@@ -13,7 +13,6 @@ node_modules/
 .next/
 .env
 .env.*
-!.env.example
 artifacts/local/
 research/runs/local/
 mlruns/

@@ -1,9 +1,5 @@
 # Benchmark Methodology
 
-## Goal
-
-The benchmark makes the three public project bullets reproducible.
-
 ## 45-case suite
 
 ### Group A: 15 published-factor replication cases

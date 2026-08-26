@@ -360,7 +360,7 @@ A subagent output is parsed into a typed result object. It is never directly exe
 
 ## 15. Comments
 
-Application comments explain non-obvious invariants such as point-in-time timing, sandbox boundaries, retry semantics, or numerical assumptions. Architecture rationale belongs in ADRs and design docs.
+Application comments explain non-obvious invariants such as point-in-time timing, sandbox boundaries, retry semantics, or numerical assumptions. Architecture rationale belongs in ADRs and design docs. Comment on each function to explain it.
 
 ## 16. RL environment contracts
 

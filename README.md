@@ -132,7 +132,6 @@ Documentation
 - [Quality gates](docs/quality-gates.md)
 - [Results](docs/results.md)
 - [Demo plan](docs/demo.md)
-- [Interview preparation](docs/interview-prep.md)
 - [Technical blog outline](docs/blog-outline.md)
 - [Commands](docs/commands.md)
 - [References](docs/references.md)

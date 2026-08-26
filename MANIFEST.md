@@ -36,7 +36,6 @@
 - `docs/results.md`
 - `docs/demo.md`
 - `docs/blog-outline.md`
-- `docs/interview-prep.md`
 - `docs/commands.md`
 - `docs/references.md`
 
