@@ -74,14 +74,14 @@ completeness = complete_runs / benchmark_runs
 
 ## Reproducibility bundle
 
-A benchmark release includes case definitions, data acquisition instructions or redistributable snapshots, configs, code, environment locks, result JSON, summary tables, trace identifiers, and reproduction commands.
+A benchmark includes case definitions, data acquisition instructions or redistributable snapshots, configs, code, environment locks, result JSON, summary tables, trace identifiers, and reproduction commands.
 
 ## RL policy benchmark separation
 
-The public 45-case benchmark is a release holdout and is not used to train agent policies.
+The public 45-case benchmark is a holdout and is not used to train agent policies.
 
-Agentic-learning experiments maintain separate immutable case IDs for training trajectories, development, RL validation, transfer evaluation, and release evaluation.
+Agentic-learning experiments maintain separate immutable case IDs for training trajectories, development, RL validation, transfer evaluation, and evaluation.
 
 A policy artifact records the exact case-set hashes used during training.
 
-The release benchmark runner checks that no release case ID appears in the policy training manifest.
+The benchmark runner checks that no case ID appears in the policy training manifest.

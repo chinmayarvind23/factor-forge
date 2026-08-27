@@ -143,7 +143,7 @@ After the deterministic agent baseline and eval harness are stable:
 - train supervised and preference baselines before RL,
 - run RLVR on tasks with strong verifiable reward,
 - run multi-step agentic-RL experiments inside the same sandbox and budget boundaries,
-- keep the 45-case public release benchmark outside training,
+- keep the 45-case  benchmark outside training,
 - compare the learned policy with the prompted LangGraph baseline,
 - refuse promotion when the learned policy increases hard execution-path violations.
 
@@ -248,24 +248,13 @@ FactorSpec
 
 The language model can propose the structure. Pydantic validation and deterministic domain rules decide whether the structure is executable.
 
-## 9. Release evidence gates
-
-The final release is accepted only when saved evidence supports all of the following:
-
-- 43 of 45 benchmark research cases reach a valid terminal state without human correction during the run.
-- 11 of 15 published equity-factor cases reproduce within the predeclared Sharpe/t-stat tolerance.
-- 13 of 15 published-factor cases have a correctly extracted `FactorSpec`.
-- Every benchmark case has complete prompt, data, code, config, backtest, trace, and experiment lineage.
-- The trace corpus contains at least 1,200 agent/tool spans.
-- The controlled performance study reproduces the runtime reduction from 46 minutes to 18 minutes under a documented workload.
-- The controlled cost study supports an average LLM cost of $0.84 per paper under the documented model and pricing snapshot.
-- No run that violates a leakage, sandbox, authorization, lineage, or forbidden-tool invariant can pass the execution-path scorecard.11. Product validation
+## 9. Product Validation
 
 The product is useful if it makes research faster while increasing, rather than reducing, the evidence available for review.
 
 The strongest proof is a run where a reviewer can inspect the source papers, FactorSpec, data version, generated code, point-in-time checks, experiment logs, validation statistics, independent LEAN result, agent trajectory, failure decisions, and final verdict from one run identifier.
 
-## 12. Competitive and reference landscape
+## 10. Competitive and reference landscape
 
 FactorForge sits between:
 
@@ -277,7 +266,7 @@ FactorForge sits between:
 
 Its differentiator is the integration contract. A plausible hypothesis, successful code execution, or high Sharpe ratio is never enough by itself. Each stage has a typed contract and an independent verification path.
 
-## 13. Explicit non-goals
+## 11. Explicit non-goals
 
 - live trade execution,
 - brokerage account integration,
@@ -290,7 +279,7 @@ Its differentiator is the integration contract. A plausible hypothesis, successf
 - one giant multi-agent conversation with implicit state,
 - putting every listed technology in the first working version.
 
-## 14. Failure cases that define the product
+## 12. Failure cases that define the product
 
 The system must visibly handle:
 
@@ -319,10 +308,6 @@ The system must visibly handle:
 - corrupted cache,
 - stale search index,
 - unauthorized tool request.
-
-## 15. Definition of done
-
-FactorForge is complete when a clean checkout can reproduce the public benchmark and evidence bundle, the demo shows both a successful research run and meaningful failure handling.
 
 ## 16. Agentic learning acceptance
 

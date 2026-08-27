@@ -168,7 +168,6 @@ The agent cannot edit the metric implementation that decides whether its experim
 3. reference-data/gold comparisons,
 4. semantic evaluators such as DeepEval,
 5. model judge for criteria that cannot be deterministic,
-6. human review for release evidence and high-impact actions.
 
 A judge cannot override leakage or security failure.
 

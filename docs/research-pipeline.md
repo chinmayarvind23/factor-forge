@@ -2,23 +2,23 @@
 
 ## Purpose
 
-FactorForge uses the full autonomous-research sequence from the AI Engineering from Scratch capstone as the research lifecycle. The production system adds typed contracts, agent orchestration, sandboxing, reproducibility, finance-specific validation, observability, and release gates around that sequence.
+FactorForge uses the full autonomous-research sequence from the AI Engineering from Scratch capstone as the research lifecycle. The production system adds typed contracts, agent orchestration, sandboxing, reproducibility, finance-specific validation, and observability.
 
 The nine stages are not isolated demos. They compose into one stateful research system.
 
 ## Stage map
 
-| Research stage | FactorForge implementation |
-|---|---|
-| Language Model Evaluation Harness | Frozen eval cases, deterministic graders, DeepEval semantic graders, outcome and execution-path scorecards, regression gates |
-| Hypothesis Generator | Multiple typed `Hypothesis` candidates, novelty/specificity/testability scoring, duplicate filtering, `FactorSpec` generation |
-| Literature Retrieval | Elasticsearch lexical/hybrid search, dense retrieval comparison, citation relationships, provenance, literature MCP |
-| Experiment Runner | Typed `ExperimentSpec`, generated code hash, Docker/EKS sandbox, deterministic seeds, time/CPU/RAM/PID/network limits, artifacts and logs |
-| Result Evaluator | Point-in-time checks, Sharpe, Sortino, drawdown, IC, turnover, transaction costs, walk-forward, purged CV, HAC statistics, robustness verdicts |
-| Paper Writer | Evidence-constrained research report from accepted artifacts, citations, limitations, experiment IDs, and reproduction commands |
-| Critic Loop | Bounded Deep Agent critic that identifies weaknesses, proposes the next research action, and stops under convergence, budget, and plateau rules |
-| Iteration Scheduler | Ranked research branches, UCB-style exploration/exploitation, pruning, experiment budgets, parallel slots, and hard stop conditions |
-| End-to-End Research Demo | The complete typed pipeline from idea through evidence, experiments, critique, LEAN verification, report, lineage, and reproduction bundle |
+| Research stage                    | FactorForge implementation                                                                                                                      |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Language Model Evaluation Harness | Frozen eval cases, deterministic graders, DeepEval semantic graders, outcome and execution-path scorecards, regression gates                    |
+| Hypothesis Generator              | Multiple typed`Hypothesis` candidates, novelty/specificity/testability scoring, duplicate filtering, `FactorSpec` generation                |
+| Literature Retrieval              | Elasticsearch lexical/hybrid search, dense retrieval comparison, citation relationships, provenance, literature MCP                             |
+| Experiment Runner                 | Typed`ExperimentSpec`, generated code hash, Docker/EKS sandbox, deterministic seeds, time/CPU/RAM/PID/network limits, artifacts and logs      |
+| Result Evaluator                  | Point-in-time checks, Sharpe, Sortino, drawdown, IC, turnover, transaction costs, walk-forward, purged CV, HAC statistics, robustness verdicts  |
+| Paper Writer                      | Evidence-constrained research report from accepted artifacts, citations, limitations, experiment IDs, and reproduction commands                 |
+| Critic Loop                       | Bounded Deep Agent critic that identifies weaknesses, proposes the next research action, and stops under convergence, budget, and plateau rules |
+| Iteration Scheduler               | Ranked research branches, UCB-style exploration/exploitation, pruning, experiment budgets, parallel slots, and hard stop conditions             |
+| End-to-End Research Demo          | The complete typed pipeline from idea through evidence, experiments, critique, LEAN verification, report, lineage, and reproduction bundle      |
 
 ## End-to-end flow
 

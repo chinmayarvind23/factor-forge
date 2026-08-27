@@ -49,10 +49,6 @@ Red-team cases include network attempt, host-file attempt, fork/process bomb, me
 - Kubernetes schema/policy checks
 - least-privilege review
 
-## Release
-
-A release cannot pass with a failing hard security invariant, missing benchmark evidence, incomplete lineage, hidden human correction, post-result benchmark relabeling/tolerance changes, or a public metric unsupported by a saved run.
-
 ## RL environment and policy
 
 Required tests:
@@ -65,7 +61,7 @@ Required tests:
 - hard-failure override,
 - trajectory serialization,
 - policy/version lineage,
-- training/release case separation,
+- training case separation,
 - held-out policy comparison,
 - reward-hacking adversarial suite,
 - fallback to prompted policy.

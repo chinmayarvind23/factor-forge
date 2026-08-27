@@ -27,7 +27,7 @@ A correct evidence-backed refusal can be a valid terminal state for a case desig
 
 The 15 cases evaluate literature retrieval, factor-spec extraction, data/timing assumptions, implementation, statistical reproduction, and independent verification.
 
-Discrete release criteria:
+Discrete criteria:
 
 ```text
 11 / 15 = 73.3% factor reproduction
@@ -203,7 +203,7 @@ aggregate metrics
 
 ## CI and regression policy
 
-Pull requests run deterministic tests, a small agent eval smoke set, a small quant fixture suite, and security invariants. Release candidates run the full 45-case benchmark.
+Pull requests run deterministic tests, a small agent eval smoke set, a small quant fixture suite, and security invariants. Candidates run the full 45-case benchmark.
 
 A hard execution-path regression cannot be hidden inside an improved average score.
 
@@ -211,7 +211,7 @@ A hard execution-path regression cannot be hidden inside an improved average sco
 
 ### Data split
 
-Do not train on the public 45-case release benchmark.
+Do not train on the public 45-case benchmark.
 
 Use:
 
@@ -220,7 +220,7 @@ trajectory training corpus
 development cases
 RL validation cases
 held-out transfer cases
-public 45-case release benchmark
+public 45-case benchmark
 ```
 
 ### Policy comparisons

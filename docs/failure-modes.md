@@ -124,8 +124,6 @@ OTel/system telemetry continues; semantic trace export can retry later if policy
 
 Redaction gate blocks export and records a safe diagnostic.
 
-## Release evidence
-
 ### Missing lineage field
 
 The case fails its evidence gate even if the output looks correct.

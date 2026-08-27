@@ -74,7 +74,7 @@ Redact secrets and sensitive fields before logs/traces leave the process. Store 
 
 ## Supply chain
 
-CI includes dependency vulnerability scanning, secret scanning, CodeQL/Semgrep class checks, container scanning, and Terraform static checks. Benchmark release images are pinned by digest.
+CI includes dependency vulnerability scanning, secret scanning, CodeQL/Semgrep class checks, container scanning, and Terraform static checks. Benchmark images are pinned by digest.
 
 ## Security testing
 

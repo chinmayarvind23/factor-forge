@@ -80,7 +80,7 @@ Pull request:
 - Docker build,
 - Terraform validate.
 
-Release:
+Run:
 
 - full benchmark gate,
 - image push to ECR,

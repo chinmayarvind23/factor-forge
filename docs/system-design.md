@@ -542,6 +542,6 @@ The environment owns legal actions, tool permissions, budgets, checkpoint bounda
 
 Hard verifier failures override soft reward.
 
-The public 45-case release suite is held out from policy training.
+The public 45-case suite is held out from policy training.
 
 A learned policy is optional at runtime. The production harness can fall back to the prompted/deterministic policy.

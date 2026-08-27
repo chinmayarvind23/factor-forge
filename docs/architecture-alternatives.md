@@ -2,7 +2,7 @@
 
 ## Decision frame
 
-The design optimizes for quant research correctness, agent reliability, and a portfolio implementation that can actually be finished. An architecture that makes the first useful research loop materially harder must justify itself with a real requirement.
+The design optimizes for quant research correctness, and agent reliability. An architecture that makes the first useful research loop materially harder must justify itself with a real requirement.
 
 ## Agent architecture
 
@@ -64,7 +64,7 @@ Selected: SQS for experiment jobs, Kafka for a separate market-data replay/strea
 
 ## Kubernetes
 
-Kubernetes from day one is rejected because it delays research correctness. No Kubernetes at all is also incomplete once parallel generated-code experiments need resource isolation and restart policy.
+Kubernetes is rejected because it delays research correctness. No Kubernetes at all is also incomplete once parallel generated-code experiments need resource isolation and restart policy.
 
 Selected: Docker local first, EKS worker plane later.
 
@@ -105,6 +105,6 @@ prompted deterministic baseline
 
 The production harness remains authoritative.
 
-The 45-case release benchmark stays outside training.
+The 45-case benchmark stays outside training.
 
 A learned policy is rejected when it improves soft reward by exploiting lookahead leakage, transaction-cost omissions, skipped validation, incomplete lineage, or another hard-path failure.

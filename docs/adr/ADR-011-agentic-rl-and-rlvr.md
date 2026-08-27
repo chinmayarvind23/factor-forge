@@ -32,7 +32,7 @@ prompted baseline
 -> held-out promotion comparison
 ```
 
-The public 45-case release benchmark is never used as policy-training data.
+The public 45-case benchmark is never used as policy-training data.
 
 ## Reward
 

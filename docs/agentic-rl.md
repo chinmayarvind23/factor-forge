@@ -15,7 +15,6 @@ The learned policy may propose the next research action. It cannot change:
 - statistical validators,
 - experiment budgets,
 - lineage requirements,
-- release gates,
 - live-trading prohibition.
 
 ## Why FactorForge is a useful RL environment
@@ -286,7 +285,7 @@ The learned policy is promoted only if it improves held-out metrics without incr
 
 ## Training and evaluation separation
 
-The 45-case public release benchmark is not training data.
+The 45-case benchmark is not training data.
 
 Use separate:
 
@@ -295,10 +294,8 @@ trajectory training set
 development set
 RL validation set
 held-out transfer set
-public 45-case release benchmark
+public 45-case benchmark
 ```
-
-The final public benchmark remains untouched until release evaluation.
 
 ## Reward hacking tests
 
@@ -349,17 +346,3 @@ Later training can use:
 - GPU nodes only when the workload justifies them.
 
 The API is not coupled to the training runtime.
-
-## Release posture
-
-FactorForge does not assume reinforcement learning is superior.
-
-The project demonstrates:
-
-1. a reliable agentic environment,
-2. verifiable rewards,
-3. training from successful and failed trajectories,
-4. controlled RLVR and agentic-RL experiments,
-5. a promotion gate against the non-RL baseline.
-
-If the learned policy loses, the production system keeps the stronger prompted/deterministic policy and preserves the failed RL experiment.

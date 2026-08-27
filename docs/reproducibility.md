@@ -55,7 +55,3 @@ Stochastic training/provider behavior reproduces the same benchmark conclusion w
 External data is no longer available, but exact methodology, versions, and source identifiers remain reconstructable.
 
 Public benchmark claims prefer exact or statistical reproduction.
-
-## One-command goal
-
-The release provides a command that reruns a selected benchmark case from its manifest. If licensed data is unavailable, the command fails clearly rather than silently substituting a different dataset.
