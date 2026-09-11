@@ -10,6 +10,12 @@ PostgreSQL holds accepted state; LangGraph checkpoints execution progress. Their
 separate. Recovery validates a durable checkpoint before publishing its accepted transition.
 The pure normalization step can safely repeat; this is not an exactly-once execution claim.
 
+The data foundation adds immutable content stores, a dataset catalog within the same PostgreSQL
+boundary and deterministic point-in-time selection. Catalog publication verifies input bytes
+and permitted uses before committing metadata. Large objects stay outside PostgreSQL; their
+SHA-256 references bind source and policy metadata. The local store and S3 request contracts
+are tested; live AWS storage verification and empirical data coverage remain pending.
+
 ## Logical planes
 
 FactorForge contains five logical planes:

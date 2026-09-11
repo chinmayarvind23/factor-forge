@@ -5,6 +5,8 @@
 Implementation status: browser/API research-brief flow with optional PostgreSQL storage and
 actual LangGraph checkpoints. Submit an idea, set limits, inspect a stable run ID and recorded
 normalization events, and recover after interrupted requests or API restarts in durable mode.
+The data foundation now verifies immutable objects, publishes owner-scoped dataset manifests
+and selects facts and historical membership using explicit point-in-time rules.
 The API verifies Cognito access tokens and isolates runs by owner; live Cognito configuration
 and browser sign-in remain pending. The research pipeline described below is
 the target design and is not implemented yet. Benchmark metrics are unmeasured; see

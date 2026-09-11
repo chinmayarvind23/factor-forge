@@ -1,5 +1,33 @@
 # Data Model and Lineage
 
+## Implemented data foundation
+
+The current data slice stores immutable bytes locally, verifies S3 adapter contracts, and
+publishes owner-scoped dataset manifests in PostgreSQL. `ArtifactRef` carries SHA-256, exact
+byte length and media type. Both stores verify bytes on every read and reject corrupt existing
+objects rather than overwriting them. Local publication uses flushed temporary files and an
+atomic hard link, with pinned ancestors that reject symbolic links and Windows reparse points.
+S3 uses conditional creation, checksums and bounded requests. Live AWS verification is pending.
+
+`DatasetManifest` binds source vintage, coverage, schema versions, table row counts, content
+references, security-ID namespace, timing/action/exit policies and explicit permitted uses.
+Canonical JSON determines its SHA-256 version. Unknown rights grant no use; expired retention
+blocks publication and reads. DVC references retain the upstream MD5 separately from SHA-256.
+
+`PostgresDatasetCatalog` reuses the canonical database pool. Ingestion requires an explicit
+capability, and sharing requires a separate publication capability. Every object must verify
+before the owner/version row commits. Rights are checked again after dependency work. Repeated
+identical publication is idempotent; changing visibility for an existing publication conflicts.
+An uploaded object without committed catalog metadata grants no dataset access. Publication is
+not a distributed transaction with object storage, so a crash may leave unreferenced bytes.
+
+The original fictional market in `data/fixtures` tests late filings, amendments, historical
+membership, a ticker rename, a split, dividends and known/unknown exit outcomes. Point-in-time
+selection enforces availability at or before formation and formation strictly before trading.
+These fixtures cannot establish empirical factor replication. Accounting and complete research
+lineage remain future stages. The entities and storage layouts below describe the target model
+unless identified as implemented here.
+
 ## Canonical entities
 
 ### ResearchRun
@@ -53,6 +81,10 @@ eval_case_results
 Large blobs do not belong in PostgreSQL. Store object references and hashes.
 
 ## S3 layout
+
+The implemented content store uses `<configured-prefix>/sha256/<first-two-hex>/<sha256>`.
+The following logical research layout remains planned; manifests will join logical names to
+immutable content references.
 
 ```text
 s3://bucket/

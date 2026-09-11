@@ -27,6 +27,18 @@ and bounds raw responses to 64 KiB. HTTP operations have three-second timeouts w
 stream check at five seconds; this is not an exact preemptive total deadline. Fresh cached
 keys may work during provider outage, but expired keys never bypass refresh failure.
 
+`domain/artifacts.py` defines strict location-free content references. `data/artifacts.py` uses
+digest-derived names, pinned filesystem ancestors and no-overwrite atomic publication;
+`data/s3_artifacts.py` verifies conditional uploads and bounded checksum-enabled reads.
+`domain/datasets.py` canonicalizes immutable provenance, coverage, policy and use-rights metadata.
+`data/catalog.py` reuses the bounded PostgreSQL pool and migration-owned `dataset_versions`
+table. Owner issuer/subject plus version identify publications; sharing needs a separate
+capability. Byte verification precedes the transaction, and retention is rechecked before
+commit or return. Orphan object cleanup and ingestion HTTP endpoints are not implemented.
+`data/point_in_time.py` selects known facts and historical membership using absolute UTC time.
+Conflicting eligible history fails before selection; later filings do not rewrite earlier
+formations. Units and duration contexts remain separate, with no implicit conversion.
+
 ## 1. Domain modules
 
 ```text
