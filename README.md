@@ -2,30 +2,33 @@
 
 **Autonomous quantitative research with reproducible evidence**
 
-Implementation status: browser/API research-brief flow with optional PostgreSQL storage and
-actual LangGraph checkpoints. Submit an idea, set limits, inspect a stable run ID and recorded
-normalization events, and recover after interrupted requests or API restarts in durable mode.
-The data foundation now verifies immutable objects, publishes owner-scoped dataset manifests
-and selects facts and historical membership using explicit point-in-time rules. A fixture
-command saves a verifiable data-selection bundle and replays it from stored artifacts.
-A BM25 literature baseline has a frozen three-paper evaluation, including failed abstention
-cases. Strict source extraction and bounded arithmetic preserve model attempts and validate
-their structure. A frozen three-paper development pilot matched 11 of 27 critical fields,
-with no complete nine-field matches; release FactorSpec accuracy remains unmeasured.
-Strict factor contracts and a hypothesis queue now check declared choices and artifact
-readiness while retaining blocked drafts and duplicate candidates.
-Monthly fact selection now feeds conditional Polars portfolio targets. A separate signed-share
-ledger handles splits, dividends, exits and trade fees against original hand calculations.
-Saved complete NAV paths now produce declared return, drawdown, Sharpe and turnover metrics.
-These components still require strategy admission and execution before they form a backtest.
-A local Python sandbox now stages verified artifacts, checks container policy before starting
-code, and preserves output, termination and cleanup evidence. Eight original Docker acceptance
-cases pass locally and in hosted CI; the operator command is documented in [sandbox](docs/sandbox.md).
-LEAN verification and integration with admitted strategies remain unfinished.
-The API verifies Cognito access tokens and isolates runs by owner; live Cognito configuration
-and browser sign-in remain pending. The complete research loop described below remains
-the target design. Release benchmark metrics are unmeasured; see
-[results](docs/results.md) for the evidence status and [commands](docs/commands.md) for runnable setup.
+Implementation status: a trusted local command now connects a research idea to ranked
+source packets, durable model extraction, source-derived strategy drafts, monthly
+experiments and retained HAC diagnostics. PostgreSQL stores run budgets, operation
+results and LangGraph experiment checkpoints. Version-two plans add a separate,
+source-cited direction review before experiment dispatch. Prompts, observations,
+input references, results and review decisions remain available for replay. See the
+[research command](docs/research-command.md) and [direction review](docs/direction-review.md).
+
+The monthly engine currently executes the original integration fixture using verified
+point-in-time inputs, declared formation/trade timing, exact funding and transaction
+costs. Walk-forward/purged splitters have boundary tests and HAC calculations have
+independent statsmodels reference checks;
+full statistical research decisions and published-factor reproduction remain to be
+composed and evaluated. The frozen three-paper extraction pilot matched 11 of 27
+critical fields; release FactorSpec accuracy remains unmeasured.
+
+A Docker sandbox stages verified artifacts and retains execution, termination and
+cleanup evidence. Eight original acceptance cases pass locally and in hosted CI.
+A separate real LEAN integration spike verifies an original seeded NAV path; full
+strategy translation and independent factor verification remain in progress. See
+[sandbox setup](docs/sandbox.md) and [results](docs/results.md).
+
+The browser/API supports research briefs and owner-scoped run inspection. Cognito
+access-token verification is implemented; live sign-in and cloud deployment remain
+planned. The broader research loop and architecture below describe the target system.
+Release benchmark metrics are unmeasured. Use the [commands](docs/commands.md) and
+linked component documentation for the implemented command surface.
 
 FactorForge turns a loose investment idea into a structured, reviewable research program. It retrieves relevant literature, extracts and proposes typed factor hypotheses, runs bounded experiments in sandboxes, validates strategies with time-series-aware statistics, independently verifies selected results in LEAN, records the full experiment lineage, and produces a research report that explains what worked, what failed, and why.
 
@@ -89,7 +92,7 @@ Observability:
 LangSmith + OpenTelemetry + Prometheus/Grafana + CloudWatch
 ```
 
-The API workload is small compared with the research workload. Kubernetes exists for isolated, parallel, resource-bounded experiment jobs, not to decorate a low-traffic web API.
+The API workload is small compared with the research workload. The planned Kubernetes deployment runs isolated, parallel, resource-bounded experiment jobs on EKS. Current execution is local; EKS infrastructure and Kubernetes manifests are not yet implemented.
 
 ## Key features
 

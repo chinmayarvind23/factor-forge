@@ -35,6 +35,14 @@ passed independent size/hash verification. Replay returned the same result and
 unchanged two-operation budget ledger. This is live integration and recovery
 evidence, not a successful factor reproduction or an extraction-accuracy benchmark.
 
+A subsequent version-two live trial caught the direction disagreement before monthly
+dispatch. Extraction returned `long_low_short_high`; the source-only review returned
+`long_high_short_low` with an exact source quote. The final inventory retained
+`DIRECTION_REVIEW_DISAGREEMENT`, both observations and no experiment dispatch. All
+27 reachable artifact references passed size/hash checks. Replay returned the same
+result and unchanged two-model-operation ledger. This is one original-source gate
+trial, not a measured improvement on the published-factor benchmark.
+
 ## Supply a reviewed request
 
 Prepare a UTF-8 JSON file matching `orchestration.command.OperatorRequest`:
