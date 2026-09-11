@@ -26,6 +26,7 @@ from factorforge.orchestration.research_strategies import (
 from factorforge.providers.ollama import GenerationRequest, GenerationResult
 from factorforge.retrieval.extraction import SourcePacket, SourcePage
 from factorforge.retrieval.selection import LiteratureCatalog, LiteratureEntry
+from factorforge.validation.monthly import MonthlyHACResult
 
 
 @pytest.mark.parametrize("outcome", ["compiled", "unbound", "needs_review", "source_unavailable"])
@@ -137,6 +138,7 @@ def test_source_drafts_publish_and_replay(
             initial_cash_usd=command.initial_cash_usd,
             evaluated_at=command.evaluated_at,
             max_cost_per_source_microusd=1000000,
+            hac_lags=1,
         )
         if outcome == "compiled":
 
@@ -165,6 +167,11 @@ def test_source_drafts_publish_and_replay(
             executed = MonthlyRun.model_validate_json(artifacts.get(reference))
             assert executed.performance is not None
             assert executed.performance.terminal_nav_usd == Decimal("1057.98")
+            validation_ref = scheduled.experiments[0].validation
+            assert validation_ref is not None
+            validation = MonthlyHACResult.model_validate_json(artifacts.get(validation_ref))
+            assert validation.request.result == reference and validation.diagnostic is not None
+            assert validation.diagnostic.request.lags == 1
         assert research_experiments(store, run.run_id, owner, plan, artifacts) == scheduled
         if outcome == "compiled":
             changed_plan = plan.model_copy(update={"initial_cash_usd": Decimal("1004")})

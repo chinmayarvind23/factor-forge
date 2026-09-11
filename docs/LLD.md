@@ -1,5 +1,9 @@
 # FactorForge Low-Level Design
 
+`validation/monthly.py` binds HAC diagnostics to verified monthly result and calendar
+bytes. It recomputes returns from retained account closes and validates complete session
+coverage. The experiment scheduler publishes requested diagnostics after canonical recovery.
+
 `validation/hac.py` supplies the [HAC mean-return diagnostic](hac-validation.md).
 Its explicit lag and correction policy bind a retained ordered series. Exact residual
 products precede fifty-digit decimal outputs; constant samples retain undefined significance.

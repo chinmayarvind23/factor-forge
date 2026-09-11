@@ -23,6 +23,7 @@ from factorforge.orchestration.research_strategies import (
     research_strategies,
 )
 from factorforge.retrieval.selection import LiteratureCatalog
+from factorforge.validation.monthly import MonthlyHACRequest, validate_monthly_hac
 
 
 class ExperimentPlan(Contract):
@@ -34,6 +35,8 @@ class ExperimentPlan(Contract):
     initial_cash_usd: Positive
     evaluated_at: Instant
     max_cost_per_source_microusd: Annotated[int, Field(ge=1, le=100000000)]
+    hac_lags: Annotated[int, Field(ge=0, le=120)] | None = None
+    hac_correction: Literal["none", "n_over_n_minus_one"] = "none"
 
     @model_validator(mode="after")
     def supported_capital(self) -> Self:
@@ -49,6 +52,7 @@ class ScheduledExperiment(Contract):
     status: Literal["completed", "failed", "skipped", "budget_stopped"]
     result: ArtifactRef | None
     reason: str | None
+    validation: ArtifactRef | None = None
 
 
 class ResearchExperiments(Contract):
@@ -116,12 +120,22 @@ def research_experiments(
             )
             continue
         settled = recover_monthly_operation(runs, run_id, principal, command, artifacts)
+        validation = None
+        if plan.hac_lags is not None:
+            diagnostic = validate_monthly_hac(
+                MonthlyHACRequest(
+                    result=reference, lags=plan.hac_lags, correction=plan.hac_correction
+                ),
+                artifacts,
+            )
+            validation = _publish(diagnostic, artifacts)
         results.append(
             ScheduledExperiment(
                 candidate_index=index,
                 status=settled.status,
                 result=reference,
                 reason=settled.failure_code,
+                validation=validation,
             )
         )
     result = ResearchExperiments(

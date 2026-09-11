@@ -34,3 +34,25 @@ describes its Bartlett weighting, small-sample correction and equally spaced ser
 Saved result and fold adapters must establish series provenance and cadence before
 using this diagnostic in research validation. HAC assumptions and sample adequacy
 remain part of the research assessment.
+
+## Retained monthly results
+
+`validation/monthly.py` reads a canonical monthly result through bounded hash/size
+verification and independently verifies the strategy's retained calendar. It
+reconstructs expected session coverage from that calendar and the declared sample,
+then recomputes net returns from the retained account NAV path. Saved report return
+fields do not supply the diagnostic's values. Sampling is consecutive declared
+trading-session index, not equal elapsed wall-clock time; the calendar source's
+accuracy remains an ingestion responsibility.
+
+Failed experiments and samples too short for the requested lag retain an explicit
+unavailable reason. Each diagnostic is published with the source result reference
+and exact HAC settings. The adapter does not authorize execution or attest market
+data. The scheduler supplies a canonical settled worker result before invoking it.
+
+`ExperimentPlan.hac_lags` enables this diagnostic with an explicit lag; null leaves
+it unrequested. `hac_correction` defaults to the recorded `none` policy. Scheduled
+results retain a `validation` artifact reference when requested, including an
+unavailable diagnostic for a failed experiment. A replay recomputes bounded
+deterministic statistics and reuses completed accounting. No factor-promotion or
+sample-adequacy threshold is implied by computing a diagnostic.

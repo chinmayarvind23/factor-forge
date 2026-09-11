@@ -29,3 +29,8 @@ This version persists per-experiment graph state and worker operations. It recom
 the bounded source/compilation stages on restart. A single enclosing research graph,
 validation and iterative research decisions remain to be composed. Execution uses
 the existing trusted original-fixture monthly profile.
+
+Plans can request a [retained-result HAC diagnostic](hac-validation.md) with
+`hac_lags` and `hac_correction`. The scheduler invokes it only after canonical
+monthly settlement has been recovered, and retains its artifact in the ordered
+experiment outcome. Statistical computation adds no model call or experiment dispatch.
