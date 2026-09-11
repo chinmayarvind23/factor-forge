@@ -111,6 +111,23 @@ application dependency audit; the web job included browser E2E checks. The separ
 failed before restoration, and the complete release gate failed. These are observed job/step
 statuses; the hosted artifact closure has not yet been independently replayed.
 
+At clean commit `a949e71`, the budget ledger and bounded LEAN gRPC contract brought the
+Windows suite to 1,610 passing tests in 130.20 seconds, with the same 15 declared skips and
+one Starlette warning. Combined statement/branch coverage was 98.14%; Ruff checked 187
+formatted files, strict typing checked 131 source files, and source/wheel builds passed.
+The checkout remained clean, with no child-coverage warning in this capture. The
+[hosted workflow](https://github.com/chinmayarvind23/factor-forge/actions/runs/34590474141)
+passed Python, web and real-Docker jobs; DVC still failed its audit before execution and
+the release gate failed. These contract tests do not establish an execution-ready LEAN backend.
+
+An unpromoted installer-free Python 3.12.14/Alpine 3.24 candidate updated the signed
+`libuuid` package and removed the complete pip and ensurepip components. Scout 1.19.0
+indexed 51 packages and reported zero findings in its September 11 snapshot. The
+[candidate report](../reports/security/python-sandbox-candidate-v2.json) records the image
+and raw scan hashes, supported smoke and remaining limitations. The original runner image
+remains selected. Full runtime acceptance and a publication image without build-injected
+host-path labels are pending; the scan alone does not justify promotion.
+
 The sandbox uses a standard-library Python image and is separate from the research API.
 Canonical run/FactorSpec admission, funding checks, full strategy execution, automatic crash
 reconciliation and independent LEAN execution remain incomplete. A successful Python process

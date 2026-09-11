@@ -1,0 +1,34 @@
+{
+  "schema_version": "unpromoted-python-image-scan-v1",
+  "scan_date_utc": "2026-09-11",
+  "scope": "installer-free-candidate-v2",
+  "runner_promoted": false,
+  "image_manifest": "sha256:b444379efe50b7166252872b4f62d0004e63953e8e4d49256448607ffbf6561c",
+  "python": "3.12.14",
+  "alpine": "3.24",
+  "platform": "linux/amd64",
+  "libuuid": "2.42.3-r1",
+  "removed_component_entries": 447,
+  "removed_components": [
+    "pip including metadata and entrypoints",
+    "ensurepip including bundled wheels"
+  ],
+  "smoke": "offline venv with_pip=False passed",
+  "scanner": "Docker Scout 1.19.0",
+  "exit_code": 0,
+  "indexed_packages": 51,
+  "sarif_runs": 1,
+  "sarif_results": 0,
+  "scan_filters_requested": [],
+  "sarif_bytes": 443,
+  "sarif_sha256": "bddb0fadb288fe14c92151ed81f9729fea0dc7d2d82ff4250e33b1dbeeac044f",
+  "export_bytes": 21228032,
+  "export_sha256": "5310d8a94c75e4ba367478f5fb19711bd4f13d6498d9357798e312d5222b7d58",
+  "limitations": [
+    "Snapshot of scanner findings, not proof of absence of vulnerabilities",
+    "Scanner temporary-archive cleanup warning preserved in private raw receipt",
+    "Exact built image has not passed complete research-runner acceptance",
+    "Build-injected host-path labels require a separately hashed sanitized publication image",
+    "No public registry distribution or installed Polars runtime"
+  ]
+}

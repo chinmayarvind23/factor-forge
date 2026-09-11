@@ -1,0 +1,30 @@
+{
+  "scope": "unpromoted-installer-free-python-candidate-v2",
+  "base_manifest": "sha256:78e98729f8fc4099e53cffb3fe59fd15b18dfa4ace8c914dee0cefa5320068eb",
+  "base_config": "sha256:28eb0cb65acb65b970e85c0dc57d10067868fae8dd00d072413df273132123ac",
+  "platform": "linux/amd64",
+  "python_version": "3.12.14",
+  "alpine_package": {
+    "name": "libuuid",
+    "version": "2.42.3-r1",
+    "url": "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/libuuid-2.42.3-r1.apk",
+    "sha256": "8306e5bb577696c9069fe1dfd9e1dcc39d2d481c6a1b0e707fd03c3e21aa6aa2",
+    "signature": "Required against official Alpine keys in the pinned base"
+  },
+  "ensurepip": {
+    "change": "Entire module and bundled wheels removed; bootstrap unsupported"
+  },
+  "runtime_network": "none",
+  "runner_promotion": false,
+  "removed_components": {
+    "installed_package": "/usr/local/lib/python3.12/site-packages/pip",
+    "metadata": "/usr/local/lib/python3.12/site-packages/pip-25.0.1.dist-info",
+    "entrypoints": [
+      "/usr/local/bin/pip",
+      "/usr/local/bin/pip3",
+      "/usr/local/bin/pip3.12"
+    ],
+    "ensurepip": "/usr/local/lib/python3.12/ensurepip"
+  },
+  "venv": "Supported with_pip=False; no automatic installer bootstrap"
+}

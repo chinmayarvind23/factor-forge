@@ -139,7 +139,8 @@ there is no daemon-wide pruning or retry policy that can substitute for reconcil
 Containers share a host kernel. Host administrators, a compromised daemon/kernel and
 hostile same-account processes are outside this first boundary. Docker configuration
 inspection, an arithmetic smoke and schema tests do not establish protection against all
-escape paths. Independent LEAN execution and a gRPC verifier remain planned.
+escape paths. The [bounded LEAN gRPC contract](lean-verifier.md) is implemented with an
+unavailable default backend; independent LEAN execution remains unfinished.
 
 ## Explicit operator CLI
 
