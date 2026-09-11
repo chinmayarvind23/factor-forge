@@ -64,5 +64,16 @@ for the same operation therefore produce only one true result across connections
 A crash before commit rolls back the reservation. A crash after commit leaves an unresolved
 reservation, and a new worker receives false for that operation even after the deadline.
 This prevents automatic duplicate dispatch but does not establish that an external provider
-executed the first call. Durable settlement, explicit reconciliation of unknown outcomes,
-and graph-node integration remain unfinished. No endpoint invokes this boundary yet.
+executed the first call. No endpoint invokes this boundary yet.
+
+`settle_operation` uses the same transaction and owner checks to attach a retained result
+and controller-supplied charge. It requires an existing reservation before artifact access,
+limits the result reference to one MiB, and checks returned byte type, length and SHA-256
+against a separate expected reference. The provider receives a detached copy of that reference.
+The caller must retain provider billing evidence; a content hash alone does not prove a charge.
+
+An exact settlement replay is idempotent. Conflicting observations are rejected, including
+changing an earlier unknown charge to zero. Late observations remain recordable, and a
+measured overrun stays visible in the ledger and prevents further dispatch. An invalid or
+unavailable result leaves the reservation intact. Explicit reconciliation of unknown outcomes
+and graph-node integration are the next layers.

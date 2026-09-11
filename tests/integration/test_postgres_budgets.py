@@ -10,10 +10,12 @@ from test_postgres_runs import database as database
 from test_postgres_runs import store as store
 
 from factorforge.auth.principal import Principal
+from factorforge.data.artifacts import ArtifactStore
+from factorforge.domain.artifacts import ArtifactRef
 from factorforge.domain.errors import ResearchError
 from factorforge.domain.research_brief import ResearchBrief
 from factorforge.orchestration.budgets import Operation
-from factorforge.orchestration.postgres_budgets import reserve_operation
+from factorforge.orchestration.postgres_budgets import reserve_operation, settle_operation
 from factorforge.orchestration.postgres_runs import PostgresRunStore
 
 
@@ -126,3 +128,129 @@ def test_saved_budget_cannot_change_authoritative_limits(
     with pytest.raises(ResearchError) as error:
         reserve_operation(store, run.run_id, worker(), request, at=datetime.now(UTC))
     assert error.value.code == "RESEARCH_BUDGET_CORRUPT"
+
+
+class ResultStore:
+    """Small in-memory original bytes isolate actual SQL settlement behavior."""
+
+    def get(self, ref: ArtifactRef) -> bytes:
+        """Return independent bytes to exercise the controller's identity verification."""
+        return b"{}"
+
+    def put(self, data: bytes, *, media_type: str = "application/octet-stream") -> ArtifactRef:
+        """These tests settle existing results and must never publish through this fixture."""
+        raise AssertionError("unexpected publication")
+
+
+@pytest.mark.parametrize("charge", [None, 500000, 2000000])
+def test_settlement_preserves_actual_cost_and_exact_replay(
+    store: PostgresRunStore, charge: int | None
+) -> None:
+    """Unknown and over-budget costs stay visible, including completion after the deadline."""
+    import hashlib
+
+    run = store.create(ResearchBrief(idea="Original budget fixture"), "one", worker())
+    request = operation()
+    ledger, _ = reserve_operation(store, run.run_id, worker(), request, at=datetime.now(UTC))
+    reference = ArtifactRef(
+        sha256=hashlib.sha256(b"{}").hexdigest(), size_bytes=2, media_type="application/json"
+    )
+    result_store: ArtifactStore = ResultStore()
+    at = ledger.deadline + timedelta(seconds=1)
+    observed = settle_operation(
+        store,
+        run.run_id,
+        worker(),
+        request.operation_id,
+        result=reference,
+        artifacts=result_store,
+        actual_cost_microusd=charge,
+        at=at,
+    )
+    assert observed.committed_microusd == (1000000 if charge is None else charge)
+    assert observed.breached == (charge == 2000000)
+    assert (
+        settle_operation(
+            store,
+            run.run_id,
+            worker(),
+            request.operation_id,
+            result=reference,
+            artifacts=result_store,
+            actual_cost_microusd=charge,
+            at=at,
+        )
+        == observed
+    )
+    with pytest.raises(ResearchError):
+        settle_operation(
+            store,
+            run.run_id,
+            worker(),
+            request.operation_id,
+            result=reference,
+            artifacts=result_store,
+            actual_cost_microusd=0,
+            at=at,
+        )
+
+
+def test_result_bytes_are_verified_before_settlement(store: PostgresRunStore) -> None:
+    """A mismatched provider response leaves the original reservation unresolved."""
+    run = store.create(ResearchBrief(idea="Original budget fixture"), "one", worker())
+    request = operation()
+    original, _ = reserve_operation(store, run.run_id, worker(), request, at=datetime.now(UTC))
+    wrong = ArtifactRef(sha256="a" * 64, size_bytes=2, media_type="application/json")
+    with pytest.raises(ResearchError) as error:
+        settle_operation(
+            store,
+            run.run_id,
+            worker(),
+            request.operation_id,
+            result=wrong,
+            artifacts=ResultStore(),
+            actual_cost_microusd=0,
+            at=datetime.now(UTC),
+        )
+    assert error.value.code == "RESEARCH_RESULT_INVALID"
+    saved, allowed = reserve_operation(store, run.run_id, worker(), request, at=datetime.now(UTC))
+    assert saved == original and not allowed
+
+
+@pytest.mark.parametrize("case", ["owner", "unreserved", "oversized"])
+def test_settlement_rejects_before_reading_artifacts(store: PostgresRunStore, case: str) -> None:
+    """Authorization, reservation and byte limits precede provider access."""
+    run = store.create(ResearchBrief(idea="Original budget fixture"), "one", worker())
+    request = operation()
+    reserve_operation(store, run.run_id, worker(), request, at=datetime.now(UTC))
+
+    class NoRead(ResultStore):
+        """Count provider access without relying on an exception that could be translated."""
+
+        reads = 0
+
+        def get(self, ref: ArtifactRef) -> bytes:
+            """Any call proves a pre-read guard did not run."""
+            self.reads += 1
+            return b"{}"
+
+    artifacts = NoRead()
+    owner = worker() if case != "owner" else Principal("fixture", "other", worker().capabilities)
+    identifier = uuid4() if case == "unreserved" else request.operation_id
+    ref = ArtifactRef(
+        sha256="a" * 64,
+        size_bytes=2**20 + 1 if case == "oversized" else 2,
+        media_type="application/json",
+    )
+    with pytest.raises(ResearchError):
+        settle_operation(
+            store,
+            run.run_id,
+            owner,
+            identifier,
+            result=ref,
+            artifacts=artifacts,
+            actual_cost_microusd=0,
+            at=datetime.now(UTC),
+        )
+    assert artifacts.reads == 0
