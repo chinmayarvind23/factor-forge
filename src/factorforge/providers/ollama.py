@@ -51,7 +51,7 @@ class GenerationRequest(BaseModel):
     model_config = ConfigDict(
         extra="forbid", frozen=True, strict=True, revalidate_instances="always"
     )
-    model: Literal["llama3.1:8b"]
+    model: Literal["llama3.1:8b", "qwen3:8b"]
     profile: GenerationProfile = GenerationProfile.EXTRACTION_32K_V1
     system: str = Field(min_length=1, max_length=16000)
     user: str = Field(min_length=1, max_length=32000)
@@ -203,6 +203,9 @@ def _request_payload(supplied: GenerationRequest) -> tuple[GenerationRequest, by
                 "num_predict": limits.output,
             },
         }
+        if request.model == "qwen3:8b":
+            # Freeze non-thinking generation for the bounded model comparison.
+            payload["think"] = False
         encoded = _json_bytes(payload)
         if len(encoded) > limits.request_bytes:
             raise ValueError("Model request exceeds its byte limit")

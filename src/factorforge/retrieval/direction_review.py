@@ -79,6 +79,7 @@ def _judge_direction(
     store: ArtifactStore,
     *,
     system: str,
+    model: Literal["llama3.1:8b", "qwen3:8b"] = "llama3.1:8b",
     conflict: dict[str, object] | None = None,
     quote_first: bool = False,
     conflict_in_prompt: bool = True,
@@ -108,7 +109,7 @@ def _judge_direction(
         schema["properties"]["citation"] = schema["properties"].pop("quote")
         schema["required"] = ["citation", "pdf_page", "direction", "uncertainty"]
     request = GenerationRequest(
-        model="llama3.1:8b",
+        model=model,
         system=system,
         user=json.dumps(payload, ensure_ascii=False),
         response_schema=cast(dict[str, JsonValue], schema),

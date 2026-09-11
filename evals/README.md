@@ -58,6 +58,14 @@ The recorded candidate scored 3/10 joint passes against the baseline's 6/10. The
 saved-result gate rejected it and the production prompt remains unchanged. Both runs
 completed all cases and retain their full provider evidence.
 
+`--profile qwen3-baseline-v1` compares the installed `qwen3:8b` model using the original
+baseline prompt, unchanged cases, schema and limits. Its wire request explicitly sets
+`think: false` using [Ollama's thinking control](https://docs.ollama.com/capabilities/thinking).
+Actual model digests and wire requests remain in provider evidence. The runner does not
+download models. Production workers continue to select `llama3.1:8b`. The evaluation's
+prompt digest is intentionally identical to the baseline; model identity is recorded
+in each provider capture and the journal profile identifies the comparison.
+
 What to read next: [observability](../docs/observability.md) for the span substrate,
 [failure modes](../docs/failure-modes.md) for coverage, and
 [research reports](../docs/research-reports.md) for evidence-based execution summaries.

@@ -23,6 +23,34 @@ from factorforge.providers.ollama import (
 )
 
 
+@pytest.mark.parametrize("model", ["llama3.1:8b", "qwen3:8b"])
+def test_model_comparison_preserves_limits_and_explicit_thinking(model: str) -> None:
+    """The candidate changes model identity and disables thinking without changing budgets."""
+    transport = FixtureTransport(
+        response({**valid_reply(), "model": model}),
+        inventory={"models": [{"name": model, "digest": "b" * 64}]},
+    )
+    request = generation_request().model_copy(update={"model": model})
+    with TemporaryDirectory() as directory:
+        store = LocalArtifactStore(Path(directory))
+        result = OllamaProvider(transport=transport).generate(request, store)
+        assert result.status == "success"
+        record = json.loads(store.get(result.record))
+        payload = json.loads(store.get(ArtifactRef.model_validate(record["request"])))
+        assert record["model"] == payload["model"] == model
+        assert record["model_digest"] == "b" * 64
+        assert payload["options"] == {
+            "temperature": 0,
+            "seed": 0,
+            "num_ctx": 32768,
+            "num_predict": 2048,
+        }
+        if model == "qwen3:8b":
+            assert payload["think"] is False
+        else:
+            assert "think" not in payload
+
+
 def test_worker_deadline_prevents_expired_provider_io() -> None:
     """An already exhausted research allowance still retains a typed delivery record."""
     transport = FixtureTransport(response(valid_reply()))
