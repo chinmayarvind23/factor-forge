@@ -7,7 +7,7 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from pydantic import ValidationError
+from pydantic import Field, ValidationError
 
 from factorforge.auth.principal import Principal
 from factorforge.data.artifacts import LocalArtifactStore
@@ -15,7 +15,11 @@ from factorforge.domain.errors import ResearchError
 from factorforge.domain.factors import Contract
 from factorforge.domain.research_brief import ResearchBrief
 from factorforge.orchestration.postgres_runs import PostgresRunStore
-from factorforge.orchestration.research_experiments import ExperimentPlan, research_experiments
+from factorforge.orchestration.research_experiments import (
+    ExperimentPlan,
+    ReviewedExperimentPlan,
+    research_experiments,
+)
 from factorforge.orchestration.research_strategies import _publish
 
 OPERATOR = Principal(
@@ -29,7 +33,7 @@ class OperatorRequest(Contract):
     """A complete retained brief and plan define the operator's stable idempotency key."""
 
     brief: ResearchBrief
-    plan: ExperimentPlan
+    plan: ExperimentPlan | ReviewedExperimentPlan = Field(discriminator="schema_version")
 
 
 def _request(path: Path) -> OperatorRequest:

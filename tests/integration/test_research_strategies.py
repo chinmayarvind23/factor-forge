@@ -20,7 +20,11 @@ from factorforge.orchestration.command import OperatorRequest
 from factorforge.orchestration.command import main as operator_main
 from factorforge.orchestration.postgres_budgets import read_budget
 from factorforge.orchestration.postgres_runs import PostgresRunStore
-from factorforge.orchestration.research_experiments import ExperimentPlan, research_experiments
+from factorforge.orchestration.research_experiments import (
+    ExperimentPlan,
+    ResearchExperiments,
+    research_experiments,
+)
 from factorforge.orchestration.research_strategies import (
     ReviewedStrategyBinding,
     research_strategies,
@@ -164,6 +168,7 @@ def test_source_drafts_publish_and_replay(
 
             monkeypatch.setattr("factorforge.orchestration.monthly_worker.run_monthly", no_repeat)
         scheduled = research_experiments(store, run.run_id, owner, plan, artifacts)
+        assert isinstance(scheduled, ResearchExperiments)
         assert scheduled.experiments[0].status == (
             "completed" if outcome == "compiled" else "skipped"
         )
@@ -182,6 +187,7 @@ def test_source_drafts_publish_and_replay(
         if outcome == "compiled":
             changed_plan = plan.model_copy(update={"initial_cash_usd": Decimal("1004")})
             stopped = research_experiments(store, run.run_id, owner, changed_plan, artifacts)
+            assert isinstance(stopped, ResearchExperiments)
             assert stopped.experiments[0].status == "budget_stopped"
             assert stopped.experiments[0].reason == "RESEARCH_BUDGET_REJECTED"
             assert stopped.experiments[0].result is None

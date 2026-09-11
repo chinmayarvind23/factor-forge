@@ -34,3 +34,11 @@ Plans can request a [retained-result HAC diagnostic](hac-validation.md) with
 `hac_lags` and `hac_correction`. The scheduler invokes it only after canonical
 monthly settlement has been recovered, and retains its artifact in the ordered
 experiment outcome. Statistical computation adds no model call or experiment dispatch.
+
+`ReviewedExperimentPlan` (`research-experiment-plan-v2`) wraps that execution plan
+with `max_cost_per_review_microusd`. It adds a [source-only direction review](direction-review.md)
+before monthly dispatch. The version-two result contains the unchanged execution
+inventory shape plus the review policy and candidate-indexed review references.
+Only supported matching judgments proceed; other judgments remain explicit skipped
+outcomes, with both original extraction and review evidence retained. Existing
+version-one requests retain their canonical identities and replay behavior.

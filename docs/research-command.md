@@ -21,6 +21,13 @@ second command with the same request. This original plaintext source is represen
 as page one of the integration fixture; it is not a retrieved published paper.
 Model observations remain unedited even if they require further strategy review.
 
+Add `--direction-review` to the preparation command to create a version-two plan
+that checks a separate source-cited direction judgment before scheduling each compiled
+candidate. Use a new request path and preserve it for replay. The review reserves an
+additional maximum allowance of one USD per selected compiled candidate; actual local
+model dollar cost remains unknown. A disagreement retains both observations and holds
+the candidate without dispatching its monthly experiment.
+
 The recorded development trial reached extraction, compilation and monthly execution.
 Its model reversed the source's long/short direction; the borrow-availability rule
 stopped execution and retained that outcome. All 49 reachable artifact references

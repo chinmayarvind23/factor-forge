@@ -14,6 +14,10 @@ from factorforge.domain.artifacts import ArtifactRef
 from factorforge.domain.errors import ResearchError
 from factorforge.domain.factors import Contract
 from factorforge.domain.performance import Instant, Positive
+from factorforge.orchestration.direction_review_worker import (
+    DirectionReviewCommand,
+    execute_direction_review_operation,
+)
 from factorforge.orchestration.monthly_graph import MonthlyExperimentGraph
 from factorforge.orchestration.monthly_worker import recover_monthly_operation
 from factorforge.orchestration.postgres_runs import PostgresRunStore
@@ -55,6 +59,22 @@ class ScheduledExperiment(Contract):
     validation: ArtifactRef | None = None
 
 
+class ReviewedExperimentPlan(Contract):
+    """Version the added review policy without changing canonical bytes of existing plans."""
+
+    schema_version: Literal["research-experiment-plan-v2"] = "research-experiment-plan-v2"
+    execution: ExperimentPlan
+    max_cost_per_review_microusd: Annotated[int, Field(ge=1, le=100000000)]
+
+
+class CandidateDirectionReview(Contract):
+    """Retain the source-order judgment separately from the unchanged extraction artifact."""
+
+    candidate_index: Annotated[int, Field(ge=0, le=2)]
+    review: ArtifactRef
+    agrees: bool
+
+
 class ResearchExperiments(Contract):
     """Retain the exact plan, source-stage artifact and ordered experiment outcomes."""
 
@@ -65,13 +85,22 @@ class ResearchExperiments(Contract):
     experiments: Annotated[tuple[ScheduledExperiment, ...], Field(max_length=3)]
 
 
+class ReviewedResearchExperiments(Contract):
+    """Bind the review policy and judgments to the resulting experiment inventory."""
+
+    schema_version: Literal["research-experiments-v2"] = "research-experiments-v2"
+    plan: ReviewedExperimentPlan
+    execution: ResearchExperiments
+    reviews: Annotated[tuple[CandidateDirectionReview, ...], Field(max_length=3)]
+
+
 def research_experiments(
     runs: PostgresRunStore,
     run_id: UUID,
     principal: Principal,
-    plan: ExperimentPlan,
+    plan: ExperimentPlan | ReviewedExperimentPlan,
     artifacts: ArtifactStore,
-) -> ResearchExperiments:
+) -> ResearchExperiments | ReviewedResearchExperiments:
     """Execute compiled candidates serially in source order under original durable budgets.
 
     The stage recomputes deterministic selection/compilation and resumes each monthly graph.
@@ -79,7 +108,12 @@ def research_experiments(
     scheduling outcome. No generated code, model decision or checkpoint grants execution rights.
     """
     principal.require("execute_research")
-    plan = ExperimentPlan.model_validate(plan)
+    review_plan = (
+        ReviewedExperimentPlan.model_validate(plan)
+        if isinstance(plan, ReviewedExperimentPlan)
+        else None
+    )
+    plan = ExperimentPlan.model_validate(review_plan.execution if review_plan is not None else plan)
     strategies = research_strategies(
         runs,
         run_id,
@@ -91,6 +125,7 @@ def research_experiments(
     )
     strategy_ref = _publish(strategies, artifacts)
     results = []
+    reviews = []
     for index, candidate in enumerate(strategies.candidates):
         if (
             candidate.status != "compiled"
@@ -109,6 +144,40 @@ def research_experiments(
             evaluated_at=plan.evaluated_at,
         )
         try:
+            if review_plan is not None:
+                review = execute_direction_review_operation(
+                    runs,
+                    run_id,
+                    principal,
+                    DirectionReviewCommand(
+                        source=strategies.sources.selection.sources[index],
+                        max_cost_microusd=review_plan.max_cost_per_review_microusd,
+                    ),
+                    artifacts,
+                )
+                agrees = (
+                    review.status == "supported"
+                    and review.observation is not None
+                    and review.observation.direction
+                    == candidate.draft.request.observation.long_short_direction
+                )
+                reviews.append(
+                    CandidateDirectionReview(
+                        candidate_index=index, review=_publish(review, artifacts), agrees=agrees
+                    )
+                )
+                if not agrees:
+                    results.append(
+                        ScheduledExperiment(
+                            candidate_index=index,
+                            status="skipped",
+                            result=None,
+                            reason="DIRECTION_REVIEW_DISAGREEMENT"
+                            if review.status == "supported"
+                            else "DIRECTION_REVIEW_" + review.status.upper(),
+                        )
+                    )
+                    continue
             reference = MonthlyExperimentGraph(runs, run_id, principal, command, artifacts).finish()
         except ResearchError as error:
             if error.code != "RESEARCH_BUDGET_REJECTED":
@@ -141,5 +210,11 @@ def research_experiments(
     result = ResearchExperiments(
         run_id=run_id, plan=plan, strategies=strategy_ref, experiments=tuple(results)
     )
+    if review_plan is not None:
+        reviewed = ReviewedResearchExperiments(
+            plan=review_plan, execution=result, reviews=tuple(reviews)
+        )
+        _publish(reviewed, artifacts)
+        return reviewed
     _publish(result, artifacts)
     return result

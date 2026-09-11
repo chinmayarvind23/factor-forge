@@ -29,5 +29,19 @@ An interruption after reservation or after delivery but before settlement leaves
 unresolved operation. Retrying requires reconciliation and cannot dispatch another
 model call. Four actual PostgreSQL integration cases cover both interruption windows
 and restart recovery for supported and unavailable-provider outcomes. These controlled
-responses verify durability, not model accuracy. Scheduling integration remains next;
-this worker alone is not yet an execution gate.
+responses verify durability, not model accuracy.
+
+The version-two `ReviewedExperimentPlan` wraps an existing execution plan and an
+explicit per-review cost allowance. Before dispatching a compiled candidate, the
+scheduler requests this review and compares its direction to the retained extraction.
+Only a supported matching judgment proceeds. Disagreement, uncertainty, invalid
+provenance or provider unavailability produce a retained skip reason and consume no
+experiment slot. Budget rejection produces `budget_stopped`; unresolved operations
+still propagate for reconciliation. Both observations remain available in the final
+`research-experiments-v2` artifact. Agreement establishes consistency between these
+two observations; it does not prove their shared interpretation is correct.
+
+Version-one plans and results retain their original schemas and canonical bytes.
+The operator accepts either plan version by its explicit schema discriminator. The
+review policy is part of a new request identity, so enabling review creates an
+intentional new operator run rather than altering an earlier run's evidence.

@@ -4,7 +4,10 @@
 with verified page bytes and exact cited-quote membership. It retains the model observation
 and uncertainty separately. `orchestration/direction_review_worker.py` adds durable
 reservation, original-deadline propagation and verified replay. Scheduling integration
-remains the next layer; see the linked review contract for crash behavior.
+uses `ReviewedExperimentPlan` v2 to require a supported matching direction before
+monthly dispatch. Version-one canonical requests remain unchanged; version-two results
+retain the review policy and both observations. See the linked review contract for
+crash behavior and the limits of model agreement.
 
 `orchestration/command.py` exposes the trusted [research operator](research-command.md).
 A complete brief/plan request defines idempotency. The fixed local operator identity,
