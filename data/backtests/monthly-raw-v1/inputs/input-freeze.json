@@ -1,0 +1,30 @@
+{
+  "schema_version": "original-monthly-input-freeze-v1",
+  "calendar": {
+    "sha256": "d968fe9f8efd69f8bbf9fe2ef9b5d6e192ce89dd3fe2f61ea51b19749c919d4c",
+    "size_bytes": 4740,
+    "media_type": "application/json"
+  },
+  "signals": {
+    "sha256": "5b55c184259148bf9c98ff1d8650a56ebd89b9a2feffe9d29cc0392ecde2308c",
+    "size_bytes": 946,
+    "media_type": "application/json"
+  },
+  "market": {
+    "sha256": "456b1034c9ea1b7b63ad8ec580194d47577fcafd84f2ad0b3018e380df33580c",
+    "size_bytes": 3808,
+    "media_type": "application/json"
+  },
+  "intervals": {
+    "sha256": "595ae89b46816ea8a49bbf01f825f4f075b27f6fb5f45b8f68221f4ce177fb71",
+    "size_bytes": 1183,
+    "media_type": "application/json"
+  },
+  "manifest": {
+    "sha256": "4f81d4479afb43b442774d54329368f5f7005df88f1a1a1622d1429ea2715e2b",
+    "size_bytes": 1436,
+    "media_type": "application/json"
+  },
+  "source_commit": "97c1ed7",
+  "scope": "input-only; no execution outcomes calculated"
+}
