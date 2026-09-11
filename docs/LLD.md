@@ -34,6 +34,12 @@ split/dividend/exit phases, explicit trade fees and exact-time raw-price valuati
 terminal outcomes block accounting. This [conditional ledger](conditional-accounting.md) has
 hand-worked engineering references; it is not yet a strategy executor or funding admission gate.
 
+`domain/targets.py` and `factors/targets.py` produce conditional target weights from selected
+scalar signals. Polars joins and partitions the eligible table, with exact Decimal ordinals
+and rational sleeve weights. Removed target identities remain in drift-based turnover and
+trade-fee estimates. The [target contract](conditional-targets.md) preserves the distinction
+between these calculations and source selection, funding or order execution.
+
 The durable adapter uses owner issuer/subject predicates and SQL uniqueness for idempotency.
 Dollar values use fixed two-decimal canonical serialization, preserving equality between
 `5`, `5.0` and `5.00`. Run creation and its first event commit together. An actual LangGraph
