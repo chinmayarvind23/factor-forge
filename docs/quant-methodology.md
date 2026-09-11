@@ -9,10 +9,17 @@ The research agent may propose ideas. Quantitative claims are accepted only thro
 The core invariant is:
 
 ```text
-information_used_at_t <= information_available_at_t
+information_available_at <= formation_at < trade_at
 ```
 
 A factor calculation uses the publication/availability timestamp, not merely the economic period the data describes.
+
+The implemented selectors preserve fact revisions and known membership events by permanent
+security ID. Fact identity includes concept/context, duration start (or instant), period end
+and exact unit. A shared filing accession can supply many distinct facts. Contradictory known
+versions fail independently of input order; future publications do not change prior selection.
+Time comparisons use UTC instants, including daylight-saving folds. The original
+`data/fixtures/tiny-market-v1.json` tests these rules and is not empirical market evidence.
 
 Examples:
 
