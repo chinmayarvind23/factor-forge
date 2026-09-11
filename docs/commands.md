@@ -89,8 +89,31 @@ Both local servers must be running. Set `FACTORFORGE_E2E_OUTPUT` to a fresh outp
 to preserve screenshots, videos, traces and JSON results. Tests cover desktop/mobile submission
 and an injected network failure followed by a retry against the real API.
 
-The CLI currently provides help and version information. Research, evaluation, reproduction,
-local infrastructure and cloud commands will be documented here when implemented and verified.
+## Reproduce the original data fixture
+
+From the matching trusted checkout, create a local artifact directory and save the command's
+JSON reference. In Bash:
+
+```bash
+mkdir -p artifacts/local
+uv run --locked factorforge fixture-bundle --output artifacts/local/fixture-objects > artifacts/local/fixture-ref.json
+uv run --locked factorforge verify-bundle --output artifacts/local/fixture-objects --ref artifacts/local/fixture-ref.json
+```
+
+In PowerShell, create the parent first with
+`New-Item -ItemType Directory -Force artifacts/local | Out-Null`, then run the same two `uv`
+commands. The reference reader supports UTF-8 and BOM-marked PowerShell encodings.
+
+Replay returns `original_fixture`, the three formation-time security IDs and the three facts
+known by 1 May 2024 at 20:00 UTC. Later amendments and the delayed filing remain in the saved
+input but are excluded from that selection. No return or backtest metric is calculated.
+The saved input and terms are sufficient after their checkout copies are removed; trusted
+code, lock and installed environment still must match. Altered or missing evidence fails.
+
+The separate [DVC tooling project](../tools/dvc/README.md) has a blocking dependency audit.
+Its unavailable restoration test is an explicit skip in ordinary tests and a required check
+in the complete release workflow. The original fixture can be inspected from Git without DVC.
+Research, evaluation, infrastructure and cloud commands will be documented when implemented.
 
 Install scripts are disabled because this workspace currently requires none. The single web
 package has its own lockfile. Root commands delegate by directory without creating workspace

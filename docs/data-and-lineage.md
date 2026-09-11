@@ -28,6 +28,21 @@ These fixtures cannot establish empirical factor replication. Accounting and com
 lineage remain future stages. The entities and storage layouts below describe the target model
 unless identified as implemented here.
 
+`fixture-bundle` saves the complete authorized input and terms, dataset manifest, selection
+times, result, installed Python/Pydantic versions, dependency lock and the source modules used
+for replay. `verify-bundle` retrieves every declared component and recomputes the result with
+the installed trusted code. It never executes stored code. Exact input bytes and canonical
+UTF-8/LF code identities make checkout line endings explicit. Replaying under different code,
+lock or recorded environment versions fails; restore the matching checkout/environment first.
+
+This fixed-fixture command ties reuse rights to reviewed input and terms hashes. Modified
+fixtures need a separately reviewed version. Git metadata records the actual checkout revision
+and dirty state, or unknown values when unavailable. Hashes prove content identity and replay
+agreement; the bundle is unsigned and does not authenticate who ran it. Its DVC field remains
+unset: the separately committed pointer has provenance, but secure DVC execution is blocked by
+the [isolated tooling audit](../tools/dvc/README.md). The bundle establishes a reproducible
+data check, not complete research-run lineage.
+
 ## Canonical entities
 
 ### ResearchRun

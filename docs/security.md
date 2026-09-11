@@ -74,8 +74,16 @@ Redact secrets and sensitive fields before logs/traces leave the process. Store 
 
 ## Supply chain
 
-CI includes dependency vulnerability scanning, secret scanning, CodeQL/Semgrep class checks, container scanning, and Terraform static checks. Benchmark images are pinned by digest.
+Current CI audits locked application Python dependencies and the web package. DVC has a separate
+locked environment and a required audit before execution. Its diskcache dependency has an
+unresolved advisory, so the [complete release gate](../tools/dvc/README.md) remains blocked.
+Isolation is not remediation. CodeQL/Semgrep, container and Terraform checks, and benchmark
+image pinning remain planned for the corresponding implementation stages.
 
 ## Security testing
 
-Adversarial tests include network exfiltration, filesystem escape, fork bomb, OOM, infinite process spawn, shell injection, malicious paper prompt injection, poisoned inter-agent messages, capability escalation, and credential discovery attempts.
+Implemented adversarial checks cover identity/capability boundaries, malformed requests,
+checkpoint failures, local path escape, corrupt artifacts, conflicting point-in-time history
+and tampered fixture bundles. Execution sandboxes and their exfiltration, fork-bomb, OOM and
+process-control tests remain planned. Paper prompt-injection and inter-agent tests will be
+added with those model/tool paths; their presence is not implied by this design document.
