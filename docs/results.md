@@ -9,7 +9,7 @@ The target architecture in the design documents must not be interpreted as measu
 | --- | --- |
 | Autonomous research completion | Unmeasured; 45-case suite not frozen |
 | Published-factor reproduction | Unmeasured; paper/data/tolerance records not frozen |
-| FactorSpec extraction accuracy | Unmeasured; source-extraction pipeline under development |
+| FactorSpec extraction accuracy | Unmeasured for the release suite; separate three-paper critical-field pilot below |
 | Benchmark lineage completeness | Unmeasured; no benchmark runs |
 | Agent/tool spans | Unmeasured; tracing not implemented |
 | Paired research runtime | Unmeasured; workload not frozen |
@@ -51,6 +51,30 @@ benchmark or a published-factor replication result. With three documents and `k=
 offers little discrimination. First-rank results and negative-query behavior are reported separately.
 The saved local evaluation record is `60aa85c6e2df6b734053c98d085752380cef080df13ea52bed40edaf59310518`;
 it preserves input bytes, configuration, code snapshots, environment and results.
+
+## Source-extraction development pilot
+
+At clean commit `3cc98ea`, one local `llama3.1:8b` attempt per paper matched **11 of 27
+critical fields (40.74%)**, with **0 of 3 cases matching all nine fields**. Jegadeesh and Titman
+matched 5/9; the Novy-Marx manuscript matched 6/9. Sloan's provider attempt failed and scored
+0/9. The [per-field report](../reports/extraction/three-paper-local-v1.json) includes every case.
+There were no retries, output repairs, or changes to the frozen gold after inference.
+
+The selected strategy, source pages, exact request bytes, critical-field gold and numerical
+vectors were frozen before the calls. This measures extraction given selected evidence, not
+autonomous paper discovery or full FactorSpec construction. Formula grading requires the
+closed arithmetic grammar, canonical input names and agreement on three numerical vectors.
+The Novy-Marx formula used paper-style variable names, so it failed that declared executable
+contract; this does not establish that its economic meaning was wrong. Formation-rule prose
+and source entailment were not graded. The result is a development baseline, not the 15-paper
+release extraction score or a factor-replication result.
+
+The saved bundle is `970599cb0bab7efad0d91bed69c4719e11d83c76e63d214eed5f484a2c429ba3`.
+It retains source hashes, requests, model identity, raw responses or failure captures, code,
+environment, pre-call receipts and grades. Source PDFs and passages remain outside the public
+repository because redistribution permission has not been established. Local dollar cost is
+unmeasured. Before this run, 150 focused checks passed in the clean checkout; these are
+engineering checks and do not increase the extraction score.
 
 ## Local model protocol evidence
 

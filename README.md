@@ -10,7 +10,8 @@ and selects facts and historical membership using explicit point-in-time rules. 
 command saves a verifiable data-selection bundle and replays it from stored artifacts.
 A BM25 literature baseline has a frozen three-paper evaluation, including failed abstention
 cases. Strict source extraction and bounded arithmetic preserve model attempts and validate
-their structure; paper-extraction accuracy remains unmeasured.
+their structure. A frozen three-paper development pilot matched 11 of 27 critical fields,
+with no complete nine-field matches; release FactorSpec accuracy remains unmeasured.
 The API verifies Cognito access tokens and isolates runs by owner; live Cognito configuration
 and browser sign-in remain pending. The complete research loop described below remains
 the target design. Release benchmark metrics are unmeasured; see
