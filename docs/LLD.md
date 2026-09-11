@@ -69,6 +69,12 @@ notional, rejects quantities that cannot be represented exactly, and retains obs
 cash, current short-liability reserves and funding failures. This pure notional model
 does not grant execution permission or verify quotes and loan availability.
 
+`domain/raw_strategy.py` declares the distinct [monthly raw-price v3 contract](raw-strategy.md).
+It binds actual source roles, original-fixture scope, monthly timing and exact post-fee
+policies. Its canonical declaration and normalized execution identity remain separate;
+neither is an execution result. The complete original inputs and independently calculated
+outputs in `data/backtests/monthly-raw-v1` are frozen before the executor is implemented.
+
 `backtests/performance.py` computes [conditional NAV metrics](conditional-metrics.md) from
 a complete declared close inventory. Entry fees remain in the first full interval and
 drawdown baseline. Invalid rate or execution inventories disable only their dependent
