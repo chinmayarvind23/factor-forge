@@ -1,0 +1,3 @@
+# Preserve downloaded attribution bytes and the reviewed runtime policy digest.
+*.json -text
+upstream/* -text
