@@ -203,6 +203,16 @@ observation, exact prompt and source-only model input. Its evaluation reference 
 reviewer remains unchanged. This controlled comparison provides no basis for promoting
 the candidate; further work should evaluate a distinct model capability hypothesis.
 
+The `qwen3-baseline-v1` comparison frozen in `d41d222` used the original baseline
+prompt with installed `qwen3:8b` and explicit non-thinking generation. It completed all
+ten cases with **7/10 direction, citation and joint passes**, preserving all six baseline
+joint passes and adding the quintile case. The three ambiguity cases remain development
+work. The saved comparator returned exit 0. All 64 reachable artifacts verified, with
+every actual model request checked for the frozen prompt, source input, model and limits.
+Evaluation `84514fd743ffe7c056d5ba19af5f52b8267591240667b4a5cb524560c2fdea50`
+contains 4,713 bytes. These exposed cases support further evaluation; production model
+selection remains unchanged pending separate validation.
+
 ## Local model protocol evidence
 
 A single 32,768-context protocol call timed out during model loading after 120.55 seconds.

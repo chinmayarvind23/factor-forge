@@ -66,6 +66,10 @@ download models. Production workers continue to select `llama3.1:8b`. The evalua
 prompt digest is intentionally identical to the baseline; model identity is recorded
 in each provider capture and the journal profile identifies the comparison.
 
+The recorded Qwen comparison met both criteria on 7/10 cases, preserving all six
+baseline passes and adding complete quintile support. The comparator accepted it.
+Production promotion awaits separate validation; the three ambiguity cases remain open.
+
 What to read next: [observability](../docs/observability.md) for the span substrate,
 [failure modes](../docs/failure-modes.md) for coverage, and
 [research reports](../docs/research-reports.md) for evidence-based execution summaries.
