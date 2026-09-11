@@ -28,6 +28,24 @@ Publication must remove those labels in a separately hashed configuration, prese
 relationship to the reviewed build and rerun acceptance against the resulting exact image.
 Do not distribute the original export or treat its scan as acceptance of another digest.
 
+`publication_oci.py` packages only the exact reviewed original archive pinned in its source.
+It verifies bounded tar members, JSON, descriptors, compressed layer hashes and decompressed
+rootfs identities without extracting files. It removes the five enumerated private build
+labels, preserves every other runtime field and all history, and writes a new config,
+manifest and named OCI archive. Unexpected host paths in retained metadata cause rejection.
+The source archive remains unchanged. Output files use exclusive creation.
+
+```powershell
+python infra/sandbox/candidate/publication_oci.py --source ORIGINAL.tar --output PUBLICATION.tar --report PUBLICATION.json
+```
+
+The OCI descriptor uses a canonical repository-and-digest containerd name; a tag-only name
+did not populate RepoDigests in the first local import experiment. The corrected archive
+preserved the exact manifest RepoDigest on the existing Docker Desktop store. Its unfiltered
+Scout scan indexed 51 packages and returned zero findings. This is a scanner snapshot and an
+existing-store import result. Fresh-store import and the complete runtime policy acceptance
+suite remain required before promotion; the utility never imports or runs an image.
+
 `remediate.py` records the earlier rejected installer-preserving recipe. That attempt updated
 pip and its bundled bootstrap wheel, but an image scan found vulnerabilities in pip's vendored
 components. Its results must not be relabeled as a clean image.
