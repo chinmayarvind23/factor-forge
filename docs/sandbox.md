@@ -46,7 +46,9 @@ the created container against the resolved ID. The pinned configuration digest i
 The [OCI image specification](https://github.com/opencontainers/image-spec/blob/main/config.md#imageid)
 distinguishes the configuration-based image ID from the manifest that references it.
 Create uses `--pull never`; execution cannot download an image or install dependencies.
-Digest pinning establishes identity, not the absence of image vulnerabilities.
+Digest pinning establishes identity. The [recorded image scan](results.md#python-sandbox-execution)
+reported 33 vulnerabilities across 13 packages, including one high-severity finding;
+image remediation remains open.
 
 | Control | Fixed setting |
 | --- | --- |

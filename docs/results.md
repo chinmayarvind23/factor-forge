@@ -71,8 +71,12 @@ The official Python image
 `python@sha256:2fe5997d249a808b8eeea52c58a1dbffbba28754dc11699ef5c029f2d818ce79`
 was pulled for local sandbox development. A Docker inspection on 11 September 2026
 confirmed `linux/amd64`, image creation time `2026-09-01T00:12:40.129211396Z` and
-46,182,573 bytes. Digest pinning establishes image identity; vulnerability status has not
-been measured for this image.
+46,182,573 bytes. A subsequent Docker Scout 1.19.0 scan indexed 132 packages and reported
+33 vulnerabilities across 13 packages: 25 low, seven medium and one high. The scan exited
+two with no requested severity or suppression filters. The [saved finding inventory](../reports/security/python-sandbox-image-v1.json)
+binds the image, timestamp and raw SARIF hash. Debian's [CVE-2026-85091 tracker](https://security-tracker.debian.org/tracker/CVE-2026-85091)
+lists the installed zlib source version as vulnerable and unfixed. Seven pip findings list
+fixed versions. Image remediation remains open; runtime acceptance does not clear these findings.
 
 The [local operator runner](sandbox.md) now verifies source bytes, stages private inputs,
 checks the created container against the fixed policy and saves bounded output and cleanup
