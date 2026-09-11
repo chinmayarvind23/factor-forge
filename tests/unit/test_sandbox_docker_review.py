@@ -38,6 +38,7 @@ def daemon_info() -> dict[str, Any]:
         "OSType": "linux",
         "Architecture": "x86_64",
         "CgroupVersion": "2",
+        "CgroupDriver": "cgroupfs",
         "MemoryLimit": True,
         "SwapLimit": True,
         "PidsLimit": True,
@@ -104,6 +105,9 @@ def replies(
         ("CpuCfsQuota", False),
         ("CpuCfsQuota", None),
         ("MemoryLimit", 1),
+        ("CgroupDriver", "systemd"),
+        ("CgroupDriver", None),
+        ("CgroupDriver", "unknown"),
     ],
 )
 def test_preflight_rejects_malformed_or_missing_security_controls(

@@ -9,6 +9,16 @@ and a time-bounded container event query, including when tests fail. Docker reta
 the latest 256 events; these diagnostic files supplement the receipts and do not prove
 complete event history. See [Docker event semantics](https://docs.docker.com/reference/cli/docker/system/events/).
 
+Local sandbox admission requires cgroup v2 with the `cgroupfs` driver. The disposable
+hosted runner explicitly selects that driver, matching local Docker Desktop. Kernel
+evidence from a subsequent systemd-driver run confirmed the exact container's memory
+cgroup kill while the daemon flag stayed false. Containerd documents a systemd scope
+collection race that can remove OOM evidence before inspection in its
+[v2.3.4 test script](https://github.com/containerd/containerd/blob/v2.3.4/script/critest.sh#L71).
+The driver restriction preserves the existing OOM assertion and all resource limits.
+It is a local worker prerequisite, not an EKS driver recommendation. The controller
+never changes a user's daemon configuration; unsupported hosts fail preflight.
+
 FactorForge has an internal synchronous runner for bounded Python experiments in a local
 Docker Linux container. An original arithmetic smoke read its staged code as UID65532,
 returned 5050 for `sum(range(101))`, exited zero with no OOM flag and recorded confirmed

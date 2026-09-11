@@ -124,6 +124,8 @@ class DockerRuntime:
             info.get("OSType") != "linux"
             or info.get("Architecture") != "x86_64"
             or info.get("CgroupVersion") != "2"
+            # systemd scope collection can race containerd's terminal OOM read.
+            or info.get("CgroupDriver") != "cgroupfs"
             or not all(
                 info.get(key) is True
                 for key in ("MemoryLimit", "SwapLimit", "PidsLimit", "CpuCfsPeriod", "CpuCfsQuota")

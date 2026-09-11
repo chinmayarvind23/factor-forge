@@ -94,12 +94,13 @@ jobs:
           else
             echo '{}' > "$config"
           fi
-          jq '.features = ((.features // {}) + {"containerd-snapshotter": true})' "$config" > "$config.next"
+          jq '.features = ((.features // {}) + {"containerd-snapshotter": true}) | ."exec-opts" = (((."exec-opts" // []) | map(select(startswith("native.cgroupdriver=") | not))) + ["native.cgroupdriver=cgroupfs"])' "$config" > "$config.next"
           sudo install -m 0644 "$config.next" /etc/docker/daemon.json
           sudo systemctl restart docker
           docker version
           docker info
           test "$(docker version --format '{{.Server.Version}}')" = 29.2.1
+          test "$(docker info --format '{{.CgroupDriver}} {{.CgroupVersion}}')" = 'cgroupfs 2'
       - name: Verify and import the exact reviewed Python image
         working-directory: artifacts/local/runtime-distribution
         run: |
