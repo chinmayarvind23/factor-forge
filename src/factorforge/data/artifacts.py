@@ -5,6 +5,7 @@ import errno
 import hashlib
 import os
 import stat
+import sys
 from collections.abc import Iterator
 from contextlib import ExitStack, contextmanager, suppress
 from dataclasses import dataclass
@@ -66,6 +67,8 @@ def _posix_flag(name: str) -> int:
 
 def _windows_handle(path: Path, *, directory: bool, create: bool = False) -> int:
     """Deny deletion while pinned and inspect reparse metadata without following its target."""
+    if sys.platform != "win32":
+        raise RuntimeError("Windows handles require a Windows runtime")
     from ctypes import wintypes
 
     kernel = ctypes.WinDLL("kernel32", use_last_error=True)
@@ -109,6 +112,8 @@ def _windows_handle(path: Path, *, directory: bool, create: bool = False) -> int
 
 def _close_windows_handle(handle: int) -> None:
     """Close each native handle unless a Python descriptor takes ownership."""
+    if sys.platform != "win32":
+        raise RuntimeError("Windows handles require a Windows runtime")
     kernel = ctypes.WinDLL("kernel32", use_last_error=True)
     kernel.CloseHandle.argtypes = [ctypes.c_void_p]
     kernel.CloseHandle(handle)
@@ -123,7 +128,7 @@ class _Anchor:
 
     def open_file(self, name: str, *, create: bool = False) -> int:
         """Open the leaf without following links, and reject devices/directories before reading."""
-        if os.name == "nt":
+        if sys.platform == "win32":
             import msvcrt
 
             handle = _windows_handle(self.path / name, directory=False, create=create)
