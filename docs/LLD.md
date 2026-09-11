@@ -27,6 +27,11 @@ unsettled reservation requires reconciliation. The server derives operation iden
 the canonical run and request hash. The broader research graph composes this worker with
 literature retrieval, hypothesis creation and validation stages.
 
+`orchestration/monthly_graph.py` adds the [persisted experiment subgraph](monthly-graph.md).
+Execution and publication checkpoint synchronously in PostgreSQL. Final acceptance verifies
+canonical settlement through a recovery-only worker path, and a per-thread advisory lock
+serializes graph writers. Its terminal artifact is the monthly result's evidence closure.
+
 The independent literature path uses `domain/literature.py` and `retrieval/lexical.py` for
 immutable documents and bounded BM25 ranking. `evaluation/retrieval.py` requires complete binary
 judgments and separates answerable and no-relevant query denominators; its CLI archives the

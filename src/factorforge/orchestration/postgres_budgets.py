@@ -32,6 +32,11 @@ def reserve_operation(
     return _mutate(store, run_id, principal, lambda ledger: reserve(ledger, operation, at=at))
 
 
+def read_budget(store: PostgresRunStore, run_id: UUID, principal: Principal) -> BudgetLedger:
+    """Validate the owner-bound ledger without creating a reservation or changing stored bytes."""
+    return _mutate(store, run_id, principal, lambda ledger: (ledger, False))[0]
+
+
 def settle_operation(
     store: PostgresRunStore,
     run_id: UUID,

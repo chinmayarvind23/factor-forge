@@ -10,7 +10,11 @@ from factorforge.data.artifacts import ArtifactStore
 from factorforge.domain.artifacts import ArtifactRef
 from factorforge.domain.errors import ResearchError
 from factorforge.orchestration.budgets import Operation
-from factorforge.orchestration.postgres_budgets import reserve_operation, settle_operation
+from factorforge.orchestration.postgres_budgets import (
+    read_budget,
+    reserve_operation,
+    settle_operation,
+)
 from factorforge.orchestration.postgres_runs import PostgresRunStore
 
 
@@ -98,3 +102,30 @@ def _recover(artifacts: ArtifactStore, ref: ArtifactRef, request: MonthlyRequest
         raise ResearchError(
             "RESEARCH_RESULT_INVALID", "The operation result cannot be verified.", 409
         ) from None
+
+
+def recover_monthly_operation(
+    runs: PostgresRunStore,
+    run_id: UUID,
+    principal: Principal,
+    request: MonthlyRequest,
+    artifacts: ArtifactStore,
+) -> MonthlyRun:
+    """Verify an already settled operation without any path to fresh dispatch."""
+    request = MonthlyRequest.model_validate(request)
+    ledger = read_budget(runs, run_id, principal)
+    identifier = uuid5(run_id, "monthly-worker-v1:" + request.sha256)
+    for row in ledger.operations:
+        if row.operation.operation_id == identifier and row.observation is not None:
+            if (
+                row.operation.kind != "experiment"
+                or row.operation.request_sha256 != request.sha256
+                or row.operation.max_cost_microusd != 0
+            ):
+                raise ResearchError(
+                    "RESEARCH_BUDGET_CORRUPT", "The operation identity is inconsistent.", 409
+                )
+            return _recover(artifacts, row.observation.result, request)
+    raise ResearchError(
+        "RESEARCH_OPERATION_UNRESOLVED", "The recorded operation needs reconciliation.", 409
+    )
