@@ -1,10 +1,14 @@
 # FactorForge High-Level Design
 
-Current implementation: a Next.js browser console and one local FastAPI process with opt-in development identity and a
-bounded in-memory run store. It creates receipts and normalizes brief text only. PostgreSQL,
-agent research, isolated execution and the cloud planes below remain planned. This local
-slice establishes the HTTP/event contract before durability is added.
+Current implementation: a Next.js browser console and one FastAPI process with explicit local
+identity or verified Cognito access tokens. Storage is independently configured as bounded
+memory or PostgreSQL with actual LangGraph checkpoints. It creates owner-scoped receipts and
+normalizes brief text only. Agent research, isolated execution and cloud deployment remain planned.
+Live Cognito integration and browser sign-in still need deployment configuration.
 The browser performs bounded polling and validates responses before rendering progress.
+PostgreSQL holds accepted state; LangGraph checkpoints execution progress. Their commits are
+separate. Recovery validates a durable checkpoint before publishing its accepted transition.
+The pure normalization step can safely repeat; this is not an exactly-once execution claim.
 
 ## Logical planes
 

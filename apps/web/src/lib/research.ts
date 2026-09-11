@@ -17,6 +17,7 @@ export interface ResearchRun extends ResearchRequest {
   events: { status: RunStatus; created_at: string }[];
   created_at: string;
   mode: "local";
+  storage: "memory" | "postgres";
 }
 export interface Submission {
   payload: ResearchRequest;
@@ -91,7 +92,7 @@ async function request(
   if (!response.ok) {
     const messages: Record<number, string> = {
       403: "The API denied this request. Use the local console with local mode enabled.",
-      404: "This run is no longer available. Local runs are cleared when the API restarts.",
+      404: "This run is unavailable in the current workspace.",
       409: "This request key already belongs to different input. Change the idea to start a new request.",
       413: "This idea exceeds the request size limit. Shorten the text, then submit again.",
       422: "The API rejected these inputs. Review the idea and research limits.",
@@ -153,6 +154,7 @@ export async function readRun(
     value.run_id !== id ||
     !status(value.status) ||
     value.mode !== "local" ||
+    (value.storage !== "memory" && value.storage !== "postgres") ||
     typeof value.idea !== "string" ||
     !(value.brief === null || typeof value.brief === "string") ||
     typeof value.created_at !== "string" ||

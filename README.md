@@ -2,9 +2,11 @@
 
 **Autonomous quantitative research with reproducible evidence**
 
-Implementation status: local browser/API skeleton. Submit an idea, set limits, inspect the
-stable run ID and recorded brief-normalization events, and recover from an interrupted request.
-State is bounded and in memory. The research pipeline described below is
+Implementation status: browser/API research-brief flow with optional PostgreSQL storage and
+actual LangGraph checkpoints. Submit an idea, set limits, inspect a stable run ID and recorded
+normalization events, and recover after interrupted requests or API restarts in durable mode.
+The API verifies Cognito access tokens and isolates runs by owner; live Cognito configuration
+and browser sign-in remain pending. The research pipeline described below is
 the target design and is not implemented yet. Benchmark metrics are unmeasured; see
 [results](docs/results.md) for the evidence status and [commands](docs/commands.md) for runnable setup.
 

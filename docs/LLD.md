@@ -12,6 +12,21 @@ accepts it. Polling reads canonical API events sequentially and stops at normali
 an error, or its attempt limit. It validates response shapes and never invents progress.
 The broader modules and state machine below describe the target system.
 
+The durable adapter uses owner issuer/subject predicates and SQL uniqueness for idempotency.
+Dollar values use fixed two-decimal canonical serialization, preserving equality between
+`5`, `5.0` and `5.00`. Run creation and its first event commit together. An actual LangGraph
+PostgresSaver persists execution before the adapter publishes the normalized state and event
+in a second canonical transaction. A checked checkpoint can repair a lost publication.
+Short row locks are suitable for this pure normalization step; later model calls require a
+durable lease/worker protocol. API blocking work has eight admission slots and rejects overload.
+
+The token verifier accepts only fixed-pool RS256 access tokens. It requires issuer, subject,
+expiry, issue time, client and token-use claims; only configured scopes grant capabilities.
+Its signing-key cache holds up to 16 keys for 300 seconds, refreshes at most once per 30 seconds,
+and bounds raw responses to 64 KiB. HTTP operations have three-second timeouts with an elapsed
+stream check at five seconds; this is not an exact preemptive total deadline. Fresh cached
+keys may work during provider outage, but expired keys never bypass refresh failure.
+
 ## 1. Domain modules
 
 ```text

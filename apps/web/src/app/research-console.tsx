@@ -135,7 +135,11 @@ export default function ResearchConsole() {
           <span className="local-dot" />
           <strong>Local workspace</strong>
           <p>
-            In-memory runs. Restarting the API clears this session’s records.
+            {run?.storage === "postgres"
+              ? "Runs are saved in PostgreSQL and survive API restarts."
+              : run?.storage === "memory"
+                ? "In-memory runs. Restarting the API clears these records."
+                : "Submit an idea to see its state and storage details."}
           </p>
         </div>
       </aside>

@@ -1,6 +1,7 @@
 # Results
 
-The local browser/API flow is implemented. There are no completed research benchmarks yet.
+The browser/API brief flow, PostgreSQL persistence and actual LangGraph recovery are implemented.
+There are no completed research benchmarks yet.
 The target architecture in the design documents must not be interpreted as measured behavior.
 
 | Measure | Evidence status |
@@ -16,7 +17,12 @@ The target architecture in the design documents must not be interpreted as measu
 Engineering smoke tests establish package/build correctness only. Synthetic fixtures will be
 reported separately from published-factor replication. Missing measurements are not zero scores.
 
-Current engineering validation includes 22 Python tests and 9 Bun tests, plus four Playwright
-cases covering real API submission and interrupted-request recovery on desktop and mobile.
-The foundation and API commits passed the hosted Linux quality workflow. Browser evidence is
-recorded by the workflow artifact upload; these are development checks rather than research benchmarks.
+Current local engineering validation includes 126 Python tests with 96.99% combined coverage,
+including real PostgreSQL failure/restart tests, RSA verification and cancellation checks.
+Nine Bun tests cover browser response/retry handling. Desktop/mobile Playwright checks exercise
+real API submission and interrupted-request recovery. Workflow artifacts preserve browser evidence.
+
+The foundation, browser and PostgreSQL commits passed hosted Linux CI. An authentication test
+exposed a platform-dependent parser assumption; an explicit header-size bound replaced that
+assumption and passed the follow-up Linux run. Live Cognito, S3 and deployment have
+not been demonstrated. These engineering checks do not measure research quality.

@@ -36,8 +36,33 @@ uv run uvicorn factorforge.api.app:app --host 127.0.0.1 --port 8001 --no-proxy-h
 
 PowerShell: `$env:FACTORFORGE_MODE = 'local'`. POSIX shell: `export FACTORFORGE_MODE=local`.
 Open `http://127.0.0.1:8001/docs` for the implemented OpenAPI contract.
-The local store is bounded and in memory; restarting the API removes its runs.
+The default local store is bounded and in memory; restarting the API removes its runs.
 The only implemented transition is receipt to deterministic brief normalization.
+
+## Durable storage and identity
+
+For local durable runs, also set `FACTORFORGE_STORAGE=postgres` and `RDS_DSN` to a dedicated
+database named `factorforge` or `factorforge_*`. Use an application role, not a superuser.
+Startup initializes the `factorforge` and `factorforge_checkpoints` schemas. The driver
+uses bounded connections and timeouts. PostgreSQL 16 is exercised in CI.
+
+Run the same API command. `/ready` reports identity mode and storage separately. Durable
+receipts and checkpoints survive restart; pending receipts are reconciled in bounded batches.
+Do not point this setup at an unrelated shared database. No `.env` file is loaded implicitly.
+
+For the authenticated API, set `FACTORFORGE_MODE=cognito`, `RDS_DSN`, `AWS_REGION`,
+`COGNITO_USER_POOL_ID` and `COGNITO_CLIENT_ID`. Configure Cognito resource scopes
+`factorforge/create` and `factorforge/read`, and supply an access token in `Authorization: Bearer ...`.
+`FACTORFORGE_ALLOWED_ORIGIN` sets one exact browser origin; `COGNITO_AUDIENCE` optionally
+requires a resource-bound audience in addition to the access-token client check.
+`FACTORFORGE_ENV` is a deployment label and never enables local identity.
+
+Live Cognito and browser sign-in are not configured in the development evidence. The browser
+currently targets the loopback API in local identity mode with either storage adapter.
+
+Real database tests require a separate `FACTORFORGE_TEST_DSN` pointing to a dedicated
+`factorforge_test_*` database. Tests never fall back to `RDS_DSN`; absent test storage is
+reported as skipped locally, while CI provisions it explicitly. Run `uv run pytest tests/integration`.
 
 ## Local browser
 

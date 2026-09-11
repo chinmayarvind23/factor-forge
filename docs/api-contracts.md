@@ -1,10 +1,15 @@
 # API Contracts
 
-Implemented local surface: health, readiness, run creation and run lookup. The remaining
+Implemented surface: health, readiness, run creation and owner-scoped run lookup. The remaining
 operations below are design contracts. Local mode requires `FACTORFORGE_MODE=local`, a
 loopback peer and host, and either no Origin (CLI) or `http://127.0.0.1:3001` (browser).
 Launch Uvicorn with `--no-proxy-headers` so forwarded headers cannot supply the peer identity.
-Local records are ephemeral; this surface is not production authentication.
+Storage is configured separately: `FACTORFORGE_STORAGE=memory` is ephemeral;
+`postgres` uses `RDS_DSN`, canonical records and actual LangGraph checkpoints. Database failure
+never falls back to memory. `FACTORFORGE_MODE=cognito` requires durable storage and a verified
+RS256 access token from the configured pool/client. API scopes are `factorforge/create` and
+`factorforge/read`; missing capability returns 403, invalid credentials 401, and foreign/unknown
+run IDs both return 404. No live Cognito session has been demonstrated yet.
 Requests larger than 16 KiB return a typed 413 `REQUEST_TOO_LARGE` response before JSON parsing.
 
 ## Principles
@@ -20,7 +25,7 @@ Requests larger than 16 KiB return a typed 413 `REQUEST_TOO_LARGE` response befo
 
 ### POST `/api/v1/research-runs`
 
-Requires `Idempotency-Key` (1-128 letters, digits, underscores or hyphens). A repeated key
+Requires `Idempotency-Key` (1-128 letters, digits, underscores or hyphens). Within an owner, a repeated key
 and identical validated request returns the same 202 receipt. Different input with the same
 key returns 409 `IDEMPOTENCY_CONFLICT`. The idea is 3-4000 characters after stripping outer
 whitespace; cost must be positive and at most $100 with at most two decimal places; wall time
@@ -49,7 +54,8 @@ Response:
 Returns state, progress, current budget, terminal reason, and authorized artifact links.
 
 The local skeleton currently returns the original idea, a normalized `brief` string, the
-three `max_*` budget fields, `created_at`, `mode: "local"`, and an `events` array containing
+three `max_*` budget fields, `created_at`, identity `mode` (`local` or `cognito`), storage
+(`memory` or `postgres`), and an `events` array containing
 `status` and `created_at`. It stops at `BRIEF_NORMALIZED`; no research verdict is produced.
 
 ### POST `/api/v1/research-runs/{run_id}/cancel`

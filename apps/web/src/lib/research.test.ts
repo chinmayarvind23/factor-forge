@@ -89,6 +89,7 @@ test("reads the normalized brief and ordered events", async () => {
     status: "BRIEF_NORMALIZED",
     brief: payload.idea,
     mode: "local",
+    storage: "memory",
     created_at: "2026-09-11T12:00:00Z",
     events: [
       { status: "RECEIVED", created_at: "2026-09-11T12:00:00Z" },
@@ -96,6 +97,16 @@ test("reads the normalized brief and ordered events", async () => {
     ],
   };
   expect(await readRun(id, async () => Response.json(run))).toEqual(run);
+  expect(
+    (
+      await readRun(id, async () =>
+        Response.json({ ...run, storage: "postgres" }),
+      )
+    ).storage,
+  ).toBe("postgres");
+  await expect(
+    readRun(id, async () => Response.json({ ...run, storage: "unknown" })),
+  ).rejects.toThrow("invalid run state");
   await expect(
     readRun(id, async () => Response.json({ ...run, brief: null })),
   ).rejects.toThrow("inconsistent research timeline");
@@ -110,9 +121,9 @@ test("rejects a receipt served with an unexpected HTTP status", async () => {
   ).rejects.toThrow("unexpected response status");
 });
 
-/** A lost local run is recoverable as a new research request, not as fake progress. */
-test("missing runs explain the local restart limitation", async () => {
+/** A missing run cannot establish whether storage was ephemeral or access was denied. */
+test("missing runs describe only the unavailable workspace record", async () => {
   await expect(
     readRun(id, async () => new Response(null, { status: 404 })),
-  ).rejects.toThrow("cleared when the API restarts");
+  ).rejects.toThrow("unavailable in the current workspace");
 });
