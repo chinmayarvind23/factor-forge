@@ -75,7 +75,7 @@ confirmed `linux/amd64`, image creation time `2026-09-01T00:12:40.129211396Z` an
 33 vulnerabilities across 13 packages: 25 low, seven medium and one high. The scan exited
 two with no requested severity or suppression filters. The [saved finding inventory](../reports/security/python-sandbox-image-v1.json)
 binds the image, timestamp and raw SARIF hash. Debian's [CVE-2026-85091 tracker](https://security-tracker.debian.org/tracker/CVE-2026-85091)
-lists the installed zlib source version as vulnerable and unfixed. Seven pip findings list
+lists the installed zlib source version as vulnerable and unfixed. Six pip findings list
 fixed versions. Image remediation remains open; runtime acceptance does not clear these findings.
 
 The [local operator runner](sandbox.md) now verifies source bytes, stages private inputs,
