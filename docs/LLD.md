@@ -37,6 +37,11 @@ source extraction. The command binds source and prompt identity; restart recover
 observation without another provider call. Unknown dollar charges retain reserved capacity,
 and the original wall allowance is propagated as a fixed monotonic HTTP deadline.
 
+`retrieval/selection.py` binds bounded literature metadata to exact source packets.
+`orchestration/research_sources.py` uses the canonical idea to rank those entries and
+execute up to three durable extraction operations, retaining the ranking and all typed
+outcomes in a [source-stage artifact](research-sources.md).
+
 The independent literature path uses `domain/literature.py` and `retrieval/lexical.py` for
 immutable documents and bounded BM25 ranking. `evaluation/retrieval.py` requires complete binary
 judgments and separates answerable and no-relevant query denominators; its CLI archives the

@@ -10,6 +10,7 @@ from test_postgres_runs import store as store
 
 from factorforge.auth.principal import Principal
 from factorforge.data.artifacts import ArtifactStore, LocalArtifactStore
+from factorforge.domain.literature import PaperDocument
 from factorforge.domain.research_brief import ResearchBrief
 from factorforge.orchestration.extraction_worker import (
     ExtractionCommand,
@@ -17,8 +18,10 @@ from factorforge.orchestration.extraction_worker import (
 )
 from factorforge.orchestration.postgres_budgets import read_budget
 from factorforge.orchestration.postgres_runs import PostgresRunStore
+from factorforge.orchestration.research_sources import research_sources
 from factorforge.providers.ollama import GenerationRequest, GenerationResult
 from factorforge.retrieval.extraction import SourcePacket, SourcePage
+from factorforge.retrieval.selection import LiteratureCatalog, LiteratureEntry
 
 
 @pytest.mark.parametrize("delivered", [True, False])
@@ -103,3 +106,69 @@ def test_extraction_delivery_is_recorded_once(
             assert len(calls) == 1
         finally:
             replacement.close()
+
+
+def test_canonical_idea_selects_and_replays_three_packets(
+    store: PostgresRunStore, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Real ranking and durable workers compose without repeating the controlled provider calls."""
+    calls = []
+
+    class Provider:
+        """Controlled delivery isolates the source-stage orchestration from model quality."""
+
+        def __init__(self, *, deadline: float) -> None:
+            """Require the original run's time allowance."""
+            assert deadline > 0
+
+        def generate(
+            self, request: GenerationRequest, artifacts: ArtifactStore
+        ) -> GenerationResult:
+            """Retain every selected source's explicit provider outcome."""
+            calls.append(request)
+            return GenerationResult(
+                status="unavailable",
+                content=None,
+                record=artifacts.put(b"{}", media_type="application/json"),
+            )
+
+    monkeypatch.setattr("factorforge.orchestration.extraction_worker.OllamaProvider", Provider)
+    owner = Principal("fixture", "owner", frozenset({"execute_research"}))
+    run = store.create(ResearchBrief(idea="momentum"), "one", owner)
+    with TemporaryDirectory() as directory:
+        artifacts = LocalArtifactStore(Path(directory))
+        page = artifacts.put(b"An original momentum strategy description.", media_type="text/plain")
+        entries = []
+        for identifier in ("d", "c", "b", "a"):
+            entries.append(
+                LiteratureEntry(
+                    document=PaperDocument(
+                        paper_id=identifier,
+                        title="momentum",
+                        text="momentum",
+                        source_url="https://example.org/original",
+                        source_sha256="a" * 64,
+                        content_kind="original_summary",
+                        source_version="v1",
+                    ),
+                    source=SourcePacket(
+                        paper_id=identifier,
+                        source_sha256="a" * 64,
+                        selected_strategy="momentum",
+                        pages=(SourcePage(pdf_page=1, artifact=page),),
+                    ),
+                )
+            )
+        catalog = LiteratureCatalog(entries=tuple(entries))
+        result = research_sources(
+            store, run.run_id, owner, catalog, artifacts, max_cost_per_source_microusd=1000000
+        )
+        assert [source.paper_id for source in result.selection.sources] == ["a", "b", "c"]
+        assert len(result.extractions) == len(calls) == 3
+        assert (
+            research_sources(
+                store, run.run_id, owner, catalog, artifacts, max_cost_per_source_microusd=1000000
+            )
+            == result
+        )
+        assert len(calls) == 3 and len(read_budget(store, run.run_id, owner).operations) == 3
