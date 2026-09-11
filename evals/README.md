@@ -1,0 +1,47 @@
+# FactorForge evaluation layers
+
+The current custom offline slice freezes ten original direction examples in
+`cases/custom/direction-v1.json`. They cover both directions, quintile interpretation,
+signed scores, missing direction, a missing short leg, strategy selection, an embedded
+instruction, contradictory rules and negation. Case IDs are neutral. Gold labels and
+support anchors are evaluator-only fields; runtime requests contain selected strategy
+and source pages only.
+
+The rubric reports direction correctness, cited support and their conjunction. On an
+explicit-direction case, the quote must occur on the source page and contain all
+predeclared support anchors. On an ambiguous case, an actual uncertain observation
+with no guessed direction/quote is required. Provider failure does not earn abstention
+credit. Anchor inclusion is a conservative original-case rubric, not general semantic
+entailment or published-factor accuracy.
+
+```powershell
+uv run python evals/runner.py --artifacts artifacts/direction-eval --output artifacts/direction-eval/run.jsonl
+uv run python evals/ci_gate.py --baseline baseline.json --candidate candidate.json
+```
+
+The runner uses the fixed source-only reviewer, existing local model profile and one
+600-second provider allowance. It creates an exclusive journal before inference and
+retains each case grade and provider evidence before advancing. Reusing the journal
+path refuses another run. Model outcomes remain separate from execution-path tests.
+The comparator requires the same suite reference and ordered case IDs and rejects a
+relative pass-count regression of at least five percent. It consumes saved evaluation
+JSON and starts no model. Unit CI exercises the grader and comparator; automated model
+score gating awaits a reviewed baseline artifact distribution path.
+
+Layer status:
+
+- Static release benchmarks: the planned 15 reproduction / 15 synthesis / 15 adversarial
+  cases remain a separate release deliverable; these original examples do not replace them.
+- Custom offline: direction/citation rubric and frozen cases implemented. Existing real
+  PostgreSQL tests verify dispatch, replay, amendments, budget effects and reports. A
+  calibrated source-grounded LLM judge and a general optimizer loop remain future work.
+- Online: retained operator replays and provider cost/latency records exist. OTel GenAI
+  spans, guardrail alerts and production evaluation aggregation remain future work.
+
+The first live direction-suite run establishes its baseline after this case/rubric
+freeze. Do not alter labels or support anchors in response to that run. Results and
+complete provider evidence are retained outside the repository by the operator.
+
+What to read next: [observability](../docs/observability.md) for the span substrate,
+[failure modes](../docs/failure-modes.md) for coverage, and
+[research reports](../docs/research-reports.md) for evidence-based execution summaries.

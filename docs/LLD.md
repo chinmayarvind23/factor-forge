@@ -1,5 +1,9 @@
 # FactorForge Low-Level Design
 
+The [direction development evaluation](../evals/README.md) separates model inputs from
+gold direction/support labels, journals each case, and compares matching saved evaluations
+with an explicit regression threshold. Its ten original cases are not release benchmarks.
+
 `report_export.py` shares deterministic local export between the offline command and
 operator `--report`. `ResearchCompletion` binds the full request, result, settled ledger
 snapshot and report artifacts without adding research operations or changing request IDs.
