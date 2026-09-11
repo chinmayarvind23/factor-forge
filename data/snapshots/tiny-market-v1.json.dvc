@@ -1,0 +1,5 @@
+outs:
+- md5: efb091859b54b8ad4a96c201f36c099c
+  size: 8761
+  hash: md5
+  path: tiny-market-v1.json
