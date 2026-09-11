@@ -22,6 +22,13 @@ retains raw source pages, a versioned whitespace transform, prepared prompt and 
 `domain/formula.py` interprets a closed arithmetic grammar without executing Python. See the
 [extraction contract](extraction-contract.md) and [formula language](formula-language.md).
 
+`domain/factors.py` binds required strategy policies and data roles in immutable, revalidated
+contracts. It checks closed formula names, units, temporal operators and declared history.
+`factors/hypotheses.py` verifies bounded artifacts and manifest compatibility before ranking
+up to 64 hypotheses. It retains blockers and exact-execution duplicates. Queue admission is
+declared-contract and artifact readiness only; actual rows, accounting and sandbox admission
+remain later gates. See the [factor contract](factor-contract.md).
+
 The durable adapter uses owner issuer/subject predicates and SQL uniqueness for idempotency.
 Dollar values use fixed two-decimal canonical serialization, preserving equality between
 `5`, `5.0` and `5.00`. Run creation and its first event commit together. An actual LangGraph

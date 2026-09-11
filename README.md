@@ -12,6 +12,8 @@ A BM25 literature baseline has a frozen three-paper evaluation, including failed
 cases. Strict source extraction and bounded arithmetic preserve model attempts and validate
 their structure. A frozen three-paper development pilot matched 11 of 27 critical fields,
 with no complete nine-field matches; release FactorSpec accuracy remains unmeasured.
+Strict factor contracts and a hypothesis queue now check declared choices and artifact
+readiness while retaining blocked drafts and duplicate candidates.
 The API verifies Cognito access tokens and isolates runs by owner; live Cognito configuration
 and browser sign-in remain pending. The complete research loop described below remains
 the target design. Release benchmark metrics are unmeasured; see

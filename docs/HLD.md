@@ -20,9 +20,14 @@ The literature development path now runs an in-process BM25 baseline over versio
 and records a frozen pilot's per-query results. A separate one-shot local model adapter archives
 source packets, prompts, delivery and extraction outcomes. This path has no tools or authority
 to execute paper instructions. It is not yet connected to the API's durable research loop.
-The [results](results.md) distinguish measured retrieval behavior and protocol probes from
-unmeasured extraction accuracy and factor replication. Elasticsearch and dense retrieval remain
+The [results](results.md) distinguish development retrieval and critical-field extraction pilots
+from unmeasured release accuracy and factor replication. Elasticsearch and dense retrieval remain
 planned comparisons under ADR-006.
+
+Strict factor contracts and a deterministic hypothesis queue now check declared strategy
+choices and artifact readiness. Drafts with unresolved questions remain blocked; exact duplicate
+execution contracts remain visible without entering the queue twice. These in-process checks
+do not yet execute a portfolio. The [factor contract](factor-contract.md) defines their scope.
 
 ## Logical planes
 
