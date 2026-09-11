@@ -11,7 +11,9 @@ from factorforge.data.artifacts import ArtifactStore
 from factorforge.evaluation.directions import (
     DirectionEvaluation,
     DirectionGrade,
+    DirectionProfile,
     DirectionSuite,
+    direction_prompt,
     evaluate_directions,
     grade_direction,
 )
@@ -113,7 +115,8 @@ def test_saved_score_edits_cannot_change_the_gate() -> None:
         verify_grades(cases, baseline.model_copy(update={"grades": (edited,)}))
 
 
-def test_gold_changes_do_not_change_the_model_request() -> None:
+@pytest.mark.parametrize("profile", ["baseline", "complete-evidence-v1"])
+def test_gold_changes_do_not_change_the_model_request(profile: DirectionProfile) -> None:
     """Labels affect grading only, even when a deliberately changed label disagrees with source."""
     store = MemoryStore()
     first = suite().cases[0]
@@ -127,6 +130,7 @@ def test_gold_changes_do_not_change_the_model_request() -> None:
         ) -> GenerationResult:
             """Record the prompt and return a source-based observation independent of gold."""
             calls.append(request)
+            assert request.system == direction_prompt(profile)
             assert set(json.loads(request.user)) == {"selected_strategy", "pages"}
             return GenerationResult(
                 status="success",
@@ -141,9 +145,13 @@ def test_gold_changes_do_not_change_the_model_request() -> None:
                 ),
             )
 
-    original = list(evaluate_directions(DirectionSuite(cases=(first,)), Provider(), store))
+    original = list(
+        evaluate_directions(DirectionSuite(cases=(first,)), Provider(), store, profile=profile)
+    )
     changed = first.model_copy(update={"expected_direction": "long_low_short_high"})
-    alternate = list(evaluate_directions(DirectionSuite(cases=(changed,)), Provider(), store))
+    alternate = list(
+        evaluate_directions(DirectionSuite(cases=(changed,)), Provider(), store, profile=profile)
+    )
     assert calls[0] == calls[1] and original[0].passed and not alternate[0].passed
 
 

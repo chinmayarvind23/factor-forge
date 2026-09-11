@@ -5,16 +5,18 @@ import hashlib
 import json
 import time
 from pathlib import Path
+from typing import cast
 
 from factorforge.data.artifacts import LocalArtifactStore
 from factorforge.evaluation.directions import (
     DirectionEvaluation,
+    DirectionProfile,
     DirectionSuite,
+    direction_prompt,
     evaluate_directions,
 )
 from factorforge.orchestration.research_strategies import _publish
 from factorforge.providers.ollama import OllamaProvider
-from factorforge.retrieval.direction_review import REVIEW_PROMPT
 
 
 def main() -> None:
@@ -25,6 +27,9 @@ def main() -> None:
     )
     parser.add_argument("--artifacts", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--profile", choices=("baseline", "complete-evidence-v1"), default="baseline"
+    )
     args = parser.parse_args()
     with args.cases.open("rb") as source:
         raw = source.read(256 * 1024 + 1)
@@ -33,7 +38,8 @@ def main() -> None:
     suite = DirectionSuite.model_validate_json(raw)
     artifacts = LocalArtifactStore(args.artifacts)
     suite_ref = _publish(suite, artifacts)
-    prompt_sha = hashlib.sha256(REVIEW_PROMPT.encode()).hexdigest()
+    profile = cast(DirectionProfile, args.profile)
+    prompt_sha = hashlib.sha256(direction_prompt(profile).encode()).hexdigest()
     with args.output.open("xb") as journal:
         journal.write(
             json.dumps(
@@ -41,6 +47,7 @@ def main() -> None:
                     "status": "started",
                     "suite": suite_ref.model_dump(mode="json"),
                     "prompt_sha256": prompt_sha,
+                    "profile": profile,
                     "max_wall_seconds": 600,
                 }
             ).encode()
@@ -49,7 +56,7 @@ def main() -> None:
         journal.flush()
         grades = []
         provider = OllamaProvider(deadline=time.monotonic() + 600)
-        for grade in evaluate_directions(suite, provider, artifacts):
+        for grade in evaluate_directions(suite, provider, artifacts, profile=profile):
             grades.append(grade)
             row = {
                 "case_id": grade.case_id,

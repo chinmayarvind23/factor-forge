@@ -45,6 +45,15 @@ The suite was frozen in `33e4e86` before inference; labels and anchors remain un
 See [recorded results](../docs/results.md#original-direction-development-baseline).
 Complete provider evidence is retained outside the repository by the operator.
 
+The optional `--profile complete-evidence-v1` runs a fixed development prompt that
+explicitly requires both trading legs, resolves ranking definitions in the cited excerpt,
+and requests uncertainty for incomplete or conflicting instructions. It uses the same
+model, schema, parser and frozen cases as the baseline. The journal records its profile
+and prompt digest; every case retains the actual request. This profile is an experiment
+and does not change the production reviewer. Use a new output journal for its single
+comparison run. Improvement on these exposed development cases needs separate held-out
+validation before any broader accuracy claim.
+
 What to read next: [observability](../docs/observability.md) for the span substrate,
 [failure modes](../docs/failure-modes.md) for coverage, and
 [research reports](../docs/research-reports.md) for evidence-based execution summaries.
