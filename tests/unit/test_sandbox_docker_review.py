@@ -48,7 +48,13 @@ def daemon_info() -> dict[str, Any]:
 
 def image_info() -> dict[str, Any]:
     """Provide the expected immutable image identity and absence of inherited volumes."""
-    return {"Id": PYTHON_IMAGE, "Os": "linux", "Architecture": "amd64", "Config": {"Volumes": None}}
+    return {
+        "Id": PYTHON_IMAGE,
+        "Os": "linux",
+        "Architecture": "amd64",
+        "Config": {"Volumes": None},
+        "RepoDigests": ["python@" + PYTHON_IMAGE],
+    }
 
 
 def owned_info() -> dict[str, Any]:
@@ -124,7 +130,10 @@ def test_valid_preflight_returns_verified_metadata(
     calls = replies(runtime, monkeypatch, [daemon_info(), [image_info()]])
     result = runtime.preflight(PYTHON_IMAGE)
     assert result == {"daemon": daemon_info(), "image": image_info()}
-    assert calls == [("info", "--format", "{{json .}}"), ("image", "inspect", PYTHON_IMAGE)]
+    assert calls == [
+        ("info", "--format", "{{json .}}"),
+        ("image", "inspect", "python@" + PYTHON_IMAGE),
+    ]
 
 
 @pytest.mark.parametrize(
@@ -244,6 +253,7 @@ def test_create_arguments_are_fixed_and_generated_code_is_not_a_host_command(
             launcher="trusted_launcher()",
         )
     assert args[0] == "create" and args[-2:] == ("-c", "trusted_launcher()")
+    assert args[args.index("--entrypoint") + 2] == "python@" + PYTHON_IMAGE
     for flag, value in [
         ("--network", "none"),
         ("--user", "65532:65532"),
@@ -442,3 +452,45 @@ def test_failed_cleanup_transport_reply_remains_in_evidence(
     assert runtime.cleanup_evidence[0]["reason"] == "timed_out"
     assert runtime.cleanup_evidence[0]["stdout"] == "partial"
     assert runtime.cleanup_evidence[0]["stderr"] == "controller timeout"
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("RepoDigests", None),
+        ("RepoDigests", []),
+        ("RepoDigests", "python@" + PYTHON_IMAGE),
+        ("RepoDigests", {"python@" + PYTHON_IMAGE: True}),
+        ("RepoDigests", ["python@" + PYTHON_IMAGE, None]),
+        ("RepoDigests", ["untrusted@" + PYTHON_IMAGE]),
+        ("RepoDigests", ["python@sha256:" + "0" * 64]),
+        ("Id", None),
+        ("Id", []),
+        ("Id", "sha256:" + "0" * 64),
+        ("Id", "python@" + PYTHON_IMAGE),
+    ],
+)
+def test_image_requires_exact_repository_digest_and_pinned_object_identity(
+    runtime: DockerRuntime, monkeypatch: pytest.MonkeyPatch, field: str, value: object
+) -> None:
+    """Neither a matching repository string nor a matching ID alone establishes image identity."""
+    actual = image_info()
+    actual[field] = value
+    calls = replies(runtime, monkeypatch, [daemon_info(), [actual]])
+    with pytest.raises(ResearchError) as error:
+        runtime.preflight(PYTHON_IMAGE)
+    assert error.value.code == "SANDBOX_IMAGE_INVALID"
+    assert calls[-1] == ("image", "inspect", "python@" + PYTHON_IMAGE)
+
+
+@pytest.mark.parametrize("field", ["RepoDigests", "Id"])
+def test_missing_image_identity_is_typed_invalid(
+    runtime: DockerRuntime, monkeypatch: pytest.MonkeyPatch, field: str
+) -> None:
+    """Absent required metadata cannot silently substitute the requested digest."""
+    actual = image_info()
+    del actual[field]
+    replies(runtime, monkeypatch, [daemon_info(), [actual]])
+    with pytest.raises(ResearchError) as error:
+        runtime.preflight(PYTHON_IMAGE)
+    assert error.value.code == "SANDBOX_IMAGE_INVALID"

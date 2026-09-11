@@ -4,11 +4,13 @@ import sys
 from collections.abc import Iterator
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Any
 
 import pytest
+from test_sandbox_docker_review import daemon_info
 
 from factorforge.domain.errors import ResearchError
-from factorforge.sandbox.docker import DockerRuntime
+from factorforge.sandbox.docker import PYTHON_IMAGE, DockerRuntime
 
 
 @pytest.fixture
@@ -36,3 +38,31 @@ def test_changed_seccomp_asset_fails_before_create(directory: Path) -> None:
     with pytest.raises(ResearchError) as error:
         runtime.verify_seccomp(profile)
     assert error.value.code == "SANDBOX_POLICY_INVALID"
+
+
+def test_classic_image_store_preserves_manifest_and_config_id_distinction(
+    directory: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """OCI manifest and configuration digests are different pinned objects on classic Docker."""
+    runtime = DockerRuntime(
+        binary=Path(sys.executable), endpoint="unix:///var/run/docker.sock", config=directory
+    )
+    actual: dict[str, Any] = {
+        "Id": "sha256:ec7d6c95cd3692a2e2d228a8b1ca74e4025b54121fcc4c5da6f09cfa473315ad",
+        "Os": "linux",
+        "Architecture": "amd64",
+        "Config": {"Volumes": None},
+        "RepoDigests": ["python@" + PYTHON_IMAGE],
+    }
+    replies = iter((daemon_info(), actual))
+    calls: list[tuple[str, ...]] = []
+
+    def response(args: tuple[str, ...], *, array: bool = False) -> dict[str, Any]:
+        """Supply a classic store identity without invoking or modifying a Docker daemon."""
+        calls.append(args)
+        return next(replies)
+
+    monkeypatch.setattr(runtime, "object", response)
+    assert runtime.preflight(PYTHON_IMAGE)["image"] == actual
+    assert calls[-1] == ("image", "inspect", "python@" + PYTHON_IMAGE)

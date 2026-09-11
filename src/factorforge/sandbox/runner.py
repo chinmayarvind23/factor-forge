@@ -22,6 +22,7 @@ from factorforge.sandbox.staging import staged_inputs
 CODE_MODULES = (
     "factorforge",
     "factorforge.sandbox.runner",
+    "factorforge.sandbox.command",
     "factorforge.sandbox.docker",
     "factorforge.sandbox.staging",
     "factorforge.sandbox.process",

@@ -87,7 +87,7 @@ src/factorforge/
   domain/
     research_brief.py
     factor_spec.py
-    experiment.py
+    experiments.py
     result.py
     verdict.py
     lineage.py
@@ -147,8 +147,10 @@ src/factorforge/
     hashes.py
     evidence.py
   sandbox/
-    spec.py
-    local_docker.py
+    staging.py
+    docker.py
+    process.py
+    runner.py
     k8s_job.py
     policy.py
   telemetry/
@@ -201,23 +203,26 @@ class Hypothesis(BaseModel):
 ```
 
 ```python
-class ExperimentSpec(BaseModel):
-    experiment_id: str
+class ExperimentSpec(Contract):
+    schema_version: Literal["experiment-spec-v1"]
+    experiment_id: UUID
     run_id: UUID
-    hypothesis_id: str
-    factor_spec_version: str
-    dataset_version: str
-    engine: Literal["polars", "lean", "spark", "r"]
-    code_sha256: str
-    config: dict[str, JsonValue]
-    seeds: list[int]
-    timeout_s: int
-    memory_mb: int
-    cpu_limit: float
-    network_policy: Literal["none", "approved_only"]
-    required_metrics: list[str]
-    idempotency_key: str
+    owner_issuer: str
+    owner_subject: str
+    factor_spec_sha256: Digest
+    code: ArtifactRef
+    config: ArtifactRef
+    input_refs: tuple[ArtifactRef, ...]
+    seed: int
+    engine: Literal["python"]
+    profile: Literal["python-bounded-v1"]
 ```
+
+This abbreviated schema reflects the implemented internal experiment request; production
+validators bound every field and inventory. Fixed server policy supplies resource limits
+and image identity separately. Requests cannot select a daemon, image, path, command,
+environment or network override. Run ownership lookup and FactorSpec hash resolution are
+still trusted-caller admission work. See the [sandbox contract](sandbox.md).
 
 ```python
 class ResearchVerdict(BaseModel):
@@ -372,7 +377,42 @@ raw signal
 
 No LLM performs return accounting.
 
-## 10. LEAN verifier
+## 9a. Implemented local Python sandbox
+
+`domain/experiments.py` separates a strict experiment request, fixed declared policy,
+verified-input admission and controller-reported terminal result. `sandbox/policy.py`
+reconstructs the principal, requires `execute_experiment` and exact owner issuer/subject
+before artifact reads, and checks canonical allowlisted image identity and actual bytes.
+Existing browser/Cognito permissions do not gain execution capability.
+
+`sandbox/staging.py` revalidates admission and rereads at most 16 MiB of unique source
+bytes before creating a private random bundle. Fixed code/config/input paths and an
+inventory bind roles to references. POSIX permissions and protected Windows owner/SYSTEM
+ACLs protect the private outer directory; the container receives its readonly mount root.
+Pinned ancestors, exclusive file creation and identity-checked leaf cleanup avoid following
+symlinks/reparse replacements or recursively deleting an untrusted path.
+
+`sandbox/docker.py` targets an explicitly configured local daemon and one Linux/amd64
+stdlib Python image by immutable identity. It checks cgroup/resource prerequisites,
+builds fixed arguments and verifies the effective container before code starts. Required
+controls include UID/GID65532, readonly root/input, private namespaces, one CPU, 512 MiB
+memory with no additional swap, 64 PIDs, bounded tmpfs and the pinned no-network seccomp
+asset. The [sandbox profile](sandbox.md) records exact settings and compatibility limits.
+
+`sandbox/process.py` bounds controller process output and elapsed calls. Its termination
+does not prove that Docker stopped a container. `sandbox/runner.py` retains start/code/
+environment references before creation, checks mounted bytes again in the container,
+captures bounded stdout/stderr and separately verifies nonce-owned cleanup. A successful
+process is an execution observation; economic correctness needs an independent validator.
+
+When container removal remains uncertain, a once-evaluated staging cleanup callback keeps
+the entire private bundle and closes handles. A failed callback also retains inputs.
+An indeterminate create cannot become confirmed cleanup merely because a later listing is
+empty. Automatic reconciliation after controller crashes and canonical run/FactorSpec
+admission are unfinished. The initial arithmetic smoke supports Windows bind readability
+and observed exit/cleanup; the full denial/resource probe suite remains separate work.
+
+## 10. LEAN verifier (planned)
 
 LEAN runs through a separate service boundary because it has its own runtime and engine semantics and promoted strategies need independent implementation.
 
