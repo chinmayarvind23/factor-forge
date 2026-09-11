@@ -6,7 +6,11 @@ from tempfile import TemporaryDirectory
 import pytest
 
 from factorforge.orchestration.command import OperatorRequest, main
-from factorforge.orchestration.research_experiments import ExperimentPlan, ReviewedExperimentPlan
+from factorforge.orchestration.research_experiments import (
+    ExperimentPlan,
+    IterativeExperimentPlan,
+    ReviewedExperimentPlan,
+)
 from infra.research.prepare_original import main as prepare_original
 
 
@@ -23,22 +27,25 @@ def test_invalid_request_returns_safe_error(capsys: pytest.CaptureFixture[str]) 
     assert "private-test-content" not in captured.err
 
 
-@pytest.mark.parametrize("review", [False, True])
+@pytest.mark.parametrize("version", [1, 2, 3])
 def test_original_preparation_preserves_versioned_request(
-    monkeypatch: pytest.MonkeyPatch, review: bool
+    monkeypatch: pytest.MonkeyPatch, version: int
 ) -> None:
-    """Both operator plan versions round-trip exactly and refuse replacement of saved evidence."""
+    """All operator plan versions round-trip exactly and refuse replacement of saved evidence."""
     with TemporaryDirectory() as directory:
         path = Path(directory) / "request.json"
         args = ["prepare", "--request", str(path), "--artifacts", str(Path(directory) / "objects")]
-        if review:
-            args.append("--direction-review")
+        if version > 1:
+            args.append("--direction-review" if version == 2 else "--direction-revision")
         monkeypatch.setattr("sys.argv", args)
         prepare_original()
         raw = path.read_bytes()
         request = OperatorRequest.model_validate_json(raw)
         assert request.canonical_bytes() == raw
-        assert isinstance(request.plan, ReviewedExperimentPlan if review else ExperimentPlan)
+        assert isinstance(
+            request.plan,
+            {1: ExperimentPlan, 2: ReviewedExperimentPlan, 3: IterativeExperimentPlan}[version],
+        )
         if isinstance(request.plan, ReviewedExperimentPlan):
             assert request.plan.max_cost_per_review_microusd == 1000000
         with pytest.raises(FileExistsError):

@@ -42,3 +42,10 @@ inventory shape plus the review policy and candidate-indexed review references.
 Only supported matching judgments proceed; other judgments remain explicit skipped
 outcomes, with both original extraction and review evidence retained. Existing
 version-one requests retain their canonical identities and replay behavior.
+
+`IterativeExperimentPlan` (`research-experiment-plan-v3`) wraps the reviewed plan and
+adds an explicit per-revision allowance. The fixed policy permits one revision per
+supported disagreement. A source-supported amendment gets a distinct monthly command;
+its artifact retains the original draft and every judgment. The version-three result
+adds candidate-indexed amendment references. Uncertainty and continued disagreement
+retain held outcomes; changing plans never resets the original run's budgets.

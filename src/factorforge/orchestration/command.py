@@ -17,6 +17,7 @@ from factorforge.domain.research_brief import ResearchBrief
 from factorforge.orchestration.postgres_runs import PostgresRunStore
 from factorforge.orchestration.research_experiments import (
     ExperimentPlan,
+    IterativeExperimentPlan,
     ReviewedExperimentPlan,
     research_experiments,
 )
@@ -33,7 +34,9 @@ class OperatorRequest(Contract):
     """A complete retained brief and plan define the operator's stable idempotency key."""
 
     brief: ResearchBrief
-    plan: ExperimentPlan | ReviewedExperimentPlan = Field(discriminator="schema_version")
+    plan: ExperimentPlan | ReviewedExperimentPlan | IterativeExperimentPlan = Field(
+        discriminator="schema_version"
+    )
 
 
 def _request(path: Path) -> OperatorRequest:

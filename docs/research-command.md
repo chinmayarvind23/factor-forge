@@ -28,6 +28,13 @@ additional maximum allowance of one USD per selected compiled candidate; actual 
 model dollar cost remains unknown. A disagreement retains both observations and holds
 the candidate without dispatching its monthly experiment.
 
+Use `--direction-revision` during preparation for version-three scheduling. This implies
+direction review and permits one additional source-reading attempt per conflicting
+candidate. If the revision supports the reviewed direction, a separately retained
+amendment can proceed to monthly execution. The prepared plan reserves up to one
+additional USD for revision; all three model calls remain subject to the original
+brief budget and deadline. Local dollar cost remains unknown. Use a new request path.
+
 The recorded development trial reached extraction, compilation and monthly execution.
 Its model reversed the source's long/short direction; the borrow-availability rule
 stopped execution and retained that outcome. All 49 reachable artifact references

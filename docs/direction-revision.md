@@ -29,6 +29,15 @@ and revision records to lineage. Formula, timing, data, costs and funding remain
 The original draft and all judgments are retained in the amendment. Unsupported
 revision evidence or continued disagreement produces an explicit held result.
 
-The bounded scheduler revision policy and amendment publication are the next integration
-steps. Version-two scheduling continues to hold disagreements. No live revision accuracy
-claim follows from controlled tests.
+`IterativeExperimentPlan` (`research-experiment-plan-v3`) wraps the reviewed plan with
+a revision allowance and the fixed `one-direction-revision-v1` policy. A supported
+review disagreement triggers at most one separately reserved revision. A compiled
+amendment proceeds through the same monthly graph, with its own immutable command.
+Uncertainty or continued disagreement stays held. Budget rejection produces
+`budget_stopped`; unresolved operations still require reconciliation.
+
+The v3 result retains indexed review and amendment artifacts, original source-stage
+evidence and ordered monthly/HAC outcomes. Replay recomputes deterministic compilation
+and recovers settled model/experiment operations. It cannot reset the original run's
+budget or repeat a revision delivery. No live revision accuracy claim follows from
+controlled tests. Existing v1/v2 requests preserve their byte identities and policies.

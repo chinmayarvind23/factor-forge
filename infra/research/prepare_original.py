@@ -11,7 +11,11 @@ from factorforge.domain.literature import PaperDocument
 from factorforge.domain.raw_strategy import RawStrategySpec
 from factorforge.domain.research_brief import ResearchBrief
 from factorforge.orchestration.command import OperatorRequest
-from factorforge.orchestration.research_experiments import ExperimentPlan, ReviewedExperimentPlan
+from factorforge.orchestration.research_experiments import (
+    ExperimentPlan,
+    IterativeExperimentPlan,
+    ReviewedExperimentPlan,
+)
 from factorforge.orchestration.research_strategies import ReviewedStrategyBinding
 from factorforge.retrieval.extraction import SourcePacket, SourcePage
 from factorforge.retrieval.selection import LiteratureCatalog, LiteratureEntry
@@ -23,6 +27,7 @@ def main() -> None:
     parser.add_argument("--artifacts", type=Path, required=True)
     parser.add_argument("--request", type=Path, required=True)
     parser.add_argument("--direction-review", action="store_true")
+    parser.add_argument("--direction-revision", action="store_true")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
     artifacts = LocalArtifactStore(args.artifacts)
@@ -71,12 +76,20 @@ def main() -> None:
             hac_correction="none",
         ),
     )
-    if args.direction_review:
+    if args.direction_review or args.direction_revision:
         assert isinstance(request.plan, ExperimentPlan)
         request = OperatorRequest(
             brief=request.brief,
             plan=ReviewedExperimentPlan(
                 execution=request.plan, max_cost_per_review_microusd=1000000
+            ),
+        )
+    if args.direction_revision:
+        assert isinstance(request.plan, ReviewedExperimentPlan)
+        request = OperatorRequest(
+            brief=request.brief,
+            plan=IterativeExperimentPlan(
+                execution=request.plan, max_cost_per_revision_microusd=1000000
             ),
         )
     args.request.parent.mkdir(parents=True, exist_ok=True)

@@ -14,9 +14,14 @@ from factorforge.domain.artifacts import ArtifactRef
 from factorforge.domain.errors import ResearchError
 from factorforge.domain.factors import Contract
 from factorforge.domain.performance import Instant, Positive
+from factorforge.factors.direction_amendment import DirectionAmendmentRequest, amend_direction
 from factorforge.orchestration.direction_review_worker import (
     DirectionReviewCommand,
     execute_direction_review_operation,
+)
+from factorforge.orchestration.direction_revision_worker import (
+    DirectionRevisionCommand,
+    execute_direction_revision_operation,
 )
 from factorforge.orchestration.monthly_graph import MonthlyExperimentGraph
 from factorforge.orchestration.monthly_worker import recover_monthly_operation
@@ -26,6 +31,7 @@ from factorforge.orchestration.research_strategies import (
     _publish,
     research_strategies,
 )
+from factorforge.retrieval.direction_revision import DirectionRevisionRequest
 from factorforge.retrieval.selection import LiteratureCatalog
 from factorforge.validation.monthly import MonthlyHACRequest, validate_monthly_hac
 
@@ -75,6 +81,22 @@ class CandidateDirectionReview(Contract):
     agrees: bool
 
 
+class IterativeExperimentPlan(Contract):
+    """A separate plan identity permits one recorded direction revision per compiled candidate."""
+
+    schema_version: Literal["research-experiment-plan-v3"] = "research-experiment-plan-v3"
+    execution: ReviewedExperimentPlan
+    max_cost_per_revision_microusd: Annotated[int, Field(ge=1, le=100000000)]
+    policy: Literal["one-direction-revision-v1"] = "one-direction-revision-v1"
+
+
+class CandidateDirectionAmendment(Contract):
+    """An amendment reference retains the original draft, conflict, revision and new draft."""
+
+    candidate_index: Annotated[int, Field(ge=0, le=2)]
+    amendment: ArtifactRef
+
+
 class ResearchExperiments(Contract):
     """Retain the exact plan, source-stage artifact and ordered experiment outcomes."""
 
@@ -94,13 +116,23 @@ class ReviewedResearchExperiments(Contract):
     reviews: Annotated[tuple[CandidateDirectionReview, ...], Field(max_length=3)]
 
 
+class IterativeResearchExperiments(Contract):
+    """Retain the bounded iteration policy and every amendment beside ordered outcomes."""
+
+    schema_version: Literal["research-experiments-v3"] = "research-experiments-v3"
+    plan: IterativeExperimentPlan
+    execution: ResearchExperiments
+    reviews: Annotated[tuple[CandidateDirectionReview, ...], Field(max_length=3)]
+    amendments: Annotated[tuple[CandidateDirectionAmendment, ...], Field(max_length=3)]
+
+
 def research_experiments(
     runs: PostgresRunStore,
     run_id: UUID,
     principal: Principal,
-    plan: ExperimentPlan | ReviewedExperimentPlan,
+    plan: ExperimentPlan | ReviewedExperimentPlan | IterativeExperimentPlan,
     artifacts: ArtifactStore,
-) -> ResearchExperiments | ReviewedResearchExperiments:
+) -> ResearchExperiments | ReviewedResearchExperiments | IterativeResearchExperiments:
     """Execute compiled candidates serially in source order under original durable budgets.
 
     The stage recomputes deterministic selection/compilation and resumes each monthly graph.
@@ -108,6 +140,13 @@ def research_experiments(
     scheduling outcome. No generated code, model decision or checkpoint grants execution rights.
     """
     principal.require("execute_research")
+    iterative_plan = (
+        IterativeExperimentPlan.model_validate(plan)
+        if isinstance(plan, IterativeExperimentPlan)
+        else None
+    )
+    if iterative_plan is not None:
+        plan = iterative_plan.execution
     review_plan = (
         ReviewedExperimentPlan.model_validate(plan)
         if isinstance(plan, ReviewedExperimentPlan)
@@ -126,6 +165,7 @@ def research_experiments(
     strategy_ref = _publish(strategies, artifacts)
     results = []
     reviews = []
+    amendments = []
     for index, candidate in enumerate(strategies.candidates):
         if (
             candidate.status != "compiled"
@@ -167,17 +207,54 @@ def research_experiments(
                     )
                 )
                 if not agrees:
-                    results.append(
-                        ScheduledExperiment(
-                            candidate_index=index,
-                            status="skipped",
-                            result=None,
-                            reason="DIRECTION_REVIEW_DISAGREEMENT"
-                            if review.status == "supported"
-                            else "DIRECTION_REVIEW_" + review.status.upper(),
-                        )
+                    reason = (
+                        "DIRECTION_REVIEW_DISAGREEMENT"
+                        if review.status == "supported"
+                        else "DIRECTION_REVIEW_" + review.status.upper()
                     )
-                    continue
+                    amended_spec = None
+                    if iterative_plan is not None and review.status == "supported":
+                        conflict = DirectionRevisionRequest(
+                            source=strategies.sources.selection.sources[index],
+                            extraction=strategies.sources.extractions[index],
+                            review=review,
+                        )
+                        resolution = execute_direction_revision_operation(
+                            runs,
+                            run_id,
+                            principal,
+                            DirectionRevisionCommand(
+                                request=conflict,
+                                max_cost_microusd=iterative_plan.max_cost_per_revision_microusd,
+                            ),
+                            artifacts,
+                        )
+                        amendment = amend_direction(
+                            DirectionAmendmentRequest(
+                                original=candidate.draft, conflict=conflict, resolution=resolution
+                            )
+                        )
+                        amendments.append(
+                            CandidateDirectionAmendment(
+                                candidate_index=index, amendment=_publish(amendment, artifacts)
+                            )
+                        )
+                        if amendment.draft is not None:
+                            amended_spec = amendment.draft.strategy
+                        if amendment.reason is not None:
+                            reason = "DIRECTION_AMENDMENT_" + amendment.reason.upper()
+                    if amended_spec is None:
+                        results.append(
+                            ScheduledExperiment(
+                                candidate_index=index, status="skipped", result=None, reason=reason
+                            )
+                        )
+                        continue
+                    command = MonthlyRequest(
+                        spec=amended_spec,
+                        initial_cash_usd=plan.initial_cash_usd,
+                        evaluated_at=plan.evaluated_at,
+                    )
             reference = MonthlyExperimentGraph(runs, run_id, principal, command, artifacts).finish()
         except ResearchError as error:
             if error.code != "RESEARCH_BUDGET_REJECTED":
@@ -210,6 +287,15 @@ def research_experiments(
     result = ResearchExperiments(
         run_id=run_id, plan=plan, strategies=strategy_ref, experiments=tuple(results)
     )
+    if iterative_plan is not None:
+        iterative = IterativeResearchExperiments(
+            plan=iterative_plan,
+            execution=result,
+            reviews=tuple(reviews),
+            amendments=tuple(amendments),
+        )
+        _publish(iterative, artifacts)
+        return iterative
     if review_plan is not None:
         reviewed = ReviewedResearchExperiments(
             plan=review_plan, execution=result, reviews=tuple(reviews)
