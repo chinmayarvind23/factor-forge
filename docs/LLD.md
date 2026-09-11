@@ -57,6 +57,12 @@ fallback. The [monthly adapter](monthly-signals.md) retains every selected or mi
 passes derived scalars to target construction. Calendar admission, full FactorSpec checks and
 execution remain separate boundaries.
 
+`domain/raw_market.py` and `data/raw_market.py` define and verify the new
+[raw market and interval sources](raw-market.md). Raw opening/closing prices, complete
+action coverage, bounded original short-loan grants and exact comparison intervals remain
+separate roles. Parsing preserves unavailable observations and unknown exits; execution must
+check their admissibility against every required calendar clock.
+
 `backtests/performance.py` computes [conditional NAV metrics](conditional-metrics.md) from
 a complete declared close inventory. Entry fees remain in the first full interval and
 drawdown baseline. Invalid rate or execution inventories disable only their dependent
