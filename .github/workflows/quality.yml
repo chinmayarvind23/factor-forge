@@ -113,7 +113,24 @@ jobs:
           FACTORFORGE_SANDBOX_ACCEPTANCE: "1"
           FACTORFORGE_SANDBOX_ENDPOINT: unix:///var/run/docker.sock
           FACTORFORGE_SANDBOX_EVIDENCE: ${{ github.workspace }}/artifacts/local/sandbox-acceptance
-        run: uv run --locked pytest tests/integration/test_sandbox_runtime.py -q
+        run: |
+          date -u +%s > artifacts/local/sandbox-acceptance/started-epoch.txt
+          uv run --locked pytest tests/integration/test_sandbox_runtime.py -q
+      - name: Retain kernel and daemon evidence for terminal-state diagnosis
+        if: always()
+        run: |
+          evidence=artifacts/local/sandbox-acceptance
+          mkdir -p "$evidence"
+          if ! test -f "$evidence/started-epoch.txt"; then
+            echo 'Acceptance did not start' > "$evidence/diagnostics-unavailable.txt"
+            exit 0
+          fi
+          since=$(cat "$evidence/started-epoch.txt")
+          until=$(date -u +%s)
+          timeout 20 docker version > "$evidence/daemon-version.txt" 2>&1 || echo "$?" > "$evidence/daemon-version.exit"
+          timeout 20 docker events --since "$since" --until "$until" --filter type=container --format '{{json .}}' > "$evidence/container-events.jsonl" 2>&1 || echo "$?" > "$evidence/container-events.exit"
+          timeout 20 sudo journalctl -k --since "@$since" --until "@$until" --no-pager -n 2000 > "$evidence/kernel.log" 2>&1 || echo "$?" > "$evidence/kernel.exit"
+          timeout 20 sudo journalctl -u docker -u containerd --since "@$since" --until "@$until" --no-pager -n 2000 > "$evidence/daemon.log" 2>&1 || echo "$?" > "$evidence/daemon.exit"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -205,6 +205,7 @@ def invoke(
         ("exited", 0, False, "completed", None),
         ("exited", 7, False, "failed", "SANDBOX_EXECUTION_FAILED"),
         ("exited", 137, True, "failed", "SANDBOX_OOM"),
+        ("exited", 137, False, "failed", "SANDBOX_EXECUTION_FAILED"),
         ("timed_out", 137, False, "timed_out", "SANDBOX_TIMED_OUT"),
         ("cancelled", 137, False, "cancelled", "SANDBOX_CANCELLED"),
         ("output_limit", 137, False, "failed", "SANDBOX_OUTPUT_LIMIT"),
@@ -244,6 +245,18 @@ def test_lifecycle_distinguishes_controller_and_container_outcomes(
     )
     record = json.loads(store.get(ArtifactRef.model_validate(result["record"])))
     assert record["schema_version"] == "experiment-record-v1"
+    controls = [
+        json.loads(store.get(ArtifactRef.model_validate(ref))) for ref in record["controls"]
+    ]
+    attached = [entry for entry in controls if entry.get("operation") == "attach"]
+    assert attached == [
+        {
+            "operation": "attach",
+            "exit": exit_code,
+            "reason": reason,
+            "outputs": result["result"]["outputs"],
+        }
+    ]
     assert json.loads(store.get(ArtifactRef.model_validate(record["result"]))) == result["result"]
 
 

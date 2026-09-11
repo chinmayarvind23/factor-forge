@@ -253,6 +253,17 @@ def _run_admitted(
                     store.put(response.stdout, media_type="application/octet-stream"),
                     store.put(response.stderr, media_type="application/octet-stream"),
                 )
+                controls.append(
+                    _save(
+                        store,
+                        {
+                            "operation": "attach",
+                            "exit": response.returncode,
+                            "reason": response.reason,
+                            "outputs": [ref.model_dump(mode="json") for ref in state["outputs"]],
+                        },
+                    )
+                )
                 if response.reason != "exited":
                     runtime.inspect_owned(identity, nonce)
                     runtime.command(("container", "kill", identity))

@@ -1,5 +1,14 @@
 # Local Python experiment runner
 
+Terminal diagnostics retain the attach client's exit code and reason, output references,
+and the separate daemon inspection. Exit 137 alone never establishes OOM: the controller
+requires the daemon's `OOMKilled` flag. A hosted acceptance run at `d41d222` recorded 137
+with that flag false in both terminal and cleanup inspections. Its assertion stayed red.
+Hosted acceptance now also saves bounded kernel/daemon journal tails, runtime versions
+and a time-bounded container event query, including when tests fail. Docker retains only
+the latest 256 events; these diagnostic files supplement the receipts and do not prove
+complete event history. See [Docker event semantics](https://docs.docker.com/reference/cli/docker/system/events/).
+
 FactorForge has an internal synchronous runner for bounded Python experiments in a local
 Docker Linux container. An original arithmetic smoke read its staged code as UID65532,
 returned 5050 for `sum(range(101))`, exited zero with no OOM flag and recorded confirmed
