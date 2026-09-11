@@ -21,6 +21,12 @@ commits them under the run's PostgreSQL row lock. Settlement verifies retained r
 and records immutable cost observations in the same transaction boundary. Graph integration
 remains a worker responsibility; this does not expand the browser's normalization flow.
 
+`orchestration/monthly_worker.py` connects one immutable monthly request to durable experiment
+reservation and result settlement. Replays recover the verified stored `MonthlyRun`; an
+unsettled reservation requires reconciliation. The server derives operation identity from
+the canonical run and request hash. The broader research graph composes this worker with
+literature retrieval, hypothesis creation and validation stages.
+
 The independent literature path uses `domain/literature.py` and `retrieval/lexical.py` for
 immutable documents and bounded BM25 ranking. `evaluation/retrieval.py` requires complete binary
 judgments and separates answerable and no-relevant query denominators; its CLI archives the

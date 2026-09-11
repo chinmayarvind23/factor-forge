@@ -77,3 +77,22 @@ changing an earlier unknown charge to zero. Late observations remain recordable,
 measured overrun stays visible in the ledger and prevents further dispatch. An invalid or
 unavailable result leaves the reservation intact. Explicit reconciliation of unknown outcomes
 and graph-node integration are the next layers.
+
+## Monthly experiment worker
+
+`monthly_worker.execute_monthly_operation` connects the trusted monthly executor to this
+ledger. It derives an operation UUID from the canonical run UUID and exact `MonthlyRequest`
+hash, reserves one experiment slot, executes the admitted strategy, verifies publication of
+its result, and settles zero LLM cost. The graph must retain the original request, including
+its evaluation clock, for retry identity to remain stable.
+
+A settled replay reads and validates the existing result bytes and request binding instead
+of executing again. This applies to both completed backtests and retained domain failures.
+A reservation without a settlement returns `RESEARCH_OPERATION_UNRESOLVED`; it is never
+automatically dispatched again. Failpoints cover the gaps after reservation and before
+settlement. A timeout or crash may therefore require explicit reconciliation even when
+the artifact store already contains output.
+
+This worker invokes the trusted local monthly accounting implementation. It provides no
+generated-code execution, process deadline enforcement, public endpoint, or autonomous
+literature-to-strategy decision. Those remain separate graph and sandbox responsibilities.
