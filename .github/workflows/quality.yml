@@ -1,0 +1,30 @@
+name: Quality
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.4"
+      - run: uv sync --locked
+      - run: uv run ruff format --check .
+      - run: uv run ruff check .
+      - run: uv run mypy src tests
+      - run: uv run pytest --cov --cov-fail-under=85
+      - run: uv build
+      - run: uv run pip-audit --skip-editable
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+      - run: bun install --cwd apps/web --frozen-lockfile --ignore-scripts
+      - run: bun run check
+      - run: bun run test
+      - run: bun run build

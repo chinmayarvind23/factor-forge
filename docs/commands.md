@@ -1,90 +1,37 @@
 # Commands
 
-These are intended stable command shapes. Exact dependencies are added when the corresponding implementation exists.
+Run from the repository root. Install uv and Bun 1.3.10 and make them available on PATH.
+The Python selection is pinned in `.python-version`; uv can provision Python when needed.
 
-## Python
+## Reproducible setup
 
 ```bash
-uv sync
+uv sync --locked
+bun install --cwd apps/web --frozen-lockfile --ignore-scripts
 uv run python -m factorforge --help
+uv run factorforge --version
 ```
 
-## Web
-
-```bash
-cd apps/web
-bun install
-bun run dev
-```
-
-## API
-
-```bash
-uv run uvicorn factorforge.api.app:app --reload
-```
-
-## Quality
+## Quality and build
 
 ```bash
 uv run ruff format --check .
 uv run ruff check .
-uv run mypy src
-uv run pytest
+uv run mypy src tests
+uv run pytest --cov --cov-fail-under=85
+uv run pip-audit --skip-editable
+uv build
+bun run check
+bun run test
+bun run build
 ```
 
-## Evals
+The current CLI provides help and version information. The web build verifies the TypeScript
+workspace. API serving, browser run submission, research, evaluation, reproduction, local
+infrastructure and cloud commands will be documented here when implemented and verified.
 
-```bash
-uv run factorforge eval smoke
-uv run factorforge eval benchmark --suite benchmark-v1
-```
+Install scripts are disabled because this workspace currently requires none. The single web
+package has its own lockfile. Root commands delegate by directory without creating workspace
+symbolic links, which this Windows environment cannot traverse.
 
-## Research
-
-```bash
-uv run factorforge research run \
-  --idea "residual momentum after sector neutralization" \
-  --max-experiments 8 \
-  --budget-usd 5
-```
-
-## Reproduce one case
-
-```bash
-uv run factorforge reproduce --manifest artifacts/benchmark/<case>/manifest.json
-```
-
-## Local infrastructure
-
-```bash
-docker compose up -d
-```
-
-## Terraform
-
-```bash
-terraform -chdir=infra/terraform fmt -check
-terraform -chdir=infra/terraform validate
-terraform -chdir=infra/terraform plan
-```
-
-## Kubernetes
-
-```bash
-kubectl apply --dry-run=server -f infra/k8s/
-```
-
-## DVC
-
-```bash
-dvc status
-dvc pull
-```
-
-## MLflow
-
-```bash
-mlflow server
-```
-
-No command silently downloads a different benchmark dataset when a pinned snapshot is unavailable.
+No command silently downloads a replacement benchmark dataset when a pinned snapshot is unavailable.

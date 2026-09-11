@@ -2,11 +2,15 @@
   "name": "factorforge-web",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "build": "bun build src/index.ts --outdir dist --target browser",
     "test": "bun test",
-    "lint": "biome check ."
+    "lint": "biome check .",
+    "check": "tsc --noEmit && biome check ."
   },
   "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.0",
+    "@types/bun": "^1.3.10",
+    "typescript": "^5.9.0"
+  }
 }

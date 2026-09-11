@@ -1,0 +1,3 @@
+# Hoisting avoids workspace binary symlink failures on the supported Windows setup.
+[install]
+linker = "hoisted"
