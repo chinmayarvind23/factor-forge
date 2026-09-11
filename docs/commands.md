@@ -132,3 +132,23 @@ original summaries checked into Git and makes no network or model call. The reco
 inputs, ranking configuration, report, installed source snapshots and environment versions.
 See the [pilot policy](../data/literature/three-paper-pilot-v1/README.md) for frozen input hashes,
 separate metric denominators and the limits of this small development sample.
+
+## Run one prepared source-extraction trial
+
+The trial command requires your approved `SourcePacket` and `GoldCase` JSON files, a JSON
+`ArtifactRef` for the frozen expected wire request, and an existing artifact store containing
+the referenced page and request bytes. Full source papers are not distributed with the pilot.
+Prepare and freeze these inputs before observing model output; the request comes from
+`prepare_prompt` and the fixed provider profile described in the [contract](extraction-contract.md).
+
+```console
+uv run --locked python -m factorforge.evaluation.source_trial --packet packet.json --gold gold.json --expected-request expected-request.json --output artifacts/local/source-trial
+```
+
+It verifies the paper identity, PDF hash, selected page set and exact prepared request bytes
+before one local Ollama call. Ollama must already serve the declared `llama3.1:8b` model at
+`127.0.0.1:11434`; this command does not download models. Gold fields never enter the model prompt.
+The command records a start before delivery and returns the extraction outcome, nine-field grade
+and artifact pointers. It makes no retry and provides no automatic resume. An explicit rerun is
+a new trial and must not replace a failed baseline attempt. Unexpected failures retain a safe
+failure event when storage remains available; a storage outage can leave only the start record.
