@@ -1,5 +1,10 @@
 # FactorForge High-Level Design
 
+Current implementation: one local FastAPI process with opt-in development identity and a
+bounded in-memory run store. It creates receipts and normalizes brief text only. PostgreSQL,
+agent research, isolated execution and the cloud planes below remain planned. This local
+slice establishes the HTTP/event contract before durability is added.
+
 ## Logical planes
 
 FactorForge contains five logical planes:

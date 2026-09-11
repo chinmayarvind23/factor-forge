@@ -1,5 +1,12 @@
 # API Contracts
 
+Implemented local surface: health, readiness, run creation and run lookup. The remaining
+operations below are design contracts. Local mode requires `FACTORFORGE_MODE=local`, a
+loopback peer and host, and either no Origin (CLI) or `http://127.0.0.1:3001` (browser).
+Launch Uvicorn with `--no-proxy-headers` so forwarded headers cannot supply the peer identity.
+Local records are ephemeral; this surface is not production authentication.
+Requests larger than 16 KiB return a typed 413 `REQUEST_TOO_LARGE` response before JSON parsing.
+
 ## Principles
 
 - Public product operations use REST.
@@ -12,6 +19,12 @@
 ## REST
 
 ### POST `/api/v1/research-runs`
+
+Requires `Idempotency-Key` (1-128 letters, digits, underscores or hyphens). A repeated key
+and identical validated request returns the same 202 receipt. Different input with the same
+key returns 409 `IDEMPOTENCY_CONFLICT`. The idea is 3-4000 characters after stripping outer
+whitespace; cost must be positive and at most $100 with at most two decimal places; wall time
+is 1-86400 seconds; experiment count is 1-100. These are request bounds, not cost authorization.
 
 ```json
 {
@@ -34,6 +47,10 @@ Response:
 ### GET `/api/v1/research-runs/{run_id}`
 
 Returns state, progress, current budget, terminal reason, and authorized artifact links.
+
+The local skeleton currently returns the original idea, a normalized `brief` string, the
+three `max_*` budget fields, `created_at`, `mode: "local"`, and an `events` array containing
+`status` and `created_at`. It stops at `BRIEF_NORMALIZED`; no research verdict is produced.
 
 ### POST `/api/v1/research-runs/{run_id}/cancel`
 

@@ -2,9 +2,10 @@
 
 **Autonomous quantitative research with reproducible evidence**
 
-Implementation status: repository foundation. The Python package and TypeScript/Bun workspace
-provide install, import, build, and quality checks. The research pipeline described below is the
-target design and is not implemented yet. Benchmark metrics are unmeasured; see
+Implementation status: local API skeleton. The packaged FastAPI application accepts an idea,
+returns an idempotent run receipt, and records deterministic brief normalization in bounded
+in-memory state. The browser is under development. The research pipeline described below is
+the target design and is not implemented yet. Benchmark metrics are unmeasured; see
 [results](docs/results.md) for the evidence status and [commands](docs/commands.md) for runnable setup.
 
 FactorForge turns a loose investment idea into a structured, reviewable research program. It retrieves relevant literature, extracts and proposes typed factor hypotheses, runs bounded experiments in sandboxes, validates strategies with time-series-aware statistics, independently verifies selected results in LEAN, records the full experiment lineage, and produces a research report that explains what worked, what failed, and why.

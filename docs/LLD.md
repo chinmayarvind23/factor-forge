@@ -1,5 +1,14 @@
 # FactorForge Low-Level Design
 
+Implemented local slice: `domain/research_brief.py` validates immutable requests and records;
+`orchestration/local_runs.py` serializes idempotent creation with a lock, caps the store at 1000
+runs, and records a single normalization transition. `api/app.py` enforces explicit local mode,
+loopback peer/host and exact browser Origin before operations. `api/body_limit.py` caps raw JSON
+bodies at 16 KiB including chunked uploads. No model is called and no backtest is performed.
+The stored original request determines idempotency equality, so differences in internal
+whitespace conflict even when deterministic normalization would produce the same brief.
+The broader modules and state machine below describe the target system.
+
 ## 1. Domain modules
 
 ```text
