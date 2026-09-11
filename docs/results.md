@@ -96,6 +96,15 @@ skips and one Starlette warning in 110.17 seconds. Combined statement/branch cov
 97.99%; formatting, lint, strict typing and source/wheel builds passed. This predates the
 operator CLI and required Docker acceptance job added in `161a865`.
 
+Clean commit `161a865` then passed 1,464 Windows tests in 114.71 seconds, with 15 declared
+skips: DVC restoration, eight separately enabled Docker cases and six POSIX-only probes.
+Reported combined coverage was 97.99%. One unreadable child coverage file was preserved and
+excluded from that aggregate; its cause is unresolved. Ruff, strict typing and both package
+builds passed. A separate real-Docker invocation passed all eight cases in 57.88 seconds.
+Independent checks verified all saved reference bytes and 14 controller source modules per
+run, the paired host canaries and owned-container removal. A separate environment installed
+the fresh wheel and passed the operator CLI calculation and its 28-object evidence closure.
+
 The [hosted workflow for `161a865`](https://github.com/chinmayarvind23/factor-forge/actions/runs/34587864317)
 passed Python, web and the required real-Docker acceptance job. The Python job included its
 application dependency audit; the web job included browser E2E checks. The separate DVC audit
