@@ -9,10 +9,28 @@ import pytest
 ASSETS = Path(__file__).resolve().parents[2] / "infra" / "sandbox"
 NETWORK = frozenset(
     {
-        "accept", "accept4", "bind", "connect", "getpeername", "getsockname",
-        "getsockopt", "listen", "recv", "recvfrom", "recvmmsg", "recvmmsg_time64",
-        "recvmsg", "send", "sendmmsg", "sendmsg", "sendto", "setsockopt",
-        "shutdown", "socket", "socketcall", "socketpair",
+        "accept",
+        "accept4",
+        "bind",
+        "connect",
+        "getpeername",
+        "getsockname",
+        "getsockopt",
+        "listen",
+        "recv",
+        "recvfrom",
+        "recvmmsg",
+        "recvmmsg_time64",
+        "recvmsg",
+        "send",
+        "sendmmsg",
+        "sendmsg",
+        "sendto",
+        "setsockopt",
+        "shutdown",
+        "socket",
+        "socketcall",
+        "socketpair",
     }
 )
 
@@ -70,17 +88,39 @@ def test_basic_cpu_file_and_subprocess_calls_remain_available() -> None:
         for name in group["names"]
     }
     assert {
-        "read", "write", "openat", "close", "newfstatat", "lseek", "mmap", "mprotect",
-        "munmap", "brk", "getrandom", "futex", "clock_gettime", "rt_sigaction",
-        "rt_sigprocmask", "getpid", "getppid", "fork", "vfork", "execve", "pipe2",
-        "dup2", "wait4", "kill", "exit_group",
+        "read",
+        "write",
+        "openat",
+        "close",
+        "newfstatat",
+        "lseek",
+        "mmap",
+        "mprotect",
+        "munmap",
+        "brk",
+        "getrandom",
+        "futex",
+        "clock_gettime",
+        "rt_sigaction",
+        "rt_sigprocmask",
+        "getpid",
+        "getppid",
+        "fork",
+        "vfork",
+        "execve",
+        "pipe2",
+        "dup2",
+        "wait4",
+        "kill",
+        "exit_group",
     } <= unconditional
     clone = [group for group in profile["syscalls"] if group["names"] == ["clone"]]
     assert len(clone) == 2
     assert all(group["args"][0]["op"] == "SCMP_CMP_MASKED_EQ" for group in clone)
     assert all(group["args"][0]["value"] == 2114060288 for group in clone)
     assert any(
-        group["names"] == ["clone3"] and group["action"] == "SCMP_ACT_ERRNO"
+        group["names"] == ["clone3"]
+        and group["action"] == "SCMP_ACT_ERRNO"
         and group["errnoRet"] == 38
         for group in profile["syscalls"]
     )

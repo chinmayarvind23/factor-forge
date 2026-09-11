@@ -50,6 +50,37 @@ and strict typing checks passed. Hosted Python and web jobs also passed; the sep
 audit and complete release gate still failed. These conditional components have hand-checked
 fictional examples, but do not yet execute a complete admitted strategy.
 
+At clean commit `29f0d7d`, the completed conditional core passed 1,048 Windows tests
+with two skips and one Starlette warning in 104.49 seconds. Combined statement/branch
+coverage was 98.50%; Ruff, strict typing, source distribution and wheel builds passed.
+The additions include monthly source assembly, artifact-backed target planning and
+performance metrics. Four original target cases matched their hand references, and one
+strict missing-signal case retained the expected failure. Eight original metric cases
+matched 176 numeric/count checks. Their separate working-checkout artifact replay verified
+40 objects and reproduced all eight outputs from saved inputs; it is separate from the
+clean full-suite run. Funding, order admission, annual source assembly and continuous
+full-strategy execution remain incomplete.
+
+The [hosted workflow for `29f0d7d`](https://github.com/chinmayarvind23/factor-forge/actions/runs/34583861341)
+passed Python and web jobs. Its DVC audit failed before restoration ran, and the required
+release gate failed. The application dependency audit passed within the Python job.
+
+## Sandbox preparation
+
+The official Python image
+`python@sha256:2fe5997d249a808b8eeea52c58a1dbffbba28754dc11699ef5c029f2d818ce79`
+was pulled for local sandbox development. A read-only Docker inspection on 11 September 2026
+confirmed `linux/amd64`, image creation time `2026-09-01T00:12:40.129211396Z` and
+46,182,573 bytes. Image acquisition does not establish vulnerability status, successful
+execution or sandbox isolation. No container execution evidence is included in this update.
+
+The experiment admission/controller contracts are committed at `9fce122`. A separate
+[pinned Moby seccomp derivative](../infra/sandbox/README.md) removes socket/network allowances
+while retaining default denial; its 29 static checks pass. Runtime loading, resource limits,
+network denial and cleanup still require Docker probes. As of 09:38 UTC on 11 September,
+the [C8 workflow](https://github.com/chinmayarvind23/factor-forge/actions/runs/34585177883)
+was in progress, with its DVC audit already failed. No complete release pass is claimed.
+
 ## Retrieval development pilot
 
 At clean commit `42c66c2`, the frozen [three-paper pilot](../data/literature/three-paper-pilot-v1/README.md)

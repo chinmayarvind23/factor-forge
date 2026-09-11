@@ -16,7 +16,10 @@ Strict factor contracts and a hypothesis queue now check declared choices and ar
 readiness while retaining blocked drafts and duplicate candidates.
 Monthly fact selection now feeds conditional Polars portfolio targets. A separate signed-share
 ledger handles splits, dividends, exits and trade fees against original hand calculations.
+Saved complete NAV paths now produce declared return, drawdown, Sharpe and turnover metrics.
 These components still require strategy admission and execution before they form a backtest.
+Sandbox admission contracts and a pinned Python image are prepared; container execution and
+isolation remain unverified in the recorded status.
 The API verifies Cognito access tokens and isolates runs by owner; live Cognito configuration
 and browser sign-in remain pending. The complete research loop described below remains
 the target design. Release benchmark metrics are unmeasured; see
