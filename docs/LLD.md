@@ -63,6 +63,12 @@ action coverage, bounded original short-loan grants and exact comparison interva
 separate roles. Parsing preserves unavailable observations and unknown exits; execution must
 check their admissibility against every required calendar clock.
 
+`backtests/funding.py` solves the bounded exact [post-fee funding equation](funding.md)
+with rational arithmetic. It charges commission and slippage on every absolute trade
+notional, rejects quantities that cannot be represented exactly, and retains observed
+cash, current short-liability reserves and funding failures. This pure notional model
+does not grant execution permission or verify quotes and loan availability.
+
 `backtests/performance.py` computes [conditional NAV metrics](conditional-metrics.md) from
 a complete declared close inventory. Entry fees remain in the first full interval and
 drawdown baseline. Invalid rate or execution inventories disable only their dependent
