@@ -40,6 +40,13 @@ and rational sleeve weights. Removed target identities remain in drift-based tur
 trade-fee estimates. The [target contract](conditional-targets.md) preserves the distinction
 between these calculations and source selection, funding or order execution.
 
+`data/monthly_signals.py` verifies an input-only fact/membership artifact and selects the
+consecutive monthly instant observations declared by `domain/monthly_signals.py`. Publication
+is bounded by formation, economic lag preserves civil dates, and missing months have no stale
+fallback. The [monthly adapter](monthly-signals.md) retains every selected or missing cell and
+passes derived scalars to target construction. Calendar admission, full FactorSpec checks and
+execution remain separate boundaries.
+
 The durable adapter uses owner issuer/subject predicates and SQL uniqueness for idempotency.
 Dollar values use fixed two-decimal canonical serialization, preserving equality between
 `5`, `5.0` and `5.00`. Run creation and its first event commit together. An actual LangGraph
