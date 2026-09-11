@@ -1,0 +1,2 @@
+# Dataset content identities include line endings; checkouts must preserve the exact bytes.
+data/fixtures/*.json -text
