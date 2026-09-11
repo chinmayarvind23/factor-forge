@@ -73,8 +73,31 @@ jobs:
         with:
           version: "0.8.4"
       - run: uv sync --locked
-      - name: Acquire the exact reviewed Python image
-        run: docker pull --platform linux/amd64 python@sha256:2fe5997d249a808b8eeea52c58a1dbffbba28754dc11699ef5c029f2d818ce79
+      - name: Fetch the pinned sanitized runtime archive
+        uses: actions/checkout@v4
+        with:
+          ref: 790c03618afc6defb12977d3844701a08b01565c
+          path: artifacts/local/runtime-distribution
+          persist-credentials: false
+      - name: Enable the containerd image store on this disposable runner
+        run: |
+          config="$RUNNER_TEMP/factorforge-docker-daemon.json"
+          if sudo test -f /etc/docker/daemon.json; then
+            sudo cat /etc/docker/daemon.json > "$config"
+          else
+            echo '{}' > "$config"
+          fi
+          jq '.features = ((.features // {}) + {"containerd-snapshotter": true})' "$config" > "$config.next"
+          sudo install -m 0644 "$config.next" /etc/docker/daemon.json
+          sudo systemctl restart docker
+          docker version
+          docker info
+      - name: Verify and import the exact reviewed Python image
+        working-directory: artifacts/local/runtime-distribution
+        run: |
+          test "$(wc -c < runtime.oci.tar)" -eq 21227520
+          echo '9f7b76a6e035cb0a64066be9b7e7bf7db51f831011d43e3a62039324df411a99  runtime.oci.tar' | sha256sum --check --strict
+          docker image load --input runtime.oci.tar
       - name: Require actual isolation, resource limits and cleanup
         env:
           FACTORFORGE_SANDBOX_ACCEPTANCE: "1"

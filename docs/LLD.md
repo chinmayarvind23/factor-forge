@@ -254,7 +254,7 @@ class ExperimentSpec(Contract):
     input_refs: tuple[ArtifactRef, ...]
     seed: int
     engine: Literal["python"]
-    profile: Literal["python-bounded-v1"]
+    profile: Literal["python-bounded-v1", "python-bounded-v2"]
 ```
 
 This abbreviated schema reflects the implemented internal experiment request; production

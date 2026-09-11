@@ -28,7 +28,7 @@ def request_bytes() -> bytes:
             input_refs=(),
             seed=9,
             engine="python",
-            profile="python-bounded-v1",
+            profile="python-bounded-v2",
         )
         .model_dump_json()
         .encode()

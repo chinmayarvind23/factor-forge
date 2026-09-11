@@ -13,6 +13,7 @@ CODE_CONFIG_LIMIT = 256 * 1024
 INPUT_LIMIT = 16 * 1024 * 1024
 OUTPUT_LIMIT = 1024 * 1024
 ImageDigest = Annotated[str, Field(pattern=r"^sha256:[a-f0-9]{64}$")]
+PythonProfile = Literal["python-bounded-v1", "python-bounded-v2"]
 
 
 def unique_refs(refs: tuple[ArtifactRef, ...]) -> tuple[ArtifactRef, ...]:
@@ -39,7 +40,7 @@ class ExperimentSpec(Contract):
     input_refs: Annotated[tuple[ArtifactRef, ...], Field(max_length=32)]
     seed: Annotated[int, Field(ge=0, le=2**32 - 1)]
     engine: Literal["python"]
-    profile: Literal["python-bounded-v1"]
+    profile: PythonProfile
 
     @model_validator(mode="after")
     def bounded_inventory(self) -> Self:
@@ -67,7 +68,7 @@ class ExperimentSpec(Contract):
 class PythonSandboxPolicy(Contract):
     """Only this fixed server profile is admitted; requested runtime overrides have no field."""
 
-    profile: Literal["python-bounded-v1"] = "python-bounded-v1"
+    profile: PythonProfile = "python-bounded-v1"
     cpu_count: Literal[1] = 1
     memory_bytes: Literal[536870912] = 536870912
     memory_swap_bytes: Literal[536870912] = 536870912
@@ -130,6 +131,8 @@ class ExperimentAdmission(Contract):
     @model_validator(mode="after")
     def complete_references(self) -> Self:
         """Reloaded metadata must retain exactly the input closure that admission describes."""
+        if self.policy.profile != self.spec.profile:
+            raise ValueError("Admission policy must match the requested profile")
         if self.verified_refs != self.spec.unique_artifacts():
             raise ValueError("Admission references do not match its request")
         return self
@@ -171,6 +174,8 @@ class ExperimentResult(Contract):
     @model_validator(mode="after")
     def coherent_outcome(self) -> Self:
         """Validate assertions; only a future controller can supply runtime observations."""
+        if self.policy.profile != self.spec.profile:
+            raise ValueError("Result policy must match the requested profile")
         unique_refs(self.outputs)
         if sum(ref.size_bytes for ref in self.outputs) > OUTPUT_LIMIT:
             raise ValueError("Combined captured output exceeds the profile bound")

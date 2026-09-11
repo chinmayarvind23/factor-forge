@@ -13,6 +13,7 @@ import pytest
 
 from factorforge.domain.errors import ResearchError
 from factorforge.sandbox.docker import OWNERSHIP_LABEL, PYTHON_IMAGE, DockerRuntime
+from factorforge.sandbox.image_binding import PYTHON_ENV, PYTHON_REFERENCE, ROOTFS_DIFF_IDS
 from factorforge.sandbox.process import CommandResult
 
 NONCE = "1" * 32
@@ -52,8 +53,14 @@ def image_info() -> dict[str, Any]:
         "Id": PYTHON_IMAGE,
         "Os": "linux",
         "Architecture": "amd64",
-        "Config": {"Volumes": None},
-        "RepoDigests": ["python@" + PYTHON_IMAGE],
+        "Config": {"Env": list(PYTHON_ENV), "Cmd": ["python3"], "WorkingDir": "/"},
+        "RepoDigests": [PYTHON_REFERENCE],
+        "Descriptor": {
+            "digest": PYTHON_IMAGE,
+            "mediaType": "application/vnd.oci.image.manifest.v1+json",
+            "size": 1033,
+        },
+        "RootFS": {"Type": "layers", "Layers": list(ROOTFS_DIFF_IDS)},
     }
 
 
@@ -132,7 +139,7 @@ def test_valid_preflight_returns_verified_metadata(
     assert result == {"daemon": daemon_info(), "image": image_info()}
     assert calls == [
         ("info", "--format", "{{json .}}"),
-        ("image", "inspect", "python@" + PYTHON_IMAGE),
+        ("image", "inspect", PYTHON_REFERENCE),
     ]
 
 
@@ -253,7 +260,7 @@ def test_create_arguments_are_fixed_and_generated_code_is_not_a_host_command(
             launcher="trusted_launcher()",
         )
     assert args[0] == "create" and args[-2:] == ("-c", "trusted_launcher()")
-    assert args[args.index("--entrypoint") + 2] == "python@" + PYTHON_IMAGE
+    assert args[args.index("--entrypoint") + 2] == PYTHON_REFERENCE
     for flag, value in [
         ("--network", "none"),
         ("--user", "65532:65532"),
@@ -480,7 +487,7 @@ def test_image_requires_exact_repository_digest_and_pinned_object_identity(
     with pytest.raises(ResearchError) as error:
         runtime.preflight(PYTHON_IMAGE)
     assert error.value.code == "SANDBOX_IMAGE_INVALID"
-    assert calls[-1] == ("image", "inspect", "python@" + PYTHON_IMAGE)
+    assert calls[-1] == ("image", "inspect", PYTHON_REFERENCE)
 
 
 @pytest.mark.parametrize("field", ["RepoDigests", "Id"])

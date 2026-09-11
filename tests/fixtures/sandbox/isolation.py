@@ -1,6 +1,7 @@
 """Original bounded denial probes run only inside the reviewed Python container profile."""
 
 import errno
+import importlib.util
 import json
 import os
 import socket
@@ -43,6 +44,8 @@ def main() -> None:
         "input_write_denied": denied_write("/input/code.py"),
         "canary_not_mounted": not Path("/input/../host-canary.txt").exists(),
         "host_env_absent": "FACTORFORGE_HOST_ONLY" not in os.environ,
+        "pip_absent": importlib.util.find_spec("pip") is None,
+        "ensurepip_absent": importlib.util.find_spec("ensurepip") is None,
         "socket_denials": sockets,
         "cgroups": {
             name: (Path("/sys/fs/cgroup") / name).read_text().strip()

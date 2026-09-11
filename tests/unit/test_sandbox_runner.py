@@ -18,7 +18,7 @@ def test_denied_principal_never_touches_runtime() -> None:
     store = MemoryArtifacts()
     with pytest.raises(ResearchError) as error:
         run_experiment(
-            spec(),
+            spec(profile="python-bounded-v2"),
             store,
             principal=LOCAL_PRINCIPAL,
             runtime=cast(DockerRuntime, object()),
@@ -32,7 +32,7 @@ def test_busy_worker_does_not_start_another_experiment() -> None:
     """An authorized second request cannot multiply the initial worker's container budget."""
     with module._EXECUTION_LOCK, pytest.raises(ResearchError) as error:
         run_experiment(
-            spec(),
+            spec(profile="python-bounded-v2"),
             MemoryArtifacts(),
             principal=OWNER,
             runtime=cast(DockerRuntime, object()),
@@ -46,7 +46,7 @@ def test_failed_start_archival_releases_worker_slot() -> None:
     """A storage exception cannot leave the synchronous worker permanently occupied."""
     with pytest.raises(AssertionError, match="Admission must not write"):
         run_experiment(
-            spec(),
+            spec(profile="python-bounded-v2"),
             MemoryArtifacts(),
             principal=OWNER,
             runtime=cast(DockerRuntime, object()),

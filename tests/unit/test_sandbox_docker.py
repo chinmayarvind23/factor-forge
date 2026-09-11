@@ -7,10 +7,11 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 import pytest
-from test_sandbox_docker_review import daemon_info
+from test_sandbox_docker_review import daemon_info, image_info
 
 from factorforge.domain.errors import ResearchError
 from factorforge.sandbox.docker import PYTHON_IMAGE, DockerRuntime
+from factorforge.sandbox.image_binding import PYTHON_CONFIG, PYTHON_REFERENCE
 
 
 @pytest.fixture
@@ -40,21 +41,16 @@ def test_changed_seccomp_asset_fails_before_create(directory: Path) -> None:
     assert error.value.code == "SANDBOX_POLICY_INVALID"
 
 
-def test_classic_image_store_preserves_manifest_and_config_id_distinction(
+def test_classic_config_only_image_identity_is_unsupported(
     directory: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """OCI manifest and configuration digests are different pinned objects on classic Docker."""
+    """The v2 profile requires containerd manifest identity with no classic-store fallback."""
     runtime = DockerRuntime(
         binary=Path(sys.executable), endpoint="unix:///var/run/docker.sock", config=directory
     )
-    actual: dict[str, Any] = {
-        "Id": "sha256:ec7d6c95cd3692a2e2d228a8b1ca74e4025b54121fcc4c5da6f09cfa473315ad",
-        "Os": "linux",
-        "Architecture": "amd64",
-        "Config": {"Volumes": None},
-        "RepoDigests": ["python@" + PYTHON_IMAGE],
-    }
+    actual = image_info()
+    actual["Id"] = PYTHON_CONFIG
     replies = iter((daemon_info(), actual))
     calls: list[tuple[str, ...]] = []
 
@@ -64,5 +60,7 @@ def test_classic_image_store_preserves_manifest_and_config_id_distinction(
         return next(replies)
 
     monkeypatch.setattr(runtime, "object", response)
-    assert runtime.preflight(PYTHON_IMAGE)["image"] == actual
-    assert calls[-1] == ("image", "inspect", "python@" + PYTHON_IMAGE)
+    with pytest.raises(ResearchError) as error:
+        runtime.preflight(PYTHON_IMAGE)
+    assert error.value.code == "SANDBOX_IMAGE_INVALID"
+    assert calls[-1] == ("image", "inspect", PYTHON_REFERENCE)

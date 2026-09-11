@@ -11,6 +11,7 @@ import pytest
 
 from factorforge.domain.errors import ResearchError
 from factorforge.sandbox.docker import PYTHON_IMAGE, DockerRuntime
+from factorforge.sandbox.image_binding import PYTHON_REFERENCE
 
 PROFILE = Path(__file__).resolve().parents[2] / "infra/sandbox/python-no-network-v1.json"
 NONCE = "a" * 32
@@ -146,7 +147,7 @@ def inspection_case(
                 "StdinOnce": False,
                 "Healthcheck": {"Test": ["NONE"]},
                 "Volumes": None,
-                "Image": PYTHON_IMAGE,
+                "Image": PYTHON_REFERENCE,
             },
         }
 
@@ -178,6 +179,18 @@ def test_authored_valid_policy_is_accepted(
 ) -> None:
     """The negative matrix needs a positive control independent of the actual daemon."""
     assert verify(inspection_case) is inspection_case[2]
+
+
+@pytest.mark.parametrize("image", [PYTHON_IMAGE, "python:latest", None])
+def test_created_request_image_retains_fixed_repository_reference(
+    inspection_case: tuple[DockerRuntime, Path, dict[str, Any]],
+    image: str | None,
+) -> None:
+    """Matching effective filesystem identity does not permit a different create reference."""
+    inspection_case[2]["Config"]["Image"] = image
+    with pytest.raises(ResearchError) as error:
+        verify(inspection_case)
+    assert error.value.code == "SANDBOX_POLICY_MISMATCH"
 
 
 @pytest.mark.parametrize(

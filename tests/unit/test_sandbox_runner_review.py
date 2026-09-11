@@ -159,7 +159,7 @@ def setup(
         input_refs=(),
         seed=3,
         engine="python",
-        profile="python-bounded-v1",
+        profile="python-bounded-v2",
     )
     runtime = FakeRuntime(trace)
     trace.clear()

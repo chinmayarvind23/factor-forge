@@ -24,6 +24,7 @@ CODE_MODULES = (
     "factorforge.sandbox.runner",
     "factorforge.sandbox.command",
     "factorforge.sandbox.docker",
+    "factorforge.sandbox.image_binding",
     "factorforge.sandbox.staging",
     "factorforge.sandbox.process",
     "factorforge.sandbox.policy",
@@ -109,6 +110,7 @@ def run_experiment(
         principal=principal,
         image_digest=PYTHON_IMAGE,
         allowed_image_digests=frozenset({PYTHON_IMAGE}),
+        required_profile="python-bounded-v2",
     )
     if not _EXECUTION_LOCK.acquire(blocking=False):
         raise ResearchError("SANDBOX_BUSY", "This worker already has an active experiment.", 409)

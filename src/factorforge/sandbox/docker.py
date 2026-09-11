@@ -9,12 +9,12 @@ from threading import Event
 from typing import Any
 
 from factorforge.domain.errors import ResearchError
+from factorforge.sandbox.image_binding import PYTHON_IMAGE as PYTHON_IMAGE
+from factorforge.sandbox.image_binding import PYTHON_REFERENCE, matches_publication
 from factorforge.sandbox.process import CommandResult, run_command
 
 SECCOMP_SHA256 = "9033f43b539af2002ca705475be2b8b6633a9fd1fae924c9f58adb8aebd8a334"
 OWNERSHIP_LABEL = "org.factorforge.controller-nonce"
-PYTHON_IMAGE = "sha256:2fe5997d249a808b8eeea52c58a1dbffbba28754dc11699ef5c029f2d818ce79"
-PYTHON_CONFIG = "sha256:ec7d6c95cd3692a2e2d228a8b1ca74e4025b54121fcc4c5da6f09cfa473315ad"
 ENDPOINTS = frozenset({"unix:///var/run/docker.sock", "npipe:////./pipe/dockerDesktopLinuxEngine"})
 
 
@@ -133,18 +133,8 @@ class DockerRuntime:
             or not any("name=seccomp" in item.split(",") for item in security)
         ):
             raise _failure("SANDBOX_UNSUPPORTED")
-        actual = self.object(("image", "inspect", "python@" + image), array=True)
-        if (
-            not isinstance(actual.get("Id"), str)
-            or actual["Id"] not in {image, PYTHON_CONFIG}
-            or not isinstance(actual.get("RepoDigests"), list)
-            or not all(isinstance(item, str) for item in actual["RepoDigests"])
-            or "python@" + image not in actual["RepoDigests"]
-            or actual.get("Os") != "linux"
-            or actual.get("Architecture") != "amd64"
-            or not isinstance(actual.get("Config"), dict)
-            or actual.get("Config", {}).get("Volumes")
-        ):
+        actual = self.object(("image", "inspect", PYTHON_REFERENCE), array=True)
+        if not matches_publication(actual):
             raise _failure("SANDBOX_IMAGE_INVALID")
         return {"daemon": info, "image": actual}
 
@@ -237,7 +227,7 @@ class DockerRuntime:
             "OMP_NUM_THREADS=1",
             "--entrypoint",
             "/usr/local/bin/python",
-            "python@" + image,
+            PYTHON_REFERENCE,
             "-B",
             "-s",
             "-P",
@@ -414,6 +404,7 @@ class DockerRuntime:
                 or config.get("StdinOnce") is not False
                 or config.get("Healthcheck", {}).get("Test") != ["NONE"]
                 or config.get("Volumes")
+                or config.get("Image") != PYTHON_REFERENCE
                 or value.get("Image") != image["Id"]
                 or value["State"].get("Status") != "created"
                 or value["State"].get("Running") is not False

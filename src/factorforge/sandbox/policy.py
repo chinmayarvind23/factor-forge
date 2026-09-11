@@ -11,6 +11,7 @@ from factorforge.domain.errors import ResearchError
 from factorforge.domain.experiments import (
     ExperimentAdmission,
     ExperimentSpec,
+    PythonProfile,
     PythonSandboxPolicy,
 )
 
@@ -52,6 +53,7 @@ def admit_experiment(
     principal: Principal,
     image_digest: str | None,
     allowed_image_digests: frozenset[str],
+    required_profile: PythonProfile = "python-bounded-v1",
 ) -> ExperimentAdmission:
     """Fail before reads on authority/config errors, then check every unique artifact exactly once.
 
@@ -67,6 +69,16 @@ def admit_experiment(
         raise ResearchError("SANDBOX_INPUT_INVALID", "Experiment input is invalid.", 422) from None
     if (request.owner_issuer, request.owner_subject) != (owner.issuer, owner.subject):
         raise ResearchError("FORBIDDEN", "Experiment execution is not permitted.", 403)
+    if (
+        type(required_profile) is not str
+        or required_profile not in {"python-bounded-v1", "python-bounded-v2"}
+        or request.profile != required_profile
+    ):
+        raise ResearchError(
+            "SANDBOX_PROFILE_UNSUPPORTED",
+            "Experiment profile is not supported by this worker.",
+            422,
+        )
     if (
         type(image_digest) is not str
         or re.fullmatch(r"sha256:[a-f0-9]{64}", image_digest) is None
@@ -92,7 +104,7 @@ def admit_experiment(
             )
     return ExperimentAdmission(
         spec=request,
-        policy=PythonSandboxPolicy(),
+        policy=PythonSandboxPolicy(profile=required_profile),
         image_digest=image_digest,
         verified_refs=references,
     )

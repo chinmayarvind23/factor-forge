@@ -21,7 +21,8 @@ admission checks before exposing execution through an application API.
 [`ExperimentSpec`](../src/factorforge/domain/experiments.py) is strict, frozen and revalidated
 at boundaries. It contains experiment/run UUIDs, owner issuer and subject, a FactorSpec
 SHA-256, code/config/input ArtifactRefs, an integer seed, engine `python` and profile
-`python-bounded-v1`. Each code/config object is nonempty and at most 256 KiB; their media
+`python-bounded-v2`. Historical v1 declarations and records remain readable, but this worker
+rejects v1 execution before artifact reads. Each code/config object is nonempty and at most 256 KiB; their media
 types are `text/x-python` and `application/json`. At most 32 input references and 16 MiB
 of unique source bytes are admitted.
 
@@ -34,21 +35,32 @@ records validated inputs and declared policy; it is not runtime attestation.
 
 ## Fixed runtime profile
 
-The initial image contains Python and its standard library. It does not contain the
-FactorForge application, Polars or LEAN. The current allowlisted image identity is
-`sha256:2fe5997d249a808b8eeea52c58a1dbffbba28754dc11699ef5c029f2d818ce79`.
+The image contains Python and its standard library, with pip and ensurepip removed. It does
+not contain the FactorForge application, Polars or LEAN. The exact image reference is
+`factorforge-python-runtime@sha256:d3f48bcda1df69a2e87baa63ab56d5883fa790e790c3c7b3c907dcc9097d57d4`.
 The executor requires Linux/amd64, cgroup v2 and reported CPU, memory, swap and PID controls.
-It checks the repository manifest digest, actual image ID, OS, architecture and absence
-of image-declared volumes. Docker image stores can identify the resolved image by its
-manifest or configuration object; the controller pins both expected digests and verifies
-the created container against the resolved ID. The pinned configuration digest is
-`sha256:ec7d6c95cd3692a2e2d228a8b1ca74e4025b54121fcc4c5da6f09cfa473315ad`.
+It requires a containerd image store with the exact repository digest and manifest image ID,
+matching manifest descriptor, sanitized runtime Config and ordered filesystem diff IDs.
+Classic configuration-only image identity is unsupported. The configuration object digest is
+`sha256:f3418e6db48e622047d51483756f98a50346cb44f832e2b428a53f551192d3c3`.
 The [OCI image specification](https://github.com/opencontainers/image-spec/blob/main/config.md#imageid)
 distinguishes the configuration-based image ID from the manifest that references it.
+The controller checks Docker's runtime Config subset; it does not claim to recompute the raw
+configuration object digest from an inspection response.
 Create uses `--pull never`; execution cannot download an image or install dependencies.
-Digest pinning establishes identity. The [recorded image scan](results.md#python-sandbox-execution)
-reported 33 vulnerabilities across 13 packages, including one high-severity finding;
-image remediation remains open.
+The [recorded image evidence](results.md#python-sandbox-execution) preserves the original
+image's 33 findings and the sanitized image's zero-finding unfiltered scan. Eight local v2
+acceptance cases passed, including absence of pip and ensurepip. Fresh hosted import and
+acceptance remain required before claiming runtime promotion is complete.
+
+CI retrieves `runtime.oci.tar` from the isolated artifact commit
+`790c03618afc6defb12977d3844701a08b01565c`, requires exactly 21,227,520 bytes and
+SHA-256 `9f7b76a6e035cb0a64066be9b7e7bf7db51f831011d43e3a62039324df411a99`,
+then imports it into the disposable runner's containerd image store. The archive is
+kept on a separate orphan Git branch after Release asset transfers failed. This adds
+a 21 MB Git object but permits authenticated checkout with read-only CI permissions.
+The source checkout contains no runtime binary. Enabling the image store changes only
+the hosted sandbox job's daemon; local operators must prepare their own supported store.
 
 | Control | Fixed setting |
 | --- | --- |

@@ -82,7 +82,7 @@ def test_real_bounded_container(case: str, monkeypatch: pytest.MonkeyPatch) -> N
         input_refs=(),
         seed=7,
         engine="python",
-        profile="python-bounded-v1",
+        profile="python-bounded-v2",
     )
     runtime = DockerRuntime(binary=Path(binary), endpoint=endpoint, config=config)
     cancel = Event()
@@ -149,6 +149,8 @@ def test_real_bounded_container(case: str, monkeypatch: pytest.MonkeyPatch) -> N
                 "input_write_denied",
                 "canary_not_mounted",
                 "host_env_absent",
+                "pip_absent",
+                "ensurepip_absent",
             )
         )
         assert all(actual["socket_denials"].values()) and len(actual["socket_denials"]) == 5
