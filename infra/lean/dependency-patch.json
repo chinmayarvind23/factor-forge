@@ -1,0 +1,23 @@
+{
+  "schema_version": "lean-dependency-patch-v1",
+  "build_identity": "lean-8ee075a-factorforge-dependencies-v1",
+  "upstream_commit": "8ee075a39918f2df6fe9e0a5944e366fb60d10dc",
+  "patch_sha256": "21537ba9a29a2a3a5843e6bcc6c427674ea0cf6f9911d06e71f776687e99d50b",
+  "changes": [
+    {
+      "path": "Compression/QuantConnect.Compression.csproj",
+      "before_sha256": "1742074e268631814c650c8614eb68df55eb341401eae016b36a93f2e667b291",
+      "after_sha256": "1e23e4dde6287f36ffb980a654a4ca489cf86317a858fb4486de9ba3c50873bd",
+      "before": "<PackageReference Include=\"DotNetZip\" Version=\"1.16.0\" />",
+      "after": "<PackageReference Include=\"ProDotNetZip\" Version=\"1.20.0\" />"
+    },
+    {
+      "path": "Messaging/QuantConnect.Messaging.csproj",
+      "before_sha256": "a5a12487f31b3954517443ae7f247b9220874115ecf2b38e9efaf0a0535c7735",
+      "after_sha256": "d8f4493a2895d0aa125b5aa13e6ecc0863dab388aad92676c0b330359bbcc2cb",
+      "before": "<PackageReference Include=\"NetMQ\" Version=\"4.0.1.6\" />",
+      "after": "<PackageReference Include=\"NetMQ\" Version=\"4.0.4.3\" />"
+    }
+  ],
+  "engine_accounting_sources_changed": false
+}

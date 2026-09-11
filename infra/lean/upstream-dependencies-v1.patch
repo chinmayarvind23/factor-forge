@@ -1,0 +1,22 @@
+--- a/Compression/QuantConnect.Compression.csproj
++++ b/Compression/QuantConnect.Compression.csproj
+@@ -29,7 +29,7 @@
+     <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
+   </Target>
+   <ItemGroup>
+-    <PackageReference Include="DotNetZip" Version="1.16.0" />
++    <PackageReference Include="ProDotNetZip" Version="1.20.0" />
+     <PackageReference Include="SharpZipLib" Version="1.3.3" />
+   </ItemGroup>
+   <ItemGroup>
+--- a/Messaging/QuantConnect.Messaging.csproj
++++ b/Messaging/QuantConnect.Messaging.csproj
+@@ -29,7 +29,7 @@
+     <Message Text="SelectedOptimization $(SelectedOptimization)" Importance="high" />
+   </Target>
+   <ItemGroup>
+-    <PackageReference Include="NetMQ" Version="4.0.1.6" />
++    <PackageReference Include="NetMQ" Version="4.0.4.3" />
+     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+   </ItemGroup>
+   <ItemGroup>

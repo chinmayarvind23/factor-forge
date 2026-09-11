@@ -1,0 +1,16 @@
+{
+  "schema_version": "lean-price-only-seeded-holdings-v1",
+  "currency": "USD",
+  "adjustment": "unadjusted",
+  "cash_usd": "0",
+  "orders": "none",
+  "corporate_actions": "none",
+  "fees": "zero",
+  "cash_return": "zero",
+  "holdings": [{"security_id": "SEC-A", "quantity": "10", "average_price_usd": "100"}],
+  "snapshots": [
+    {"at": "2024-04-29T20:00:00Z", "prices": [{"security_id": "SEC-A", "price_usd": "100"}]},
+    {"at": "2024-04-30T20:00:00Z", "prices": [{"security_id": "SEC-A", "price_usd": "102"}]},
+    {"at": "2024-05-01T20:00:00Z", "prices": [{"security_id": "SEC-A", "price_usd": "104"}]}
+  ]
+}

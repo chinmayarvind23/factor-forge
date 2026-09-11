@@ -1,0 +1,8 @@
+{
+  "schema_version": "lean-build-inputs-v1",
+  "source_repository": "https://github.com/QuantConnect/Lean.git",
+  "source_commit": "8ee075a39918f2df6fe9e0a5944e366fb60d10dc",
+  "platform": "linux/amd64",
+  "sdk": "mcr.microsoft.com/dotnet/sdk@sha256:66d72eead315c2457cb84b3cade223863a735ae0e6a88ac73fac5501910c341e",
+  "runtime": "mcr.microsoft.com/dotnet/runtime@sha256:f9a9cef68c1ddd440de58c0c8ebe911a780210b831b39f2b84751922f7b27c42"
+}

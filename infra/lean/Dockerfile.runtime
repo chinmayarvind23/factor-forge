@@ -1,0 +1,12 @@
+# Packaging only: compilation runs separately under explicit container limits.
+FROM mcr.microsoft.com/dotnet/runtime@sha256:f9a9cef68c1ddd440de58c0c8ebe911a780210b831b39f2b84751922f7b27c42
+LABEL org.opencontainers.image.source="https://github.com/QuantConnect/Lean" \
+      org.opencontainers.image.revision="8ee075a39918f2df6fe9e0a5944e366fb60d10dc" \
+      org.factorforge.lean.build="lean-8ee075a-factorforge-dependencies-v1" \
+      org.factorforge.lean.patch.sha256="21537ba9a29a2a3a5843e6bcc6c427674ea0cf6f9911d06e71f776687e99d50b"
+ENV DOTNET_EnableDiagnostics=0 \
+    DOTNET_CLI_TELEMETRY_OPTOUT=1
+WORKDIR /app
+COPY --chown=1654:1654 runtime/ /app/
+USER 1654:1654
+ENTRYPOINT ["dotnet", "/app/QuantConnect.Lean.Launcher.dll"]
