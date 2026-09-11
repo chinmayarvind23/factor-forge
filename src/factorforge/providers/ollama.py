@@ -5,6 +5,7 @@ import math
 import re
 import time
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Annotated, Literal, cast
 
 import httpx
@@ -20,6 +21,30 @@ MAX_JSON_DEPTH = 32
 type Outcome = Literal["success", "truncated", "malformed", "unavailable"]
 
 
+@dataclass(frozen=True, slots=True)
+class _ProfileLimits:
+    """Frozen admission and output limits prevent caller-supplied tuning of a named baseline."""
+
+    context: int
+    output: int
+    request_bytes: int
+    read_seconds: int
+
+
+class GenerationProfile(StrEnum):
+    """Protocol delivery probes have an explicit identity separate from extraction experiments."""
+
+    EXTRACTION_32K_V1 = "extraction_32k_v1"
+    LOCAL_PROTOCOL_4K_V1 = "local_protocol_4k_v1"
+
+    @property
+    def limits(self) -> _ProfileLimits:
+        """The smoke probe reserves 1,920 tokens beyond admitted bytes and maximum output."""
+        if self is GenerationProfile.LOCAL_PROTOCOL_4K_V1:
+            return _ProfileLimits(4096, 128, 2048, 180)
+        return _ProfileLimits(32768, 2048, MAX_REQUEST_BYTES, 120)
+
+
 class GenerationRequest(BaseModel):
     """Trusted prompts and a schema are revalidated and snapshotted before any admitted call."""
 
@@ -27,6 +52,7 @@ class GenerationRequest(BaseModel):
         extra="forbid", frozen=True, strict=True, revalidate_instances="always"
     )
     model: Literal["llama3.1:8b"]
+    profile: GenerationProfile = GenerationProfile.EXTRACTION_32K_V1
     system: str = Field(min_length=1, max_length=16000)
     user: str = Field(min_length=1, max_length=32000)
     response_schema: dict[str, JsonValue]
@@ -67,8 +93,9 @@ class _CallRecord(BaseModel):
     """Every admitted attempt retains prompt, raw captures and an explicit measurement scope."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
-    schema_version: Literal["local-generation-v1"] = "local-generation-v1"
+    schema_version: Literal["local-generation-v2"] = "local-generation-v2"
     provider: Literal["ollama-loopback"] = "ollama-loopback"
+    profile: GenerationProfile
     status: Outcome
     model: str
     model_digest: str | None
@@ -158,6 +185,7 @@ def _request_payload(supplied: GenerationRequest) -> tuple[GenerationRequest, by
     """Freeze the exact revalidated request bytes before artifact storage or provider I/O."""
     try:
         request = GenerationRequest.model_validate(supplied)
+        limits = request.profile.limits
         payload: dict[str, object] = {
             "model": request.model,
             "messages": [
@@ -168,10 +196,15 @@ def _request_payload(supplied: GenerationRequest) -> tuple[GenerationRequest, by
             "stream": False,
             "keep_alive": 0,
             # The byte-BPE profile reserves context beyond all serialized bytes and output.
-            "options": {"temperature": 0, "seed": 0, "num_ctx": 32768, "num_predict": 2048},
+            "options": {
+                "temperature": 0,
+                "seed": 0,
+                "num_ctx": limits.context,
+                "num_predict": limits.output,
+            },
         }
         encoded = _json_bytes(payload)
-        if len(encoded) > MAX_REQUEST_BYTES:
+        if len(encoded) > limits.request_bytes:
             raise ValueError("Model request exceeds its byte limit")
         _check_depth(encoded)
         return request, encoded
@@ -197,6 +230,7 @@ class OllamaProvider:
         evidence: _Captures,
         name: str,
         deadline: float,
+        read_seconds: int,
     ) -> dict[str, JsonValue]:
         """Bound the retained buffer and archive received prefixes even when transport fails."""
         data = bytearray()
@@ -209,7 +243,7 @@ class OllamaProvider:
                 "POST" if payload is not None else "GET",
                 path,
                 content=payload,
-                timeout=httpx.Timeout(min(120, remaining), connect=min(3, remaining)),
+                timeout=httpx.Timeout(min(read_seconds, remaining), connect=min(3, remaining)),
             ) as response:
                 evidence.statuses[name] = response.status_code
                 for chunk in response.iter_raw():
@@ -241,6 +275,7 @@ class OllamaProvider:
     def generate(self, request: GenerationRequest, store: ArtifactStore) -> GenerationResult:
         """Archive one attempt without retries or output repair, returning no unverified success."""
         request, encoded = _request_payload(request)
+        limits = request.profile.limits
         request_ref = store.put(encoded, media_type="application/json")
         started = time.monotonic()
         deadline = started + 180
@@ -255,16 +290,30 @@ class OllamaProvider:
                 base_url="http://127.0.0.1:11434",
                 trust_env=False,
                 follow_redirects=False,
-                timeout=httpx.Timeout(120, connect=3),
+                timeout=httpx.Timeout(limits.read_seconds, connect=3),
                 transport=self._transport,
                 headers={"Accept-Encoding": "identity", "Content-Type": "application/json"},
             ) as client:
                 inventory = self._capture(
-                    client, "/api/tags", None, store, evidence, "inventory", deadline
+                    client,
+                    "/api/tags",
+                    None,
+                    store,
+                    evidence,
+                    "inventory",
+                    deadline,
+                    limits.read_seconds,
                 )
                 digest = self._digest(inventory, request.model)
                 version = self._capture(
-                    client, "/api/version", None, store, evidence, "version", deadline
+                    client,
+                    "/api/version",
+                    None,
+                    store,
+                    evidence,
+                    "version",
+                    deadline,
+                    limits.read_seconds,
                 )
                 value = version.get("version")
                 if not isinstance(value, str) or not re.fullmatch(
@@ -273,13 +322,31 @@ class OllamaProvider:
                     raise ValueError("Missing or invalid server version")
                 server_version = value
                 raw = self._capture(
-                    client, "/api/chat", encoded, store, evidence, "response", deadline
+                    client,
+                    "/api/chat",
+                    encoded,
+                    store,
+                    evidence,
+                    "response",
+                    deadline,
+                    limits.read_seconds,
                 )
                 parsed = _Response.model_validate(raw)
-                if not parsed.done or parsed.model != request.model:
+                if (
+                    not parsed.done
+                    or parsed.model != request.model
+                    or parsed.eval_count > limits.output
+                ):
                     raise ValueError("Provider did not complete the requested model response")
                 after = self._capture(
-                    client, "/api/tags", None, store, evidence, "inventory_after", deadline
+                    client,
+                    "/api/tags",
+                    None,
+                    store,
+                    evidence,
+                    "inventory_after",
+                    deadline,
+                    limits.read_seconds,
                 )
                 if self._digest(after, request.model) != digest:
                     raise ValueError("Model tag changed during generation")
@@ -292,6 +359,7 @@ class OllamaProvider:
         except (ValueError, ValidationError, RecursionError, OverflowError):
             status = "malformed"
         record = _CallRecord(
+            profile=request.profile,
             status=status,
             model=request.model,
             model_digest=digest,

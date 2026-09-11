@@ -15,10 +15,116 @@ from factorforge.domain.artifacts import ArtifactRef
 from factorforge.domain.errors import ResearchError
 from factorforge.providers.ollama import (
     MAX_RESPONSE_BYTES,
+    GenerationProfile,
     GenerationRequest,
     GenerationResult,
     OllamaProvider,
 )
+
+
+@pytest.mark.parametrize(
+    "profile,context,output,read_cap",
+    [
+        (GenerationProfile.EXTRACTION_32K_V1, 32768, 2048, 120),
+        (GenerationProfile.LOCAL_PROTOCOL_4K_V1, 4096, 128, 180),
+    ],
+)
+def test_fixed_profiles_preserve_wire_options_and_record_identity(
+    profile: GenerationProfile,
+    context: int,
+    output: int,
+    read_cap: int,
+) -> None:
+    """A separate smoke configuration cannot silently weaken the original extraction baseline."""
+    transport = FixtureTransport(response(valid_reply()))
+    request = generation_request().model_copy(update={"profile": profile})
+    with TemporaryDirectory(prefix="factorforge-profile-") as directory:
+        store = LocalArtifactStore(Path(directory))
+        result = OllamaProvider(transport=transport).generate(request, store)
+        record = json.loads(store.get(result.record))
+        sent = next(call for call in transport.calls if call.url.path == "/api/chat")
+        assert result.status == "success"
+        assert json.loads(sent.content)["options"] == {
+            "temperature": 0,
+            "seed": 0,
+            "num_ctx": context,
+            "num_predict": output,
+        }
+        assert sent.content == store.get(ArtifactRef.model_validate(record["request"]))
+        assert record["schema_version"] == "local-generation-v2"
+        assert record["profile"] == profile.value
+        assert read_cap - 5 < transport.calls[0].extensions["timeout"]["read"] <= read_cap
+    assert generation_request().profile is GenerationProfile.EXTRACTION_32K_V1
+
+
+@pytest.mark.parametrize(
+    "profile,limit",
+    [
+        (GenerationProfile.EXTRACTION_32K_V1, 24 * 1024),
+        (GenerationProfile.LOCAL_PROTOCOL_4K_V1, 2 * 1024),
+    ],
+)
+def test_profile_exact_request_boundary_precedes_io(
+    profile: GenerationProfile,
+    limit: int,
+) -> None:
+    """The complete canonical request, including schema and options, consumes the byte budget."""
+    transport = FixtureTransport(response(valid_reply()))
+    request = generation_request().model_copy(update={"profile": profile, "user": "x"})
+    with TemporaryDirectory(prefix="factorforge-profile-limit-") as directory:
+        store = LocalArtifactStore(Path(directory))
+        OllamaProvider(transport=transport).generate(request, store)
+        overhead = (
+            len(next(call.content for call in transport.calls if call.url.path == "/api/chat")) - 1
+        )
+    for extra in (0, 1):
+        transport = FixtureTransport(response(valid_reply()))
+        request = request.model_copy(update={"user": "x" * (limit - overhead + extra)})
+        with TemporaryDirectory(prefix="factorforge-profile-limit-") as directory:
+            store = LocalArtifactStore(Path(directory))
+            if extra:
+                with pytest.raises(ResearchError) as failure:
+                    OllamaProvider(transport=transport).generate(request, store)
+                assert failure.value.code == "MODEL_INPUT_INVALID"
+                assert not transport.calls and not list(Path(directory).iterdir())
+            else:
+                result = OllamaProvider(transport=transport).generate(request, store)
+                assert result.status == "success"
+                assert (
+                    len(
+                        next(
+                            call.content for call in transport.calls if call.url.path == "/api/chat"
+                        )
+                    )
+                    == limit
+                )
+
+
+def test_smoke_profile_rejects_provider_output_above_its_budget() -> None:
+    """The smoke call rejects counters above its separately frozen output limit."""
+    transport = FixtureTransport(response({**valid_reply(), "eval_count": 129}))
+    request = generation_request().model_copy(
+        update={"profile": GenerationProfile.LOCAL_PROTOCOL_4K_V1}
+    )
+    with TemporaryDirectory(prefix="factorforge-profile-output-") as directory:
+        store = LocalArtifactStore(Path(directory))
+        result = OllamaProvider(transport=transport).generate(request, store)
+        assert result.status == "malformed" and result.content is None
+        record = json.loads(store.get(result.record))
+        assert record["profile"] == "local_protocol_4k_v1"
+        assert record["output_tokens"] == 129
+
+
+def test_forged_profile_cannot_override_limits_or_admit_io() -> None:
+    """Only the enum's declared profiles may reach artifact or network admission."""
+    transport = FixtureTransport(response(valid_reply()))
+    request = generation_request().model_copy(update={"profile": "unbounded"})
+    with TemporaryDirectory(prefix="factorforge-profile-invalid-") as directory:
+        store = LocalArtifactStore(Path(directory))
+        with pytest.raises(ResearchError) as failure:
+            OllamaProvider(transport=transport).generate(request, store)
+        assert failure.value.code == "MODEL_INPUT_INVALID" and not transport.calls
+        assert not list(Path(directory).iterdir())
 
 
 class ProbeStream(httpx.SyncByteStream):
@@ -84,11 +190,13 @@ class FixtureTransport(httpx.BaseTransport):
 
 def exercise(
     transport: FixtureTransport,
+    profile: GenerationProfile = GenerationProfile.EXTRACTION_32K_V1,
 ) -> tuple[GenerationResult, dict[str, object], bytes | None]:
     """Load saved evidence through the verifying store before releasing its workspace."""
     with TemporaryDirectory(prefix="factorforge-provider-probe-") as directory:
         store = LocalArtifactStore(Path(directory))
-        result = OllamaProvider(transport=transport).generate(generation_request(), store)
+        request = generation_request().model_copy(update={"profile": profile})
+        result = OllamaProvider(transport=transport).generate(request, store)
         record = cast(dict[str, object], json.loads(store.get(result.record)))
         raw = (
             store.get(ArtifactRef.model_validate(record["response"]))
@@ -240,8 +348,10 @@ def test_request_rejection_precedes_artifact_and_network_io(case: str) -> None:
 
 
 @pytest.mark.parametrize("expire_at", ["admission", "chunk", "eof"])
+@pytest.mark.parametrize("profile", list(GenerationProfile))
 def test_elapsed_deadline_blocks_admission_and_late_eof(
     expire_at: str,
+    profile: GenerationProfile,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """An expired budget blocks HTTP admission and cannot be revived by a late complete body."""
@@ -267,7 +377,7 @@ def test_elapsed_deadline_blocks_admission_and_late_eof(
     stream = LateStream([])
     transport = FixtureTransport(httpx.Response(200, stream=stream))
     monkeypatch.setattr("factorforge.providers.ollama.time", SimpleNamespace(monotonic=now))
-    result, record, _ = exercise(transport)
+    result, record, _ = exercise(transport, profile)
     assert result.status == "unavailable" and result.content is None
     assert transport.closed
     if expire_at != "admission":
@@ -278,7 +388,18 @@ def test_elapsed_deadline_blocks_admission_and_late_eof(
         assert cast(dict[str, bool], record["capture_complete"])["inventory"] is False
 
 
-def test_remaining_deadline_reduces_later_http_timeouts(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(
+    "profile,read_cap",
+    [
+        (GenerationProfile.EXTRACTION_32K_V1, 120),
+        (GenerationProfile.LOCAL_PROTOCOL_4K_V1, 180),
+    ],
+)
+def test_remaining_deadline_reduces_later_http_timeouts(
+    monkeypatch: pytest.MonkeyPatch,
+    profile: GenerationProfile,
+    read_cap: int,
+) -> None:
     """Each subsequent call receives the remaining elapsed budget rather than a fresh timeout."""
     clock = SimpleNamespace(value=0.0)
 
@@ -295,9 +416,9 @@ def test_remaining_deadline_reduces_later_http_timeouts(monkeypatch: pytest.Monk
         "factorforge.providers.ollama.time", SimpleNamespace(monotonic=lambda: clock.value)
     )
     transport = SlowInventory(response(valid_reply()))
-    result, _, _ = exercise(transport)
+    result, _, _ = exercise(transport, profile)
     assert result.status == "success"
-    assert transport.calls[0].extensions["timeout"]["read"] == 120
+    assert transport.calls[0].extensions["timeout"]["read"] == read_cap
     assert transport.calls[1].extensions["timeout"]["read"] == 80
 
 
