@@ -1,5 +1,9 @@
 # FactorForge Low-Level Design
 
+`retrieval/direction_review.py` adds a [source-only direction judgment](direction-review.md)
+with verified page bytes and exact cited-quote membership. It retains the model observation
+and uncertainty separately; budgeted scheduling integration remains the next layer.
+
 `orchestration/command.py` exposes the trusted [research operator](research-command.md).
 A complete brief/plan request defines idempotency. The fixed local operator identity,
 dedicated database guard and artifact directory bind execution; no browser permissions change.
