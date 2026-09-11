@@ -115,3 +115,22 @@ Pending reservations still require reconciliation rather than repeated execution
 After execution, use the result reference with the [offline report exporter](research-reports.md)
 to read candidate outcomes, direction judgments and linked evidence. Reporting consumes
 no additional model calls or experiment budget and supports all three saved plan versions.
+
+## Publish the report with the operator
+
+```powershell
+uv run factorforge-research --request research-request.json --artifacts artifacts/research --report
+```
+
+`--report` preserves the existing request identity and the first two stdout receipts.
+After result publication it exports the same verified JSON/Markdown report as the
+offline command, snapshots the settled operation ledger and publishes a
+`research-completion-v1` receipt binding run ID, full request, result, ledger, report
+and Markdown. A third stdout line identifies the completion artifact and local report.
+The flag adds no model calls or experiment operations; it can be used when replaying
+an already settled request.
+
+If report export stops, the result receipt remains available. Retry the same command
+to recover existing operations and finish publication. A differing file at the report's
+content-derived export path is rejected without overwriting it. Report publication
+completion is not a factor-promotion decision or a release benchmark grade.

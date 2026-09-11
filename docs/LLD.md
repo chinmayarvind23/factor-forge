@@ -1,5 +1,9 @@
 # FactorForge Low-Level Design
 
+`report_export.py` shares deterministic local export between the offline command and
+operator `--report`. `ResearchCompletion` binds the full request, result, settled ledger
+snapshot and report artifacts without adding research operations or changing request IDs.
+
 [Research reports](research-reports.md) verify a bounded reachable artifact closure and
 bind typed execution verdicts to source, review, amendment, monthly and validation evidence.
 The offline exporter publishes stable JSON/Markdown without model or database work.

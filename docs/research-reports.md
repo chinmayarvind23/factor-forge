@@ -41,3 +41,10 @@ Three retained live runs have been exported and replayed with identical receipts
 All eleven exported artifact links resolve locally. Completed original execution and
 amended execution are also covered by PostgreSQL integration tests; their report NAV
 is checked against the original accounting fixture.
+
+The research operator also accepts `--report`. Both commands share `report_export.py`,
+so they produce the same report and Markdown bytes. The operator additionally records
+a completion artifact containing the original request, scheduler result, settled
+budget-ledger snapshot and report references. This provides a single root for those
+explicitly linked artifacts. It does not replace canonical PostgreSQL state or claim
+that the entire project's lineage specification has been fulfilled.

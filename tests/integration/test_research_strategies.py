@@ -4,6 +4,7 @@ import json
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from uuid import UUID
 
 import pytest
 from test_monthly_worker import request as monthly_request
@@ -13,13 +14,15 @@ from test_postgres_runs import store as store
 from factorforge.auth.principal import Principal
 from factorforge.backtests.monthly import MonthlyRun, run_monthly
 from factorforge.data.artifacts import ArtifactStore, LocalArtifactStore
+from factorforge.domain.artifacts import ArtifactRef
 from factorforge.domain.errors import ResearchError
 from factorforge.domain.literature import PaperDocument
 from factorforge.domain.research_brief import ResearchBrief
-from factorforge.orchestration.command import OperatorRequest
+from factorforge.orchestration.command import OPERATOR, OperatorRequest
 from factorforge.orchestration.command import main as operator_main
 from factorforge.orchestration.postgres_budgets import read_budget
 from factorforge.orchestration.postgres_runs import PostgresRunStore
+from factorforge.orchestration.report_export import ResearchCompletion
 from factorforge.orchestration.research_experiments import (
     ExperimentPlan,
     ResearchExperiments,
@@ -269,3 +272,33 @@ def test_source_drafts_publish_and_replay(
             assert operator_main(args) == 0
             second = capsys.readouterr()
             assert first.out == second.out and second.err == "" and len(calls) == 2
+
+            operator_run_id = UUID(json.loads(first.out.splitlines()[0])["run_id"])
+            before_report = read_budget(store, operator_run_id, OPERATOR)
+            assert operator_main([*args, "--report"]) == 0
+            with_report = capsys.readouterr()
+            lines = with_report.out.splitlines()
+            assert with_report.err == "" and len(lines) == 3
+            assert lines[:2] == first.out.splitlines()
+            receipt = json.loads(lines[2])
+            completion = ResearchCompletion.model_validate_json(
+                artifacts.get(ArtifactRef.model_validate(receipt["completion"]))
+            )
+            assert completion.run_id == operator_run_id
+            assert artifacts.get(completion.budget) == before_report.canonical_bytes()
+            assert completion.result.model_dump(mode="json") == json.loads(lines[1])["result"]
+            assert completion.request.model_dump(mode="json") == json.loads(lines[0])["request"]
+            report_path = Path(receipt["path"])
+            report_bytes = report_path.read_bytes()
+            assert b"Terminal account NAV: 1057.98 USD." in report_bytes
+            report_path.write_bytes(b"user edited report")
+            assert operator_main([*args, "--report"]) == 1
+            rejected = capsys.readouterr()
+            assert "REPORT_EXPORT_INVALID" in rejected.err
+            assert report_path.read_bytes() == b"user edited report"
+            report_path.write_bytes(report_bytes)
+            assert operator_main([*args, "--report"]) == 0
+            resumed = capsys.readouterr()
+            assert resumed.out == with_report.out and resumed.err == ""
+            assert len(calls) == 2
+            assert read_budget(store, operator_run_id, OPERATOR) == before_report

@@ -14,7 +14,9 @@ from factorforge.data.artifacts import LocalArtifactStore
 from factorforge.domain.errors import ResearchError
 from factorforge.domain.factors import Contract
 from factorforge.domain.research_brief import ResearchBrief
+from factorforge.orchestration.postgres_budgets import read_budget
 from factorforge.orchestration.postgres_runs import PostgresRunStore
+from factorforge.orchestration.report_export import ResearchCompletion, export_report
 from factorforge.orchestration.research_experiments import (
     ExperimentPlan,
     IterativeExperimentPlan,
@@ -63,6 +65,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--request", type=Path, required=True)
     parser.add_argument("--artifacts", type=Path, required=True)
     parser.add_argument("--schema", default="factorforge")
+    parser.add_argument("--report", action="store_true")
     args = parser.parse_args(argv)
     try:
         request = _request(args.request)
@@ -88,6 +91,27 @@ def main(argv: Sequence[str] | None = None) -> int:
                 ),
                 flush=True,
             )
+            if args.report:
+                exported, path = export_report(result_ref, artifacts)
+                completion = ResearchCompletion(
+                    run_id=run.run_id,
+                    request=request_ref,
+                    result=result_ref,
+                    budget=_publish(read_budget(runs, run.run_id, OPERATOR), artifacts),
+                    report=exported.report,
+                    markdown=exported.markdown,
+                )
+                print(
+                    json.dumps(
+                        {
+                            "run_id": str(run.run_id),
+                            "completion": _publish(completion, artifacts).model_dump(mode="json"),
+                            **exported.model_dump(mode="json"),
+                            "path": str(path),
+                        }
+                    ),
+                    flush=True,
+                )
         finally:
             runs.close()
     except ResearchError as error:

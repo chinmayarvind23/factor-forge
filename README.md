@@ -7,7 +7,8 @@ source packets, durable model extraction, source-derived strategy drafts, monthl
 experiments and retained HAC diagnostics. PostgreSQL stores run budgets, operation
 results and LangGraph experiment checkpoints. Version-two plans add a separate,
 source-cited direction review before experiment dispatch. Version-three plans permit
-one recorded revision and a separately identified direction amendment. Prompts, observations,
+one recorded revision and a separately identified direction amendment. The operator
+can publish a verified report and completion receipt with `--report`. Prompts, observations,
 input references, results and review decisions remain available for replay. See the
 [research command](docs/research-command.md) and [direction review](docs/direction-review.md).
 
