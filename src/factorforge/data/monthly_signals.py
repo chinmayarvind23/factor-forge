@@ -57,7 +57,14 @@ def _source(ref: ArtifactRef, store: ArtifactStore) -> MonthlySourceBundle:
     """Hash verification and bounded strict parsing precede all source record interpretation."""
     if ref.size_bytes > MAX_SOURCE_BYTES or ref.media_type != "application/json":
         raise _failure("MONTHLY_SOURCE_LIMIT")
-    raw = store.get(ref)
+    try:
+        raw = store.get(ArtifactRef.model_validate(ref).model_copy())
+    except ResearchError:
+        raise
+    except Exception:
+        raise _failure("MONTHLY_SOURCE_UNAVAILABLE") from None
+    if type(raw) is not bytes:
+        raise _failure("MONTHLY_SOURCE_INVALID")
     verify_bytes(raw, ref)
     try:
         value = json.loads(raw, object_pairs_hook=_unique_object, parse_constant=_nonfinite)
@@ -73,6 +80,15 @@ def _source(ref: ArtifactRef, store: ArtifactStore) -> MonthlySourceBundle:
         return MonthlySourceBundle.model_validate_json(raw, strict=True)
     except (ValueError, ValidationError, OverflowError, RecursionError):
         raise _failure("MONTHLY_SOURCE_INVALID") from None
+
+
+def load_monthly(ref: ArtifactRef, store: ArtifactStore) -> MonthlySourceBundle:
+    """Expose the verified source loader without treating successful parsing as signal selection."""
+    try:
+        ref = ArtifactRef.model_validate(ref)
+    except ValueError:
+        raise _failure("MONTHLY_SOURCE_INVALID") from None
+    return _source(ref, store)
 
 
 def _selected_index(

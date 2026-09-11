@@ -2,3 +2,4 @@
 data/fixtures/*.json -text whitespace=cr-at-eol
 data/backtests/monthly-raw-v1/inputs/*.json -text whitespace=cr-at-eol
 data/backtests/monthly-raw-v1/expected/*.json -text whitespace=cr-at-eol
+data/backtests/monthly-raw-v1/strategy.json -text

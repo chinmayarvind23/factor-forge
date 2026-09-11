@@ -75,6 +75,11 @@ policies. Its canonical declaration and normalized execution identity remain sep
 neither is an execution result. The complete original inputs and independently calculated
 outputs in `data/backtests/monthly-raw-v1` are frozen before the executor is implemented.
 
+`backtests/admission.py` supplies [monthly source admission](monthly-admission.md): canonical
+manifests and rights pass before economic data reads, every object role and byte identity is
+verified, and execution receives a pinned source snapshot. The receipt binds the declared
+strategy and source closure. Actual calendar, funding and execution gates remain separate.
+
 `backtests/performance.py` computes [conditional NAV metrics](conditional-metrics.md) from
 a complete declared close inventory. Entry fees remain in the first full interval and
 drawdown baseline. Invalid rate or execution inventories disable only their dependent
