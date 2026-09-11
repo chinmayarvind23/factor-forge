@@ -1,5 +1,10 @@
 # FactorForge Low-Level Design
 
+`validation/splits.py` implements [chronological validation partitions](validation-splits.md).
+Walk-forward requires label availability before test formation. Purged folds remove
+closed label-window overlap and apply an explicit elapsed-time embargo. Both retain
+excluded indices; fitting and experiment evaluation are separate consumers.
+
 `factors/source_strategy.py` compiles [source observations into monthly drafts](source-strategy.md)
 using explicit reviewed execution bindings. Source choices replace formula, direction,
 bucket count, formation lag and lookback; unresolved choices remain reason-coded outcomes.
