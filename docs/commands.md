@@ -152,3 +152,15 @@ The command records a start before delivery and returns the extraction outcome, 
 and artifact pointers. It makes no retry and provides no automatic resume. An explicit rerun is
 a new trial and must not replace a failed baseline attempt. Unexpected failures retain a safe
 failure event when storage remains available; a storage outage can leave only the start record.
+
+## Plan monthly targets from original source facts
+
+The [monthly example](../data/fixtures/monthly-signals-v1/README.md) includes runnable source,
+request and portfolio files. Run its command from a trusted checkout to produce conditional
+targets. It archives exact inputs, installed source snapshots, package versions and a start
+record before calculation. A terminal record links the assembly and targets, or preserves
+the typed calculation failure. Exit status zero means target planning succeeded.
+
+This command performs no model call, calendar admission, funding or trade execution. Stored
+code is evidence only and is never executed for replay. Recompute using the matching trusted
+code and verified stored input bytes. A storage failure can leave an incomplete start record.

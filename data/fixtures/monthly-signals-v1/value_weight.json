@@ -1,0 +1,1 @@
+{"breakpoints":"all_eligible","bucket_allocation":"balanced_contiguous_low_remainder","bucket_count":3,"cash_return":"zero","direction":"long_high_short_low","long_exposure":1,"minimum_bucket_size":2,"short_exposure":1,"short_proceeds":"segregated","sizing_basis":"pre_trade_nav","ties":"stable_security_id","weight_input":"market_cap","weighting":"value_weight"}
