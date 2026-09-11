@@ -11,6 +11,11 @@ compiler. Exact packet-bound review configuration is checked before provider wor
 published candidates retain extraction-record references and complete compiler drafts.
 Every selected source keeps its ordered compiled, review, unbound or unavailable outcome.
 
+`orchestration/research_experiments.py` adds [automatic experiment scheduling](research-experiments.md).
+It captures capital and evaluation time in the plan, runs compiled candidates through
+persisted monthly graphs, and publishes ordered execution or skip outcomes. Canonical
+worker recovery verifies results; the original run budget governs every fresh dispatch.
+
 Implemented local slice: `domain/research_brief.py` validates immutable requests and records;
 `orchestration/local_runs.py` serializes idempotent creation with a lock, caps the store at 1000
 runs, and records a single normalization transition. `api/app.py` enforces explicit local mode,

@@ -11,14 +11,14 @@ from test_postgres_runs import database as database
 from test_postgres_runs import store as store
 
 from factorforge.auth.principal import Principal
-from factorforge.backtests.monthly import MonthlyRequest
+from factorforge.backtests.monthly import MonthlyRun
 from factorforge.data.artifacts import ArtifactStore, LocalArtifactStore
 from factorforge.domain.errors import ResearchError
 from factorforge.domain.literature import PaperDocument
 from factorforge.domain.research_brief import ResearchBrief
-from factorforge.orchestration.monthly_worker import execute_monthly_operation
 from factorforge.orchestration.postgres_budgets import read_budget
 from factorforge.orchestration.postgres_runs import PostgresRunStore
+from factorforge.orchestration.research_experiments import ExperimentPlan, research_experiments
 from factorforge.orchestration.research_strategies import (
     ReviewedStrategyBinding,
     research_strategies,
@@ -72,7 +72,7 @@ def test_source_drafts_publish_and_replay(
 
     monkeypatch.setattr("factorforge.orchestration.extraction_worker.OllamaProvider", Provider)
     owner = Principal("fixture", "owner", frozenset({"execute_research"}))
-    run = store.create(ResearchBrief(idea="original score"), "one", owner)
+    run = store.create(ResearchBrief(idea="original score", max_experiments=1), "one", owner)
     with TemporaryDirectory() as directory:
         artifacts = LocalArtifactStore(Path(directory))
         command = monthly_request(artifacts)
@@ -131,16 +131,48 @@ def test_source_drafts_publish_and_replay(
         if outcome == "compiled":
             assert candidate.draft is not None and candidate.draft.strategy is not None
             assert result.sources.extractions[0].record in candidate.draft.strategy.source_refs
-            experiment = MonthlyRequest.model_validate(
-                command.model_copy(update={"spec": candidate.draft.strategy})
-            )
-            executed = execute_monthly_operation(store, run.run_id, owner, experiment, artifacts)
-            assert executed.status == "completed" and executed.performance is not None
+        plan = ExperimentPlan(
+            catalog=catalog,
+            bindings=bindings,
+            initial_cash_usd=command.initial_cash_usd,
+            evaluated_at=command.evaluated_at,
+            max_cost_per_source_microusd=1000000,
+        )
+        if outcome == "compiled":
+
+            def interrupt_publication(stage: str) -> None:
+                """Interrupt after durable execution so the scheduler must resume the graph."""
+                if stage == "before_monthly_manifest":
+                    raise RuntimeError("original publication interruption")
+
+            store.failpoint = interrupt_publication
+            with pytest.raises(RuntimeError, match="original publication interruption"):
+                research_experiments(store, run.run_id, owner, plan, artifacts)
+            store.failpoint = None
+
+            def no_repeat(*args: object, **kwargs: object) -> None:
+                """Replaying scheduling must use settled evidence rather than rerun accounting."""
+                raise AssertionError("duplicate monthly execution")
+
+            monkeypatch.setattr("factorforge.orchestration.monthly_worker.run_monthly", no_repeat)
+        scheduled = research_experiments(store, run.run_id, owner, plan, artifacts)
+        assert scheduled.experiments[0].status == (
+            "completed" if outcome == "compiled" else "skipped"
+        )
+        if outcome == "compiled":
+            reference = scheduled.experiments[0].result
+            assert reference is not None
+            executed = MonthlyRun.model_validate_json(artifacts.get(reference))
+            assert executed.performance is not None
             assert executed.performance.terminal_nav_usd == Decimal("1057.98")
-            assert (
-                execute_monthly_operation(store, run.run_id, owner, experiment, artifacts)
-                == executed
-            )
+        assert research_experiments(store, run.run_id, owner, plan, artifacts) == scheduled
+        if outcome == "compiled":
+            changed_plan = plan.model_copy(update={"initial_cash_usd": Decimal("1004")})
+            stopped = research_experiments(store, run.run_id, owner, changed_plan, artifacts)
+            assert stopped.experiments[0].status == "budget_stopped"
+            assert stopped.experiments[0].reason == "RESEARCH_BUDGET_REJECTED"
+            assert stopped.experiments[0].result is None
+            assert research_experiments(store, run.run_id, owner, plan, artifacts) == scheduled
         assert (
             research_strategies(
                 store,

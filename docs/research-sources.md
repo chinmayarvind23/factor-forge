@@ -53,5 +53,5 @@ It does not accept an arbitrary client-supplied extraction result as worker evid
 Published draft references identify the complete compiler request and result;
 they do not prove that the source interpretation is correct. A caller can pass
 a compiled strategy to the existing monthly worker with explicit capital and
-evaluation time. Automatic experiment scheduling and the full research graph
-remain the next composition layer.
+evaluation time. The [experiment scheduler](research-experiments.md) now performs
+that handoff through persisted monthly graphs for all compiled candidates.

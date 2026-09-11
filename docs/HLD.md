@@ -3,12 +3,21 @@
 Current implementation: a Next.js browser console and one FastAPI process with explicit local
 identity or verified Cognito access tokens. Storage is independently configured as bounded
 memory or PostgreSQL with actual LangGraph checkpoints. It creates owner-scoped receipts and
-normalizes brief text only. Agent research, isolated execution and cloud deployment remain planned.
+normalizes brief text in the browser/API flow. The full agent research loop and cloud deployment remain planned.
 Live Cognito integration and browser sign-in still need deployment configuration.
 The browser performs bounded polling and validates responses before rendering progress.
 PostgreSQL holds accepted state; LangGraph checkpoints execution progress. Their commits are
 separate. Recovery validates a durable checkpoint before publishing its accepted transition.
 The pure normalization step can safely repeat; this is not an exactly-once execution claim.
+
+A trusted worker path now composes canonical-idea retrieval, durable source extraction,
+reviewed strategy compilation and automatic monthly experiment scheduling. Model operations
+reserve budget before dispatch and retain their outcomes. Each compiled experiment uses a
+persisted two-node LangGraph for execution and publication. Retry reuses settled operations;
+the source/compilation stages currently recompute deterministic work. The worker publishes
+the source evidence, draft decisions and ordered execution results. This path requires the
+explicit execute_research capability and original-fixture data; it does not expand browser
+permissions. Validation, research iteration and the enclosing research graph remain planned.
 
 The data foundation adds immutable content stores, a dataset catalog within the same PostgreSQL
 boundary and deterministic point-in-time selection. Catalog publication verifies input bytes
