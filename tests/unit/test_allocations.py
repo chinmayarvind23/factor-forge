@@ -4,12 +4,12 @@ from fractions import Fraction
 
 import pytest
 from pydantic import ValidationError
+from test_targets import panel, portfolio
 
 from factorforge.domain.errors import ResearchError
 from factorforge.domain.factors import AllocationSpec
 from factorforge.domain.targets import AllocationTemplate, Rational
 from factorforge.factors.targets import build_allocation, build_targets
-from tests.unit.test_targets import panel, portfolio
 
 
 def allocation(**changes: object) -> AllocationSpec:
