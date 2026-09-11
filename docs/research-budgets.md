@@ -96,3 +96,22 @@ the artifact store already contains output.
 This worker invokes the trusted local monthly accounting implementation. It provides no
 generated-code execution, process deadline enforcement, public endpoint, or autonomous
 literature-to-strategy decision. Those remain separate graph and sandbox responsibilities.
+
+## Source-extraction worker
+
+`extraction_worker.execute_extraction_operation` reserves a model operation before calling
+the existing fixed Ollama extraction profile. Its immutable command binds the selected
+paper/pages, source artifact identities, prompt hash, provider profile and maximum charge.
+The operation UUID is derived from the canonical run and command hash. The retained result
+links that command to the extractor's prompt, provider-record and observation artifacts.
+
+Both parsed observations and other typed delivery outcomes settle once and replay from
+verified stored bytes. Dollar cost is explicitly unknown because the local provider supplies
+no billing record; the full reservation remains committed. The worker records a monotonic
+start before the reservation transaction and caps provider work by the original run deadline.
+Database wait and source preparation consume that allowance. Every metadata/generation HTTP
+read uses the same deadline, additionally capped by the provider's existing 180-second limit.
+This is cooperative HTTP deadline handling, not a separate process termination boundary.
+
+Integration tests use controlled provider responses and actual PostgreSQL persistence to
+verify dispatch, settlement and restart behavior. Those tests do not measure model accuracy.

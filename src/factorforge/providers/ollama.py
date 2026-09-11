@@ -217,9 +217,16 @@ def _request_payload(supplied: GenerationRequest) -> tuple[GenerationRequest, by
 class OllamaProvider:
     """The existing loopback endpoint is fixed; callers cannot redirect requests or enable tools."""
 
-    def __init__(self, *, transport: httpx.BaseTransport | None = None) -> None:
+    def __init__(
+        self, *, transport: httpx.BaseTransport | None = None, deadline: float | None = None
+    ) -> None:
         """Inject a transport for protocol tests without introducing another SDK or provider."""
         self._transport = transport
+        if deadline is not None and (
+            type(deadline) not in (int, float) or not math.isfinite(deadline) or deadline < 0
+        ):
+            raise ValueError("Provider deadline must be a finite monotonic instant")
+        self._deadline = deadline
 
     def _capture(
         self,
@@ -278,7 +285,9 @@ class OllamaProvider:
         limits = request.profile.limits
         request_ref = store.put(encoded, media_type="application/json")
         started = time.monotonic()
-        deadline = started + 180
+        deadline = (
+            min(started + 180, self._deadline) if self._deadline is not None else started + 180
+        )
         evidence = _Captures()
         digest: str | None = None
         server_version: str | None = None

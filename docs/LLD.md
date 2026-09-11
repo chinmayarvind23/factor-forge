@@ -32,6 +32,11 @@ Execution and publication checkpoint synchronously in PostgreSQL. Final acceptan
 canonical settlement through a recovery-only worker path, and a per-thread advisory lock
 serializes graph writers. Its terminal artifact is the monthly result's evidence closure.
 
+`orchestration/extraction_worker.py` applies the same reservation/settlement lifecycle to
+source extraction. The command binds source and prompt identity; restart recovers the saved
+observation without another provider call. Unknown dollar charges retain reserved capacity,
+and the original wall allowance is propagated as a fixed monotonic HTTP deadline.
+
 The independent literature path uses `domain/literature.py` and `retrieval/lexical.py` for
 immutable documents and bounded BM25 ranking. `evaluation/retrieval.py` requires complete binary
 judgments and separates answerable and no-relevant query denominators; its CLI archives the

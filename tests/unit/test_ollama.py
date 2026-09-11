@@ -1,6 +1,7 @@
 """Local model delivery preserves failures without claiming extraction correctness."""
 
 import json
+import time
 from collections.abc import Iterator
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -20,6 +21,29 @@ from factorforge.providers.ollama import (
     GenerationResult,
     OllamaProvider,
 )
+
+
+def test_worker_deadline_prevents_expired_provider_io() -> None:
+    """An already exhausted research allowance still retains a typed delivery record."""
+    transport = FixtureTransport(response(valid_reply()))
+    with TemporaryDirectory() as directory:
+        store = LocalArtifactStore(Path(directory))
+        result = OllamaProvider(transport=transport, deadline=0.0).generate(
+            generation_request(), store
+        )
+        assert result.status == "unavailable" and transport.calls == []
+        assert store.get(result.record)
+
+
+def test_worker_deadline_caps_each_http_read() -> None:
+    """Every metadata and generation request shares the remaining worker allowance."""
+    transport = FixtureTransport(response(valid_reply()))
+    with TemporaryDirectory() as directory:
+        result = OllamaProvider(transport=transport, deadline=time.monotonic() + 2).generate(
+            generation_request(), LocalArtifactStore(Path(directory))
+        )
+        assert result.status == "success"
+        assert all(0 < call.extensions["timeout"]["read"] <= 2 for call in transport.calls)
 
 
 @pytest.mark.parametrize(
