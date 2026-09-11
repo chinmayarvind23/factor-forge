@@ -24,6 +24,7 @@ build-backend = "hatchling.build"
 [project.scripts]
 factorforge = "factorforge.cli:main"
 factorforge-sandbox = "factorforge.sandbox.command:main"
+factorforge-research = "factorforge.orchestration.command:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/factorforge"]

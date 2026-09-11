@@ -11,11 +11,13 @@ from test_postgres_runs import database as database
 from test_postgres_runs import store as store
 
 from factorforge.auth.principal import Principal
-from factorforge.backtests.monthly import MonthlyRun
+from factorforge.backtests.monthly import MonthlyRun, run_monthly
 from factorforge.data.artifacts import ArtifactStore, LocalArtifactStore
 from factorforge.domain.errors import ResearchError
 from factorforge.domain.literature import PaperDocument
 from factorforge.domain.research_brief import ResearchBrief
+from factorforge.orchestration.command import OperatorRequest
+from factorforge.orchestration.command import main as operator_main
 from factorforge.orchestration.postgres_budgets import read_budget
 from factorforge.orchestration.postgres_runs import PostgresRunStore
 from factorforge.orchestration.research_experiments import ExperimentPlan, research_experiments
@@ -31,7 +33,11 @@ from factorforge.validation.monthly import MonthlyHACResult
 
 @pytest.mark.parametrize("outcome", ["compiled", "unbound", "needs_review", "source_unavailable"])
 def test_source_drafts_publish_and_replay(
-    store: PostgresRunStore, monkeypatch: pytest.MonkeyPatch, outcome: str
+    store: PostgresRunStore,
+    monkeypatch: pytest.MonkeyPatch,
+    outcome: str,
+    database: tuple[str, str],
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     """A controlled extraction becomes a draft with retained source evidence and one model call."""
     calls = []
@@ -213,3 +219,27 @@ def test_source_drafts_publish_and_replay(
                     max_cost_per_source_microusd=1000000,
                 )
             assert error.value.code == "STRATEGY_BINDING_INVALID" and len(calls) == 1
+        if outcome == "compiled":
+            monkeypatch.setattr("factorforge.orchestration.monthly_worker.run_monthly", run_monthly)
+            monkeypatch.setenv("RDS_DSN", database[0])
+            operator_request = OperatorRequest(
+                brief=ResearchBrief(idea="original score", max_experiments=1), plan=plan
+            )
+            request_path = Path(directory) / "operator-request.json"
+            request_path.write_bytes(operator_request.canonical_bytes())
+            args = [
+                "--request",
+                str(request_path),
+                "--artifacts",
+                directory,
+                "--schema",
+                database[1],
+            ]
+            assert operator_main(args) == 0
+            first = capsys.readouterr()
+            assert first.err == "" and len(first.out.splitlines()) == 2
+            assert len(calls) == 2
+            monkeypatch.setattr("factorforge.orchestration.monthly_worker.run_monthly", no_repeat)
+            assert operator_main(args) == 0
+            second = capsys.readouterr()
+            assert first.out == second.out and second.err == "" and len(calls) == 2

@@ -1,5 +1,9 @@
 # FactorForge Low-Level Design
 
+`orchestration/command.py` exposes the trusted [research operator](research-command.md).
+A complete brief/plan request defines idempotency. The fixed local operator identity,
+dedicated database guard and artifact directory bind execution; no browser permissions change.
+
 `validation/monthly.py` binds HAC diagnostics to verified monthly result and calendar
 bytes. It recomputes returns from retained account closes and validates complete session
 coverage. The experiment scheduler publishes requested diagnostics after canonical recovery.

@@ -12,6 +12,9 @@ uv run python -m factorforge --help
 uv run factorforge --version
 ```
 
+The [local research operator](research-command.md) runs a reviewed saved plan through
+the implemented research pipeline with PostgreSQL and local Ollama.
+
 ## Quality and build
 
 ```bash
