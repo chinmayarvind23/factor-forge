@@ -7,7 +7,9 @@ Accepted syntax consists of scalar names, decimal constants, parentheses, unary 
 ```python
 from factorforge.domain.formula import evaluate_formula
 
-ratio = evaluate_formula("(sales-cost)/assets", scalars={"sales": "90", "cost": "30", "assets": "120"})
+ratio = evaluate_formula(
+    "(sales-cost)/assets", scalars={"sales": "90", "cost": "30", "assets": "120"}
+)
 change = evaluate_formula("delta(balance)", deltas={"balance": ["40", "25"]})
 ```
 
