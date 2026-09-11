@@ -13,6 +13,7 @@ from factorforge.auth.principal import Principal
 from factorforge.domain.errors import ResearchError
 
 MAX_TOKEN_BYTES = 16384
+MAX_ENCODED_HEADER_BYTES = 2048
 MAX_JWKS_BYTES = 65536
 
 
@@ -131,7 +132,12 @@ class CognitoVerifier:
 
     def verify(self, token: str) -> Principal:
         """Unverified headers select a trusted key but can never supply identity or URLs."""
-        if not token or len(token) > MAX_TOKEN_BYTES or not token.isascii():
+        if (
+            not token
+            or len(token) > MAX_TOKEN_BYTES
+            or not token.isascii()
+            or len(token.partition(".")[0]) > MAX_ENCODED_HEADER_BYTES
+        ):
             raise unauthorized()
         try:
             header = jwt.get_unverified_header(token)

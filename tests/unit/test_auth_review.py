@@ -271,12 +271,26 @@ def test_invalid_key_collections_fail_closed(key: rsa.RSAPrivateKey, raw: bytes)
 
 
 def test_nested_unverified_header_cannot_escape_auth_failure() -> None:
-    """Parser exhaustion is possible before signature checks, despite the token byte limit."""
+    """An explicit header budget rejects hostile nesting independent of platform parser limits."""
     header = b'{"alg":"RS256","kid":"first","extra":' + b"[" * 5000 + b"0" + b"]" * 5000 + b"}"
     raw = jwt.utils.base64url_encode(header).decode() + ".e30.eA"
 
     def forbidden() -> bytes:
         """Unparseable headers must be rejected before provider work."""
+        raise AssertionError("Unexpected provider call")
+
+    with pytest.raises(ResearchError) as error:
+        verifier(fetch_jwks=forbidden).verify(raw)
+    assert error.value.status_code == 401
+
+
+def test_oversized_flat_header_never_reaches_provider() -> None:
+    """The same header budget applies to flat input, not just a recursion-sensitive fixture."""
+    header = {"alg": "RS256", "kid": "first", "extra": "x" * 1600}
+    raw = jwt.utils.base64url_encode(json.dumps(header).encode()).decode() + ".e30.eA"
+
+    def forbidden() -> bytes:
+        """Oversized header parsing cannot trigger a key refresh."""
         raise AssertionError("Unexpected provider call")
 
     with pytest.raises(ResearchError) as error:
