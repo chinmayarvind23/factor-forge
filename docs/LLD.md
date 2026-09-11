@@ -47,6 +47,12 @@ fallback. The [monthly adapter](monthly-signals.md) retains every selected or mi
 passes derived scalars to target construction. Calendar admission, full FactorSpec checks and
 execution remain separate boundaries.
 
+`backtests/performance.py` computes [conditional NAV metrics](conditional-metrics.md) from
+a complete declared close inventory. Entry fees remain in the first full interval and
+drawdown baseline. Invalid rate or execution inventories disable only their dependent
+metrics; known terminal insolvency remains a reported loss. These calculations use a fixed
+Decimal context and have independent hand references, without inferring a complete calendar.
+
 The durable adapter uses owner issuer/subject predicates and SQL uniqueness for idempotency.
 Dollar values use fixed two-decimal canonical serialization, preserving equality between
 `5`, `5.0` and `5.00`. Run creation and its first event commit together. An actual LangGraph
