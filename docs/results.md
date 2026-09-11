@@ -43,6 +43,13 @@ real PostgreSQL integration and the literature, extraction, formula and hypothes
 The factor-contract and hypothesis modules reached 100% coverage; another 93 focused checks
 passed on Linux. These counts describe engineering verification, not completed research runs.
 
+At clean commit `e0b7d28`, 881 Windows tests passed with 98.40% combined statement/branch
+coverage and the same two skips. The suite adds session-calendar planning, signed-share
+accounting and conditional Polars target construction. Its Python build, formatting, lint
+and strict typing checks passed. Hosted Python and web jobs also passed; the separate DVC
+audit and complete release gate still failed. These conditional components have hand-checked
+fictional examples, but do not yet execute a complete admitted strategy.
+
 ## Retrieval development pilot
 
 At clean commit `42c66c2`, the frozen [three-paper pilot](../data/literature/three-paper-pilot-v1/README.md)

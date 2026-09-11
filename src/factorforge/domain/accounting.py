@@ -13,10 +13,36 @@ from decimal import (
 )
 from typing import Annotated, Literal, Self
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
+
+
+def exact_decimal_wire(value: object, info: ValidationInfo) -> object:
+    """JSON decimal strings avoid binary-float rounding before ledger precision checks."""
+    if info.mode == "json":
+        if not isinstance(value, str) or len(value) > 128:
+            raise ValueError("Accounting amounts require bounded decimal strings in JSON")
+        try:
+            return Decimal(value)
+        except DecimalException:
+            raise ValueError("Accounting amount is invalid decimal text") from None
+    return value
+
 
 Identity = Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$")]
-Amount = Annotated[Decimal, Field(ge=Decimal("-1e24"), le=Decimal("1e24"), allow_inf_nan=False)]
+Amount = Annotated[
+    Decimal,
+    Field(ge=Decimal("-1e24"), le=Decimal("1e24"), allow_inf_nan=False),
+    BeforeValidator(exact_decimal_wire, json_schema_input_type=str),
+]
 Positive = Annotated[Amount, Field(gt=0)]
 Nonnegative = Annotated[Amount, Field(ge=0)]
 

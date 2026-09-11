@@ -34,6 +34,13 @@ cash flows are inferred. Arithmetic uses an explicit 50-digit half-even Decimal 
 independent of process defaults. Inputs and output magnitudes are bounded; this does not imply
 infinite-precision execution or an exchange's fractional-share policy.
 
+JSON amounts must be decimal strings, such as `"1.000000000000000001"`. Numeric tokens
+are rejected before conversion because binary-float parsing can erase a small difference
+before Decimal validation. Python callers supply `Decimal` objects. Saved records already
+use decimal strings, so this guard preserves their representation. The implementation uses
+Pydantic's [before validators](https://docs.pydantic.dev/latest/concepts/validators/) to enforce
+the wire contract before the bounded amount checks.
+
 The original hand fixture checks nine scenarios and 50 close snapshots. For example, the
 long split/dividend account ends at 1,080 from 1,000, while the short ends at 920. The mixed
 account ends at 940, or 939 when its declared entry fees total one. These are fictional
