@@ -29,6 +29,11 @@ up to 64 hypotheses. It retains blockers and exact-execution duplicates. Queue a
 declared-contract and artifact readiness only; actual rows, accounting and sandbox admission
 remain later gates. See the [factor contract](factor-contract.md).
 
+`domain/accounting.py` and `backtests/accounting.py` now replay conditional signed-share fills,
+split/dividend/exit phases, explicit trade fees and exact-time raw-price valuation. Unknown held
+terminal outcomes block accounting. This [conditional ledger](conditional-accounting.md) has
+hand-worked engineering references; it is not yet a strategy executor or funding admission gate.
+
 The durable adapter uses owner issuer/subject predicates and SQL uniqueness for idempotency.
 Dollar values use fixed two-decimal canonical serialization, preserving equality between
 `5`, `5.0` and `5.00`. Run creation and its first event commit together. An actual LangGraph
