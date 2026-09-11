@@ -50,6 +50,14 @@ dispatch. Extraction returned `long_low_short_high`; the source-only review retu
 result and unchanged two-model-operation ledger. This is one original-source gate
 trial, not a measured improvement on the published-factor benchmark.
 
+The first version-three live trial retained a revision whose proposed quote changed
+the source's direction wording. Exact quote verification classified it as invalid,
+so no amended experiment was dispatched. The run retained all three model attempts
+and `DIRECTION_AMENDMENT_REVISION_INVALID`. All 33 reachable artifact references
+verified, and replay preserved the final result and three-operation ledger. This
+trial is the frozen revision baseline; accepted amendments have been exercised with
+controlled observations and the real monthly accounting engine.
+
 ## Supply a reviewed request
 
 Prepare a UTF-8 JSON file matching `orchestration.command.OperatorRequest`:
