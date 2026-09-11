@@ -17,3 +17,24 @@ The fixed `source-extraction-v1` prompt provides field conventions and an arithm
 Each attempt retains the source packet, prepared prompt/schema, verified provider record when admitted, parsed observation when valid, and terminal extraction record. Outcomes are `extracted`, `refused`, `invalid`, `provider_failed`, or `input_rejected`. Missing artifact evidence prevents success; unexpected provider or storage errors propagate rather than being relabeled as model mistakes. The default local profile permits a 24 KiB complete wire request and 2,048 output tokens in a 32,768-token context, with no retry or repair. Oversized input retains an admission-failure record.
 
 Citations outside the supplied page set make the observation invalid. Subset membership alone does not establish that the source supports each asserted field. The later evaluation must keep this limitation separate from numerical and structural correctness.
+
+## Critical-field development grader
+
+The `critical_field_pilot` grader evaluates nine named fields: formula, required signal inputs,
+long/short direction, bucket count, weighting, return lookback, holding horizon, rebalance frequency,
+and fixed formation lag. Input sets are order-independent; the remaining structural values use
+exact equality with the declared null conventions. A formula must use the declared input names
+and match all three frozen numerical examples exactly under the bounded interpreter. This admits
+some algebraic rearrangements, but finite examples do not prove symbolic equivalence.
+
+Gold validates its own formula against the examples before scoring. Every frozen case requires an
+attempt entry; missing, duplicate or extra case identifiers stop evaluation. Refused, malformed,
+provider-failed and input-rejected attempts receive zero of nine field matches and remain in the
+denominator. Reports expose per-field decisions, total field accuracy, and the fraction of cases
+matching all nine fields. Reloaded reports validate their counts against their per-case rows.
+
+Formation prose is retained for review and is not machine-graded. Page membership is checked,
+not passage entailment. The runner must bind the actual source packet to the gold paper identity,
+PDF hash and selected pages before invoking a provider; the arithmetic grader alone cannot prove
+where an observation came from. This development metric is not full executable `FactorSpec`
+accuracy, empirical factor replication, or the 15-paper release benchmark.
