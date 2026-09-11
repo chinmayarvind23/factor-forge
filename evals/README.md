@@ -79,6 +79,13 @@ responses, change gold labels or relax citation requirements. Schemas are derive
 Pydantic with references inlined. The first provider target is local Ollama; no OpenAI
 API compatibility or live schema enforcement is claimed before evaluation.
 
+The recorded coherent-schema run completed all ten cases with **9/10 joint passes**,
+preserving Qwen's seven passes and adding valid uncertainty on unspecified and
+contradictory directions. All ten raw responses validated against the envelope; the
+missing-short-leg case still selected a direction, so schema validity alone is not
+semantic correctness. The comparator accepted the candidate. Independent validation
+and a production profile decision remain separate steps.
+
 What to read next: [observability](../docs/observability.md) for the span substrate,
 [failure modes](../docs/failure-modes.md) for coverage, and
 [research reports](../docs/research-reports.md) for evidence-based execution summaries.

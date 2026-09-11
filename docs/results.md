@@ -213,6 +213,16 @@ Evaluation `84514fd743ffe7c056d5ba19af5f52b8267591240667b4a5cb524560c2fdea50`
 contains 4,713 bytes. These exposed cases support further evaluation; production model
 selection remains unchanged pending separate validation.
 
+The `qwen3-coherent-v1` schema comparison frozen in `5f12b98` completed with **9/10
+direction, citation and joint passes**. It preserved the prior seven passes and added
+explicit uncertainty for unspecified and contradictory directions. Every raw response
+validated against the coherent envelope without repair. The missing-short-leg case
+still chose a direction. All 64 reachable artifacts, saved grades, raw envelopes and
+actual request schemas were verified; the saved comparator accepted the candidate.
+Evaluation `dec1812e767f2003adeb7730b74b8097a96490f08c9ca4a39aca6156980070e5`
+contains 5,511 bytes. This remains an exposed original development suite, with
+production promotion and published-factor accuracy measured separately.
+
 ## Local model protocol evidence
 
 A single 32,768-context protocol call timed out during model loading after 120.55 seconds.
