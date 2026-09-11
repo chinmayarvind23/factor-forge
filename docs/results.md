@@ -37,6 +37,12 @@ gate prevents DVC execution. An earlier real empty-cache restore passed before t
 it is functional evidence only. Live Cognito, S3 and deployment remain unverified. These
 engineering checks do not measure research quality.
 
+At clean commit `0badba9`, the expanded Windows suite passed 743 tests with 98.19% combined
+statement/branch coverage and the same two explicit platform/tooling skips. This includes
+real PostgreSQL integration and the literature, extraction, formula and hypothesis contracts.
+The factor-contract and hypothesis modules reached 100% coverage; another 93 focused checks
+passed on Linux. These counts describe engineering verification, not completed research runs.
+
 ## Retrieval development pilot
 
 At clean commit `42c66c2`, the frozen [three-paper pilot](../data/literature/three-paper-pilot-v1/README.md)

@@ -17,6 +17,8 @@ eligible securities for breakpoints, stable security IDs for ties, and explicit 
 value weighting. Long and short sleeves each have unit exposure, giving initial gross
 exposure two. Short proceeds are segregated and cash earns zero. These are declared policies;
 an engine must enforce funding and portfolio accounting before any execution can pass.
+The [session calendar](session-calendar.md) binds canonical schedule bytes and rejects versions
+that were unavailable at formation; calendar completeness remains an explicit source assertion.
 
 The [closed formula language](formula-language.md) supplies arithmetic. Contracts additionally
 check input names, dimensions and history: annual differences require two annual observations,
