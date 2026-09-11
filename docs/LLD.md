@@ -12,6 +12,13 @@ accepts it. Polling reads canonical API events sequentially and stops at normali
 an error, or its attempt limit. It validates response shapes and never invents progress.
 The broader modules and state machine below describe the target system.
 
+`orchestration/budgets.py` adds [pure research budget transitions](research-budgets.md).
+Integer USD millionths are reserved before dispatch; immutable operation IDs prevent repeat
+dispatch permission, and unknown charges retain capacity. Actual estimate overruns stay
+recorded and block new work. The original deadline and saved clock watermark survive restart.
+Canonical owner/request binding, transactional mutation and graph integration remain worker
+responsibilities; this module does not expand the browser's normalization flow.
+
 The independent literature path uses `domain/literature.py` and `retrieval/lexical.py` for
 immutable documents and bounded BM25 ranking. `evaluation/retrieval.py` requires complete binary
 judgments and separates answerable and no-relevant query denominators; its CLI archives the
