@@ -57,14 +57,7 @@ def revise_direction(
     establish integrity, not authenticity of arbitrary caller-created observations. This
     primitive neither edits a strategy nor authorizes experiment execution.
     """
-    request = DirectionRevisionRequest.model_validate(request)
-    for ref in (request.extraction.record, request.review.record):
-        if not 0 < ref.size_bytes <= 2**20 or ref.media_type != "application/json":
-            raise ResearchError("DIRECTION_EVIDENCE_INVALID", "Revision evidence is invalid.", 409)
-        raw = store.get(ref.model_copy(deep=True))
-        if type(raw) is not bytes:
-            raise ResearchError("DIRECTION_EVIDENCE_INVALID", "Revision evidence is invalid.", 409)
-        verify_bytes(raw, ref)
+    request = _verify_revision_inputs(request, store)
     return _judge_direction(
         request.source,
         provider,
@@ -75,3 +68,18 @@ def revise_direction(
             "review": request.review.model_dump(mode="json"),
         },
     )
+
+
+def _verify_revision_inputs(
+    request: DirectionRevisionRequest, store: ArtifactStore
+) -> DirectionRevisionRequest:
+    """Require the same prior-record integrity for every explicitly named revision experiment."""
+    request = DirectionRevisionRequest.model_validate(request)
+    for ref in (request.extraction.record, request.review.record):
+        if not 0 < ref.size_bytes <= 2**20 or ref.media_type != "application/json":
+            raise ResearchError("DIRECTION_EVIDENCE_INVALID", "Revision evidence is invalid.", 409)
+        raw = store.get(ref.model_copy(deep=True))
+        if type(raw) is not bytes:
+            raise ResearchError("DIRECTION_EVIDENCE_INVALID", "Revision evidence is invalid.", 409)
+        verify_bytes(raw, ref)
+    return request

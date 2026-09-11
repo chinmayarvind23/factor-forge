@@ -80,6 +80,8 @@ def _judge_direction(
     *,
     system: str,
     conflict: dict[str, object] | None = None,
+    quote_first: bool = False,
+    conflict_in_prompt: bool = True,
 ) -> DirectionReview:
     """Share byte/citation checks while keeping source-only and conflict prompts distinguishable."""
     source = SourcePacket.model_validate(source)
@@ -99,13 +101,17 @@ def _judge_direction(
         "selected_strategy": source.selected_strategy,
         "pages": [{"pdf_page": page, "text": text} for page, text in sorted(pages.items())],
     }
-    if conflict is not None:
+    if conflict is not None and conflict_in_prompt:
         payload["conflicting_observations"] = conflict
+    schema = DirectionObservation.model_json_schema()
+    if quote_first:
+        schema["properties"]["citation"] = schema["properties"].pop("quote")
+        schema["required"] = ["citation", "pdf_page", "direction", "uncertainty"]
     request = GenerationRequest(
         model="llama3.1:8b",
         system=system,
         user=json.dumps(payload, ensure_ascii=False),
-        response_schema=cast(dict[str, JsonValue], DirectionObservation.model_json_schema()),
+        response_schema=cast(dict[str, JsonValue], schema),
     )
     prompt = _save(store, request.model_dump(mode="json"))
     generation = provider.generate(request, store)
@@ -126,9 +132,17 @@ def _judge_direction(
         try:
             if len(generation.content.encode()) > 32768:
                 raise ValueError("Review exceeds output limit")
-            candidate = DirectionObservation.model_validate(
-                json.loads(generation.content, object_pairs_hook=_unique_pairs)
-            )
+            wire = json.loads(generation.content, object_pairs_hook=_unique_pairs)
+            if quote_first:
+                if not isinstance(wire, dict) or set(wire) != {
+                    "citation",
+                    "direction",
+                    "pdf_page",
+                    "uncertainty",
+                }:
+                    raise ValueError("Quote-first response has invalid fields")
+                wire["quote"] = wire.pop("citation")
+            candidate = DirectionObservation.model_validate(wire)
             if candidate.direction is None:
                 observation, status = candidate, "uncertain"
             elif (
@@ -140,7 +154,11 @@ def _judge_direction(
         except (ValueError, TypeError, RecursionError):
             pass
     evidence: dict[str, object] = {
-        "schema_version": "direction-review-record-v1"
+        "schema_version": "direction-revision-source-only-record-v1"
+        if not conflict_in_prompt
+        else "direction-revision-quote-first-record-v1"
+        if quote_first
+        else "direction-review-record-v1"
         if conflict is None
         else "direction-revision-record-v1",
         "source": source.model_dump(mode="json"),

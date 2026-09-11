@@ -1,5 +1,10 @@
 # FactorForge Low-Level Design
 
+[Quote-first revision probes](revision-experiments.md) retain contextual and source-only
+experiments outside production scheduling. They share strict byte/citation checks and
+use exclusive receipts to prevent accidental repeat delivery. Neither tested variant
+has been promoted.
+
 `retrieval/direction_revision.py` adds a [separate conflict-aware source reading](direction-revision.md).
 It retains both prior observations and the new quoted judgment without mutating a strategy.
 A dedicated revision worker adds original-budget reservation and replay. The amendment
