@@ -80,6 +80,12 @@ manifests and rights pass before economic data reads, every object role and byte
 verified, and execution receives a pinned source snapshot. The receipt binds the declared
 strategy and source closure. Actual calendar, funding and execution gates remain separate.
 
+`backtests/monthly.py` connects those gates in the [original monthly simulator](monthly-backtest.md).
+It saves request, admission and source/environment preparation before calculations, derives
+formation and trade clocks, generates exact funded batches and replays the ledger at every
+required observation. Failed paths retain their prefix; completed metrics require retained
+account closes and terminal liquidation. The autonomous research graph remains unfinished.
+
 `backtests/performance.py` computes [conditional NAV metrics](conditional-metrics.md) from
 a complete declared close inventory. Entry fees remain in the first full interval and
 drawdown baseline. Invalid rate or execution inventories disable only their dependent
