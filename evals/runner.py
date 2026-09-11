@@ -29,7 +29,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument(
         "--profile",
-        choices=("baseline", "complete-evidence-v1", "qwen3-baseline-v1"),
+        choices=("baseline", "complete-evidence-v1", "qwen3-baseline-v1", "qwen3-coherent-v1"),
         default="baseline",
     )
     args = parser.parse_args()

@@ -115,7 +115,9 @@ def test_saved_score_edits_cannot_change_the_gate() -> None:
         verify_grades(cases, baseline.model_copy(update={"grades": (edited,)}))
 
 
-@pytest.mark.parametrize("profile", ["baseline", "complete-evidence-v1", "qwen3-baseline-v1"])
+@pytest.mark.parametrize(
+    "profile", ["baseline", "complete-evidence-v1", "qwen3-baseline-v1", "qwen3-coherent-v1"]
+)
 def test_gold_changes_do_not_change_the_model_request(profile: DirectionProfile) -> None:
     """Labels affect grading only, even when a deliberately changed label disagrees with source."""
     store = MemoryStore()
@@ -131,20 +133,19 @@ def test_gold_changes_do_not_change_the_model_request(profile: DirectionProfile)
             """Record the prompt and return a source-based observation independent of gold."""
             calls.append(request)
             assert request.system == direction_prompt(profile)
-            assert request.model == (
-                "qwen3:8b" if profile == "qwen3-baseline-v1" else "llama3.1:8b"
-            )
+            assert request.model == ("qwen3:8b" if profile.startswith("qwen3-") else "llama3.1:8b")
             assert set(json.loads(request.user)) == {"selected_strategy", "pages"}
+            observation = {
+                "direction": "long_high_short_low",
+                "quote": first.support_anchors[0],
+                "pdf_page": 1,
+                "uncertainty": None,
+            }
             return GenerationResult(
                 status="success",
                 record=artifacts.put(b"{}", media_type="application/json"),
                 content=json.dumps(
-                    {
-                        "direction": "long_high_short_low",
-                        "quote": first.support_anchors[0],
-                        "pdf_page": 1,
-                        "uncertainty": None,
-                    }
+                    {"judgment": observation} if profile == "qwen3-coherent-v1" else observation
                 ),
             )
 

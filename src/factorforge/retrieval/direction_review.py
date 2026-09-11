@@ -11,6 +11,7 @@ from factorforge.domain.errors import ResearchError
 from factorforge.domain.extraction import _unique_pairs
 from factorforge.domain.factors import Contract
 from factorforge.providers.ollama import GenerationRequest
+from factorforge.retrieval.direction_schema import DirectionEnvelope, direction_envelope_schema
 from factorforge.retrieval.extraction import SourcePacket, TextProvider
 
 REVIEW_PROMPT = """Identify the strategy's long/short direction from the supplied source pages.
@@ -80,6 +81,7 @@ def _judge_direction(
     *,
     system: str,
     model: Literal["llama3.1:8b", "qwen3:8b"] = "llama3.1:8b",
+    coherent_wire: bool = False,
     conflict: dict[str, object] | None = None,
     quote_first: bool = False,
     conflict_in_prompt: bool = True,
@@ -104,7 +106,11 @@ def _judge_direction(
     }
     if conflict is not None and conflict_in_prompt:
         payload["conflicting_observations"] = conflict
-    schema = DirectionObservation.model_json_schema()
+    if coherent_wire and quote_first:
+        raise ValueError("Coherent and quote-first wire profiles cannot be combined")
+    schema = (
+        direction_envelope_schema() if coherent_wire else DirectionObservation.model_json_schema()
+    )
     if quote_first:
         schema["properties"]["citation"] = schema["properties"].pop("quote")
         schema["required"] = ["citation", "pdf_page", "direction", "uncertainty"]
@@ -134,6 +140,8 @@ def _judge_direction(
             if len(generation.content.encode()) > 32768:
                 raise ValueError("Review exceeds output limit")
             wire = json.loads(generation.content, object_pairs_hook=_unique_pairs)
+            if coherent_wire:
+                wire = DirectionEnvelope.model_validate(wire).judgment.model_dump(mode="json")
             if quote_first:
                 if not isinstance(wire, dict) or set(wire) != {
                     "citation",

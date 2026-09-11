@@ -70,6 +70,15 @@ The recorded Qwen comparison met both criteria on 7/10 cases, preserving all six
 baseline passes and adding complete quintile support. The comparator accepted it.
 Production promotion awaits separate validation; the three ambiguity cases remain open.
 
+`--profile qwen3-coherent-v1` keeps the Qwen model and baseline prompt but generates a
+`judgment` envelope with two disjoint schema branches: cited direction with null
+uncertainty, or null direction/citation/page with an uncertainty explanation. Pydantic
+validates the envelope before passing its unchanged judgment to the existing parser.
+This experiment constrains combinations during generation; it does not repair saved
+responses, change gold labels or relax citation requirements. Schemas are derived from
+Pydantic with references inlined. The first provider target is local Ollama; no OpenAI
+API compatibility or live schema enforcement is claimed before evaluation.
+
 What to read next: [observability](../docs/observability.md) for the span substrate,
 [failure modes](../docs/failure-modes.md) for coverage, and
 [research reports](../docs/research-reports.md) for evidence-based execution summaries.
