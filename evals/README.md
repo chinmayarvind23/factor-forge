@@ -86,6 +86,17 @@ missing-short-leg case still selected a direction, so schema validity alone is n
 semantic correctness. The comparator accepted the candidate. Independent validation
 and a production profile decision remain separate steps.
 
+`cases/custom/direction-validation-v1.json` freezes eight additional original examples
+after candidate selection and before either validation run. They cover position signs,
+accrual ordering, reverse decile numbering, explicit rule replacement, strategy selection,
+long-only and short-only portfolios, and an unknown regime. These are authored validation
+examples, not published-paper evidence or statistically independent authorship.
+Run the production `baseline` and frozen `qwen3-coherent-v1` once each with this file
+through `--cases`. Predeclared selection requires at least 7/8 joint passes, all three
+uncertain cases correct, and no regression against the baseline on the same suite.
+An accepted validation result is necessary for a versioned production-profile change;
+it does not replace scheduler integration checks or the published-factor benchmark.
+
 What to read next: [observability](../docs/observability.md) for the span substrate,
 [failure modes](../docs/failure-modes.md) for coverage, and
 [research reports](../docs/research-reports.md) for evidence-based execution summaries.
