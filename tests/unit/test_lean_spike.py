@@ -48,6 +48,12 @@ def test_tick_integer_scaling_ignores_hostile_decimal_context() -> None:
         assert module().build_files(source()) == expected
 
 
+def test_original_fixture_uses_result_handler_without_spy_analysis() -> None:
+    """Optional historical SPY analysis must not expand the original valuation data scope."""
+    config = json.loads(module().build_files(source())["config.json"])
+    assert config["result-handler"] == "FactorForge.LeanSpike.OriginalFixtureResultHandler"
+
+
 @pytest.mark.parametrize(
     "change", ["price", "date", "cash", "quantity", "id", "extra", "duplicate"]
 )

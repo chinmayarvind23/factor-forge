@@ -99,7 +99,7 @@ def build_files(raw: bytes) -> dict[str, bytes]:
             "data-provider": "QuantConnect.Lean.Engine.DataFeeds.DefaultDataProvider",
             "data-permission-manager": "DataPermissionManager",
             "setup-handler": "BacktestingSetupHandler",
-            "result-handler": "BacktestingResultHandler",
+            "result-handler": "FactorForge.LeanSpike.OriginalFixtureResultHandler",
             "data-feed-handler": "FileSystemDataFeed",
             "real-time-handler": "BacktestingRealTimeHandler",
             "transaction-handler": "BacktestingTransactionHandler",

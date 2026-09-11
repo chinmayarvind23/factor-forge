@@ -7,7 +7,10 @@ portfolio formula. The algorithm compiled against the verified assemblies with z
 compiler warnings or errors and was packaged into a local image. Both compile
 attempts confirmed container cleanup. The first failed because the inherited
 `QCAlgorithm.Symbol` method shadowed `Symbol.Empty`; qualifying the type fixed it.
-The packaged launcher has not yet executed this algorithm.
+The packaged launcher subsequently executed the fixture and matched all three
+predeclared NAV observations: 1000, 1020 and 1040. It exited zero, reported no OOM,
+and confirmed owned-container removal. This verifies conditional seeded valuation;
+it does not establish trading, corporate-action or monthly-strategy equivalence.
 
 The source is original engineering data: ten SEC-A shares, average price 100,
 cash zero, and prices 100, 102 and 104 at 20:00 UTC on April 29, April 30 and
@@ -60,6 +63,8 @@ DLL, and `notices/` with retained upstream/package notices. The build controller
 must bind source, patch, algorithm, configuration and output hashes to the final
 image digest. The first local packaging produced
 `sha256:337b3e29f39b9fbf1dba781b43469282649407c777df2362a737deda2ae724fb`.
+The executed revision with the original-fixture result handler is
+`sha256:bc6020cd13fed4c1cd4142dede6788902303c576ad850dd28cd43d176aca8d9d`.
 No registry publication is part of
 this spike. Packaging labels alone do not establish that the supplied directories
 match the reviewed bytes.
@@ -96,6 +101,17 @@ orders/fees and confirmed cleanup. Compare NAV against the separate predeclared
 hand reference outside the engine. Do not use LEAN's aggregate strategy statistics
 to grade this conditional valuation fixture. A successful trial would not yet
 enable full gRPC readiness or establish trade/action/accounting equivalence.
+
+The first execution produced correct values, but its verification failed: LEAN
+wraps algorithm console messages in a timestamped `TRACE:: Debug:` prefix, and
+the optional result analyzer attempted to load SPY market-hours/history outside
+the original fixture. The corrected parser recognizes the exact emitted prefix.
+`OriginalFixtureResultHandler` disables only the inherited optional results
+analysis through `RunResultsAnalysis = false`, retaining normal result storage.
+The successful second trial required three ordered observations, one completion
+marker, exit zero, no OOM, complete log capture, no `ERROR::` log and cleanup.
+Its standard aggregate statistics are not validation evidence: seeded holdings
+do not establish a complete strategy-return baseline.
 
 The earlier ZIP compatibility result remains 10/11: a twelve-byte truncation
 returned a missing entry instead of the expected exception. This spike generates

@@ -109,3 +109,10 @@ public sealed class SeededEquityAlgorithm : QCAlgorithm
         if (!condition) throw new InvalidOperationException(message);
     }
 }
+
+/// <summary>The original valuation fixture has no SPY dataset for optional strategy analysis.</summary>
+public sealed class OriginalFixtureResultHandler : QuantConnect.Lean.Engine.Results.BacktestingResultHandler
+{
+    /// <summary>Keep normal result storage while disabling unrelated SPY-history analysis.</summary>
+    public OriginalFixtureResultHandler() => RunResultsAnalysis = false;
+}
