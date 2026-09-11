@@ -16,8 +16,9 @@ The broader modules and state machine below describe the target system.
 Integer USD millionths are reserved before dispatch; immutable operation IDs prevent repeat
 dispatch permission, and unknown charges retain capacity. Actual estimate overruns stay
 recorded and block new work. The original deadline and saved clock watermark survive restart.
-Canonical owner/request binding, transactional mutation and graph integration remain worker
-responsibilities; this module does not expand the browser's normalization flow.
+`orchestration/postgres_budgets.py` binds reservations to the canonical owner/request and
+commits them under the run's PostgreSQL row lock. Settlement and graph integration remain
+worker responsibilities; this does not expand the browser's normalization flow.
 
 The independent literature path uses `domain/literature.py` and `retrieval/lexical.py` for
 immutable documents and bounded BM25 ranking. `evaluation/retrieval.py` requires complete binary

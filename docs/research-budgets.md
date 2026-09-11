@@ -46,3 +46,23 @@ known charge requires a future explicit reconciliation protocol; overwriting the
 observation is rejected. No automatic retry follows an unresolved dispatch. The bounded ledger
 is a prerequisite for the research graph, not evidence of an autonomous research run or a
 measured cost study.
+
+## Durable reservation boundary
+
+`postgres_budgets.reserve_operation` requires an explicitly trusted `execute_research`
+principal and locks the owner-scoped canonical run row before reading or changing the
+ledger. Browser principals have no new capability. The worker supplies the operation and
+aware clock; the original run determines request identity, start time, dollar ceiling,
+wall allowance and experiment count. The operation ceiling is fixed at 128.
+
+Migration `002_research_budgets.sql` stores one bounded canonical JSON ledger per run,
+with a foreign key to its canonical owner-bearing record. Reload revalidates the ledger,
+its exact canonical encoding, and every immutable limit against the original request.
+The transaction commits before the function returns dispatch permission. Competing calls
+for the same operation therefore produce only one true result across connections.
+
+A crash before commit rolls back the reservation. A crash after commit leaves an unresolved
+reservation, and a new worker receives false for that operation even after the deadline.
+This prevents automatic duplicate dispatch but does not establish that an external provider
+executed the first call. Durable settlement, explicit reconciliation of unknown outcomes,
+and graph-node integration remain unfinished. No endpoint invokes this boundary yet.
