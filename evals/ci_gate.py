@@ -3,7 +3,25 @@
 import argparse
 from pathlib import Path
 
-from factorforge.evaluation.directions import DirectionEvaluation
+from factorforge.evaluation.directions import DirectionEvaluation, DirectionSuite, grade_direction
+
+
+def verify_grades(suite: DirectionSuite, evaluation: DirectionEvaluation) -> None:
+    """Recompute saved scores against frozen source labels before using them in a CI decision."""
+    suite = DirectionSuite.model_validate(suite)
+    evaluation = DirectionEvaluation.model_validate(evaluation)
+    if (
+        evaluation.suite.sha256 != suite.sha256
+        or evaluation.suite.size_bytes != len(suite.canonical_bytes())
+        or evaluation.suite.media_type != "application/json"
+        or tuple(g.case_id for g in evaluation.grades) != tuple(c.case_id for c in suite.cases)
+    ):
+        raise ValueError("Evaluation does not match the frozen suite")
+    if any(
+        grade_direction(case, grade.observation) != grade
+        for case, grade in zip(suite.cases, evaluation.grades, strict=True)
+    ):
+        raise ValueError("Saved grades do not match the frozen rubric")
 
 
 def regressed(baseline: DirectionEvaluation, candidate: DirectionEvaluation) -> bool:
@@ -24,7 +42,15 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline", type=Path, required=True)
     parser.add_argument("--candidate", type=Path, required=True)
+    parser.add_argument(
+        "--cases", type=Path, default=Path(__file__).parent / "cases/custom/direction-v1.json"
+    )
     args = parser.parse_args()
+    with args.cases.open("rb") as source:
+        suite_raw = source.read(256 * 1024 + 1)
+    if len(suite_raw) > 256 * 1024:
+        raise ValueError("Evaluation suite exceeds limit")
+    suite = DirectionSuite.model_validate_json(suite_raw)
     values = []
     for path in (args.baseline, args.candidate):
         with path.open("rb") as source:
@@ -32,6 +58,7 @@ def main() -> None:
         if len(raw) > 2**20:
             raise ValueError("Evaluation artifact exceeds limit")
         values.append(DirectionEvaluation.model_validate_json(raw))
+        verify_grades(suite, values[-1])
     raise SystemExit(1 if regressed(values[0], values[1]) else 0)
 
 

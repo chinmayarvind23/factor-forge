@@ -172,6 +172,27 @@ repository because redistribution permission has not been established. Local dol
 unmeasured. Before this run, 150 focused checks passed in the clean checkout; these are
 engineering checks and do not increase the extraction score.
 
+## Original direction development baseline
+
+The ten original cases frozen in `33e4e86` completed with the existing source-only
+reviewer and local `llama3.1:8b` profile. Seven observations met the direction criterion,
+six met the cited-support criterion, and six met both. Direct high/low rules, signed
+scores, strategy selection, the embedded instruction and negation met both criteria.
+The quintile case met direction correctness; its quote omitted required supporting
+context. Unspecified direction, a missing short leg and contradictory rules did not
+meet the rubric's explicit uncertainty requirement.
+
+Every saved grade was recomputed against the frozen cases, and all 64 artifacts
+reachable from the evaluation verified by size and SHA-256. The evaluation reference
+is `cd37472a47fd638f18616303b7d97305688dc6a7f39a8840ef2061e7b2ce362e`
+(4,156 bytes). The suite reference is
+`0f72560d1e57f27d1331a56a8ab16bfaa5f3b179ae9deddc0c4ee0a7b2b93375`.
+The saved-result comparator accepted the baseline against itself without model calls.
+These are original development cases; published-factor extraction, reproduction and
+the 45-case autonomous benchmark retain their separate denominators. Local dollar
+cost remains unmeasured. The [evaluation guide](../evals/README.md) defines the rubric
+and layer status.
+
 ## Local model protocol evidence
 
 A single 32,768-context protocol call timed out during model loading after 120.55 seconds.

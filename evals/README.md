@@ -25,7 +25,8 @@ retains each case grade and provider evidence before advancing. Reusing the jour
 path refuses another run. Model outcomes remain separate from execution-path tests.
 The comparator requires the same suite reference and ordered case IDs and rejects a
 relative pass-count regression of at least five percent. It consumes saved evaluation
-JSON and starts no model. Unit CI exercises the grader and comparator; automated model
+JSON, regrades every observation against the frozen source labels, and starts no model.
+Unit CI exercises the grader and comparator; automated model
 score gating awaits a reviewed baseline artifact distribution path.
 
 Layer status:
@@ -38,9 +39,11 @@ Layer status:
 - Online: retained operator replays and provider cost/latency records exist. OTel GenAI
   spans, guardrail alerts and production evaluation aggregation remain future work.
 
-The first live direction-suite run establishes its baseline after this case/rubric
-freeze. Do not alter labels or support anchors in response to that run. Results and
-complete provider evidence are retained outside the repository by the operator.
+The first live run completed all ten cases using `llama3.1:8b`: seven met the direction
+criterion, six met cited support, and six met both. All 64 reachable artifacts verified.
+The suite was frozen in `33e4e86` before inference; labels and anchors remain unchanged.
+See [recorded results](../docs/results.md#original-direction-development-baseline).
+Complete provider evidence is retained outside the repository by the operator.
 
 What to read next: [observability](../docs/observability.md) for the span substrate,
 [failure modes](../docs/failure-modes.md) for coverage, and

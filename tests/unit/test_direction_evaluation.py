@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from test_monthly_admission import MemoryStore
 
-from evals.ci_gate import regressed
+from evals.ci_gate import regressed, verify_grades
 from factorforge.data.artifacts import ArtifactStore
 from factorforge.evaluation.directions import (
     DirectionEvaluation,
@@ -89,6 +89,28 @@ def test_abstention_requires_an_actual_uncertain_observation() -> None:
     assert grade_direction(suite().cases[4], uncertain).passed
     absent = DirectionReview(status="provider_failed", record=ref, observation=None)
     assert not grade_direction(suite().cases[4], absent).passed
+
+
+def test_saved_score_edits_cannot_change_the_gate() -> None:
+    """The gate recomputes scores instead of trusting editable pass booleans."""
+    store = MemoryStore()
+    cases = DirectionSuite(cases=(suite().cases[4],))
+    ref = store.put(cases.canonical_bytes(), media_type="application/json")
+    response = DirectionReview(
+        status="uncertain",
+        record=ref,
+        observation=DirectionObservation(
+            direction=None, quote=None, pdf_page=None, uncertainty="No direction is specified"
+        ),
+    )
+    grade = grade_direction(cases.cases[0], response)
+    baseline = DirectionEvaluation(suite=ref, prompt_sha256="a" * 64, grades=(grade,))
+    verify_grades(cases, baseline)
+    edited = grade.model_copy(
+        update={"direction_correct": False, "quote_supported": False, "passed": False}
+    )
+    with pytest.raises(ValueError, match="Saved grades"):
+        verify_grades(cases, baseline.model_copy(update={"grades": (edited,)}))
 
 
 def test_gold_changes_do_not_change_the_model_request() -> None:
