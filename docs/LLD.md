@@ -1,5 +1,9 @@
 # FactorForge Low-Level Design
 
+`validation/hac.py` supplies the [HAC mean-return diagnostic](hac-validation.md).
+Its explicit lag and correction policy bind a retained ordered series. Exact residual
+products precede fifty-digit decimal outputs; constant samples retain undefined significance.
+
 `validation/splits.py` implements [chronological validation partitions](validation-splits.md).
 Walk-forward requires label availability before test formation. Purged folds remove
 closed label-window overlap and apply an explicit elapsed-time embargo. Both retain
