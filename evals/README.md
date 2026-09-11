@@ -54,6 +54,10 @@ and does not change the production reviewer. Use a new output journal for its si
 comparison run. Improvement on these exposed development cases needs separate held-out
 validation before any broader accuracy claim.
 
+The recorded candidate scored 3/10 joint passes against the baseline's 6/10. The
+saved-result gate rejected it and the production prompt remains unchanged. Both runs
+completed all cases and retain their full provider evidence.
+
 What to read next: [observability](../docs/observability.md) for the span substrate,
 [failure modes](../docs/failure-modes.md) for coverage, and
 [research reports](../docs/research-reports.md) for evidence-based execution summaries.

@@ -193,6 +193,16 @@ the 45-case autonomous benchmark retain their separate denominators. Local dolla
 cost remains unmeasured. The [evaluation guide](../evals/README.md) defines the rubric
 and layer status.
 
+The fixed `complete-evidence-v1` candidate in `f483a71` completed the same ten cases
+with five direction matches, three cited-support matches and three joint passes.
+The comparator returned exit 1, retaining the six-pass baseline as the selected profile.
+All 64 reachable candidate artifacts verified, along with each journal grade, recorded
+observation, exact prompt and source-only model input. Its evaluation reference is
+`974b6e034779164a70e3ff914c5eaac232a90fe59b1bf40e8de68b2292196847`
+(3,769 bytes). There were no retries, response repairs or gold changes. The production
+reviewer remains unchanged. This controlled comparison provides no basis for promoting
+the candidate; further work should evaluate a distinct model capability hypothesis.
+
 ## Local model protocol evidence
 
 A single 32,768-context protocol call timed out during model loading after 120.55 seconds.
