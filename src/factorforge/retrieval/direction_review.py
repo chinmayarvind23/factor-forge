@@ -70,6 +70,18 @@ def review_direction(
     The proposed extraction is deliberately absent from the prompt to avoid copying its choice.
     Exact quote membership establishes provenance only; the model may still misread the quote.
     """
+    return _judge_direction(source, provider, store, system=REVIEW_PROMPT)
+
+
+def _judge_direction(
+    source: SourcePacket,
+    provider: TextProvider,
+    store: ArtifactStore,
+    *,
+    system: str,
+    conflict: dict[str, object] | None = None,
+) -> DirectionReview:
+    """Share byte/citation checks while keeping source-only and conflict prompts distinguishable."""
     source = SourcePacket.model_validate(source)
     pages = {}
     for page in source.pages:
@@ -83,16 +95,16 @@ def review_direction(
             raise ResearchError(
                 "DIRECTION_SOURCE_INVALID", "Review source is invalid.", 422
             ) from None
+    payload: dict[str, object] = {
+        "selected_strategy": source.selected_strategy,
+        "pages": [{"pdf_page": page, "text": text} for page, text in sorted(pages.items())],
+    }
+    if conflict is not None:
+        payload["conflicting_observations"] = conflict
     request = GenerationRequest(
         model="llama3.1:8b",
-        system=REVIEW_PROMPT,
-        user=json.dumps(
-            {
-                "selected_strategy": source.selected_strategy,
-                "pages": [{"pdf_page": page, "text": text} for page, text in sorted(pages.items())],
-            },
-            ensure_ascii=False,
-        ),
+        system=system,
+        user=json.dumps(payload, ensure_ascii=False),
         response_schema=cast(dict[str, JsonValue], DirectionObservation.model_json_schema()),
     )
     prompt = _save(store, request.model_dump(mode="json"))
@@ -127,15 +139,17 @@ def review_direction(
                 observation, status = candidate, "supported"
         except (ValueError, TypeError, RecursionError):
             pass
-    record = _save(
-        store,
-        {
-            "schema_version": "direction-review-record-v1",
-            "source": source.model_dump(mode="json"),
-            "prompt": prompt.model_dump(mode="json"),
-            "provider_record": generation.record.model_dump(mode="json"),
-            "status": status,
-            "observation": observation.model_dump(mode="json") if observation else None,
-        },
-    )
+    evidence: dict[str, object] = {
+        "schema_version": "direction-review-record-v1"
+        if conflict is None
+        else "direction-revision-record-v1",
+        "source": source.model_dump(mode="json"),
+        "prompt": prompt.model_dump(mode="json"),
+        "provider_record": generation.record.model_dump(mode="json"),
+        "status": status,
+        "observation": observation.model_dump(mode="json") if observation else None,
+    }
+    if conflict is not None:
+        evidence["conflicting_observations"] = conflict
+    record = _save(store, evidence)
     return DirectionReview(status=status, observation=observation, record=record)

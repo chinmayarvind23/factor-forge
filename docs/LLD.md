@@ -1,5 +1,9 @@
 # FactorForge Low-Level Design
 
+`retrieval/direction_revision.py` adds a [separate conflict-aware source reading](direction-revision.md).
+It retains both prior observations and the new quoted judgment without mutating a strategy.
+Durable revision dispatch and scheduler integration remain next.
+
 `retrieval/direction_review.py` adds a [source-only direction judgment](direction-review.md)
 with verified page bytes and exact cited-quote membership. It retains the model observation
 and uncertainty separately. `orchestration/direction_review_worker.py` adds durable
