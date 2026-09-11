@@ -64,7 +64,10 @@ A remote response cannot directly launch an experiment or mutate infrastructure.
 
 ## gRPC
 
-gRPC serves the internal LEAN verification boundary because the interface is structured, internal, and benefits from generated contracts.
+The [LEAN contract](lean-verifier.md) has a versioned protobuf schema, generated Python
+bindings and a handler for a narrow conditional price-only comparison. A default handler
+reports engine readiness false. No listener or engine backend is installed yet. The future
+host must provide authenticated identity, transport limits and runtime cleanup integration.
 
 ## GraphQL
 

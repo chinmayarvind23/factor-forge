@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package factorforge.lean.v1;
+
+// FactorForge wraps the LEAN launcher; this is not an upstream LEAN service.
+service LeanVerifier {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc Capabilities(CapabilitiesRequest) returns (CapabilitiesResponse);
+  rpc VerifyStrategy(VerifyStrategyRequest) returns (VerifyStrategyResponse);
+}
+
+// Explicit scalar presence prevents omitted values from becoming valid defaults.
+message ArtifactReference {
+  optional string sha256 = 1;
+  optional uint64 size_bytes = 2;
+  optional string media_type = 3;
+}
+
+message HealthRequest { optional string wire_version = 1; }
+message HealthResponse {
+  optional string wire_version = 1;
+  optional bool alive = 2;
+  optional bool engine_ready = 3;
+}
+message CapabilitiesRequest { optional string wire_version = 1; }
+message CapabilitiesResponse {
+  optional string wire_version = 1;
+  repeated string declared_profiles = 2;
+  repeated string ready_profiles = 3;
+  repeated string unsupported_features = 4;
+  optional uint32 max_message_bytes = 5;
+  optional uint32 max_inflight = 6;
+  optional uint32 max_deadline_seconds = 7;
+}
+
+enum Comparison {
+  COMPARISON_UNSPECIFIED = 0;
+  COMPARISON_EXACT_NAV = 1;
+}
+enum Outcome {
+  OUTCOME_UNSPECIFIED = 0;
+  OUTCOME_UNSUPPORTED = 1;
+  OUTCOME_UNAVAILABLE = 2;
+  OUTCOME_DEADLINE = 3;
+  OUTCOME_ENGINE_FAILED = 4;
+  OUTCOME_DISAGREED = 5;
+  OUTCOME_VERIFIED = 6;
+  OUTCOME_CANCELLED = 7;
+  OUTCOME_BUSY = 8;
+}
+
+message VerifyStrategyRequest {
+  optional string schema_version = 1;
+  optional string verification_id = 2;
+  optional string run_id = 3;
+  optional string owner_issuer = 4;
+  optional string owner_subject = 5;
+  optional string factor_spec_sha256 = 6;
+  optional string profile = 7;
+  ArtifactReference source = 8;
+  ArtifactReference reference = 9;
+  optional Comparison comparison = 10;
+}
+
+// Every numeric quantity travels as exact text; no double-valued economic field exists.
+message NavPoint {
+  optional string at_utc = 1;
+  optional string nav_usd = 2;
+}
+message VerifyStrategyResponse {
+  optional Outcome outcome = 1;
+  optional string request_sha256 = 2;
+  optional string failure_code = 3;
+  ArtifactReference record = 4;
+  repeated NavPoint observed_nav = 5;
+  optional string engine_image_sha256 = 6;
+  optional string translator_sha256 = 7;
+  optional string lean_commit = 8;
+}

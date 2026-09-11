@@ -416,12 +416,18 @@ When container removal remains uncertain, a once-evaluated staging cleanup callb
 the entire private bundle and closes handles. A failed callback also retains inputs.
 An indeterminate create cannot become confirmed cleanup merely because a later listing is
 empty. Automatic reconciliation after controller crashes and canonical run/FactorSpec
-admission are unfinished. The initial arithmetic smoke supports Windows bind readability
-and observed exit/cleanup; the full denial/resource probe suite remains separate work.
+admission are unfinished. The arithmetic smoke and separate eight-case Docker acceptance
+suite preserve observed filesystem/syscall/resource denials and cleanup; image dependency
+findings remain open in the [results](results.md).
 
-## 10. LEAN verifier (planned)
+## 10. LEAN verifier contract
 
-LEAN runs through a separate service boundary because it has its own runtime and engine semantics and promoted strategies need independent implementation.
+`interop/lean` implements a [conditional price-only contract](lean-verifier.md), generated
+protobuf bindings and a cooperative handler. It opens no listener and supplies no runtime
+backend. Health distinguishes adapter liveness from engine readiness. Authorization precedes
+artifact reads; source and expected NAV remain separate. A prepared start artifact precedes
+backend invocation, while terminal records distinguish attempted work and uncertain cleanup.
+Independent engine execution and authenticated service hosting remain unfinished.
 
 ```text
 VerifyStrategy(LeanVerificationRequest) -> LeanVerificationResult
