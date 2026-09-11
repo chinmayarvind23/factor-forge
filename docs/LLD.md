@@ -2,7 +2,9 @@
 
 `retrieval/direction_revision.py` adds a [separate conflict-aware source reading](direction-revision.md).
 It retains both prior observations and the new quoted judgment without mutating a strategy.
-Durable revision dispatch and scheduler integration remain next.
+A dedicated revision worker adds original-budget reservation and replay. The amendment
+compiler creates a distinct draft limited to direction and evidence references. Versioned
+scheduler integration remains next.
 
 `retrieval/direction_review.py` adds a [source-only direction judgment](direction-review.md)
 with verified page bytes and exact cited-quote membership. It retains the model observation

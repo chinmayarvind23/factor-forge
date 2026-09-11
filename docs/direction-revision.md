@@ -17,6 +17,18 @@ it neither edits a strategy nor grants execution permission. The trusted coordin
 must supply canonical prior worker results. Hash integrity alone does not establish
 the authenticity of arbitrary caller-created observations.
 
-Durable operation reservation, a bounded scheduler revision policy and amended-draft
-publication are the next integration steps. The version-two scheduler continues to
-hold disagreements. No live revision accuracy claim follows from controlled tests.
+`orchestration/direction_revision_worker.py` reserves a distinct operation before
+model delivery, uses the original run deadline and settles with unknown dollar cost.
+Restart recovers the exact command-bound result; interruption before settlement leaves
+an unresolved operation rather than dispatching another call.
+
+`factors/direction_amendment.py` verifies that the original draft is the actual compiler
+output and binds its extraction record. When a supported revision agrees with the
+source-only review, it compiles a new draft changing only direction and adding review
+and revision records to lineage. Formula, timing, data, costs and funding remain fixed.
+The original draft and all judgments are retained in the amendment. Unsupported
+revision evidence or continued disagreement produces an explicit held result.
+
+The bounded scheduler revision policy and amendment publication are the next integration
+steps. Version-two scheduling continues to hold disagreements. No live revision accuracy
+claim follows from controlled tests.
