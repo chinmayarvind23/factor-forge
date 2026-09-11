@@ -6,6 +6,11 @@ bucket count, formation lag and lookback; unresolved choices remain reason-coded
 The complete request is retained, and the existing raw contract validates executable drafts.
 Source review and artifact admission remain separate responsibilities.
 
+`orchestration/research_strategies.py` composes the canonical source stage with that
+compiler. Exact packet-bound review configuration is checked before provider work;
+published candidates retain extraction-record references and complete compiler drafts.
+Every selected source keeps its ordered compiled, review, unbound or unavailable outcome.
+
 Implemented local slice: `domain/research_brief.py` validates immutable requests and records;
 `orchestration/local_runs.py` serializes idempotent creation with a lock, caps the store at 1000
 runs, and records a single normalization transition. `api/app.py` enforces explicit local mode,

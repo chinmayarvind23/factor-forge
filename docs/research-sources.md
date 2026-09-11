@@ -29,3 +29,29 @@ per-source maximum charge remains subject to the original run's total budget.
 Tests use original indexed text and controlled provider responses with actual
 PostgreSQL transactions. They verify ranking-to-packet correspondence and reuse of
 three saved outcomes; they do not constitute a retrieval or model-accuracy benchmark.
+
+## Strategy publication
+
+`research_strategies` composes this source stage with the
+[monthly strategy compiler](source-strategy.md). Reviewed bindings pair the exact
+source packet with an explicit execution environment and formation-rule text.
+The coordinator rejects duplicate bindings and packets that differ from the
+catalog before any provider call. A binding therefore applies to the selected
+strategy and physical page references, as well as the paper version.
+
+Each selected source produces one ordered candidate: `compiled`, `needs_review`,
+`unbound` or `source_unavailable`. Both executable and unresolved compiler drafts
+are published as canonical artifacts. The source extraction record is included
+in the environment's source references before compilation; all existing references
+remain. Environments need capacity for that additional reference within the raw
+contract's 32-reference limit. The stage publishes its complete source inventory,
+reviewed bindings, candidates and draft references with a four-MiB object limit.
+
+The coordinator always obtains observations through the owner-bound extraction
+worker. Replays recover settled worker results before deterministic compilation.
+It does not accept an arbitrary client-supplied extraction result as worker evidence.
+Published draft references identify the complete compiler request and result;
+they do not prove that the source interpretation is correct. A caller can pass
+a compiled strategy to the existing monthly worker with explicit capital and
+evaluation time. Automatic experiment scheduling and the full research graph
+remain the next composition layer.
