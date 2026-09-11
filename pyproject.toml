@@ -5,6 +5,11 @@ description = "Autonomous quantitative research with reproducible evidence"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115,<1",
+    "httpx>=0.28,<1",
+    "langgraph>=1.2.11",
+    "langgraph-checkpoint-postgres>=3.1.2",
+    "psycopg[binary,pool]>=3.3.5",
+    "pyjwt[crypto]>=2.13.0",
     "uvicorn>=0.35,<1",
 ]
 
