@@ -14,11 +14,27 @@ Formation occurs at session close and trading at a later session open. Rebalanci
 or annually at June's last session. Holding periods align with the rebalance interval; longer
 holdings require equal allocation across active vintages. The initial portfolio uses all
 eligible securities for breakpoints, stable security IDs for ties, and explicit equal or
-value weighting. Long and short sleeves each have unit exposure, giving initial gross
-exposure two. Short proceeds are segregated and cash earns zero. These are declared policies;
-an engine must enforce funding and portfolio accounting before any execution can pass.
+value weighting. Long and short sleeves each have unit exposure, giving target gross
+exposure two relative to pre-trade NAV. Costs reduce NAV separately, so realized
+post-cost gross exposure can exceed two. Short proceeds are segregated and cash earns zero.
+An engine must enforce these policies, funding and portfolio accounting before execution can pass.
 The [session calendar](session-calendar.md) binds canonical schedule bytes and rejects versions
 that were unavailable at formation; calendar completeness remains an explicit source assertion.
+
+`factor-spec-v2` requires `balanced_contiguous_low_remainder` bucket allocation and
+`pre_trade_nav` sizing explicitly. After missing-signal exclusions, sort ascending by signal
+then stable security ID. For `N` securities and `B` buckets, let `q, r = divmod(N, B)`; the
+first `r` low-signal buckets contain `q + 1` rows, and the remaining buckets contain `q`.
+Require every bucket to meet the declared minimum. Direction chooses the long and short
+extremes after partitioning. There is no percentile interpolation or automatic bucket reduction.
+Version-one documents are rejected; migration must supply the missing choices and create new
+identities rather than reinterpreting a saved execution hash.
+
+Conditional weights and cost estimates do not grant funding permission. For example, unit
+long exposure consumes the pre-trade NAV, so positive fees can leave negative free cash when
+short proceeds are segregated. Zero financing cost does not authorize that debit. An executor
+must reject insufficient funding until an explicit permitted financing or reserve-sizing
+policy exists. Fractional execution and rounding policies also remain execution gates.
 
 The [closed formula language](formula-language.md) supplies arithmetic. Contracts additionally
 check input names, dimensions and history: annual differences require two annual observations,

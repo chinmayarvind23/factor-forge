@@ -82,6 +82,7 @@ def specification() -> dict[str, object]:
         "portfolio": {
             "direction": "long_high_short_low",
             "bucket_count": 2,
+            "bucket_allocation": "balanced_contiguous_low_remainder",
             "weighting": "equal_weight",
             "weight_input": None,
             "breakpoints": "all_eligible",
@@ -89,6 +90,7 @@ def specification() -> dict[str, object]:
             "minimum_bucket_size": 1,
             "long_exposure": 1,
             "short_exposure": 1,
+            "sizing_basis": "pre_trade_nav",
             "short_proceeds": "segregated",
             "cash_return": "zero",
         },
@@ -786,3 +788,19 @@ def test_saved_queue_cannot_promote_exact_duplicate_into_admitted_inventory() ->
         value["queued_ids"] = ["a", "b"]
         with pytest.raises(ValidationError, match="execution identities must be unique"):
             HypothesisQueue.model_validate_json(json.dumps(value))
+
+
+@pytest.mark.parametrize("field", ["bucket_allocation", "sizing_basis"])
+def test_portfolio_partition_and_sizing_choices_are_explicit(field: str) -> None:
+    """An older draft cannot inherit newly specified economic choices through defaults."""
+    value = specification()
+    portfolio = cast(dict[str, object], value["portfolio"])
+    portfolio.pop(field, None)
+    with pytest.raises(ValidationError):
+        FactorSpec.model_validate(value)
+
+
+def test_previous_factor_schema_is_not_silently_reinterpreted() -> None:
+    """Migrating version one requires explicit partition and sizing choices."""
+    with pytest.raises(ValidationError):
+        FactorSpec.model_validate(specification() | {"schema_version": "factor-spec-v1"})

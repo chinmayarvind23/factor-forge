@@ -179,6 +179,7 @@ class PortfolioSpec(Contract):
 
     direction: Literal["long_high_short_low", "long_low_short_high"]
     bucket_count: Annotated[int, Field(ge=2, le=100)]
+    bucket_allocation: Literal["balanced_contiguous_low_remainder"]
     weighting: Literal["equal_weight", "value_weight"]
     weight_input: InputName | None
     breakpoints: Literal["all_eligible"]
@@ -186,6 +187,7 @@ class PortfolioSpec(Contract):
     minimum_bucket_size: Annotated[int, Field(ge=1, le=1000)]
     long_exposure: Annotated[int, Field(ge=1, le=1)]
     short_exposure: Annotated[int, Field(ge=1, le=1)]
+    sizing_basis: Literal["pre_trade_nav"]
     short_proceeds: Literal["segregated"]
     cash_return: Literal["zero"]
 
@@ -297,7 +299,7 @@ def _formula_dimensions(node: ast.expr, inputs: dict[str, InputBinding]) -> dict
 class FactorSpec(Contract):
     """A complete declared specification is still subject to data-row, engine and sandbox gates."""
 
-    schema_version: Literal["factor-spec-v1"] = "factor-spec-v1"
+    schema_version: Literal["factor-spec-v2"] = "factor-spec-v2"
     factor_id: Identifier
     version: Identifier
     name: Annotated[str, Field(min_length=1, max_length=200)]
