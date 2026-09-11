@@ -81,6 +81,10 @@ jobs:
           persist-credentials: false
       - name: Enable the containerd image store on this disposable runner
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends --allow-downgrades \
+            docker-ce=5:29.2.1-1~ubuntu.24.04~noble \
+            docker-ce-cli=5:29.2.1-1~ubuntu.24.04~noble
           config="$RUNNER_TEMP/factorforge-docker-daemon.json"
           if sudo test -f /etc/docker/daemon.json; then
             sudo cat /etc/docker/daemon.json > "$config"
@@ -92,12 +96,15 @@ jobs:
           sudo systemctl restart docker
           docker version
           docker info
+          test "$(docker version --format '{{.Server.Version}}')" = 29.2.1
       - name: Verify and import the exact reviewed Python image
         working-directory: artifacts/local/runtime-distribution
         run: |
           test "$(wc -c < runtime.oci.tar)" -eq 21227520
           echo '9f7b76a6e035cb0a64066be9b7e7bf7db51f831011d43e3a62039324df411a99  runtime.oci.tar' | sha256sum --check --strict
           docker image load --input runtime.oci.tar
+          mkdir -p ../sandbox-acceptance
+          docker image inspect factorforge-python-runtime@sha256:d3f48bcda1df69a2e87baa63ab56d5883fa790e790c3c7b3c907dcc9097d57d4 > ../sandbox-acceptance/imported-image.json
       - name: Require actual isolation, resource limits and cleanup
         env:
           FACTORFORGE_SANDBOX_ACCEPTANCE: "1"

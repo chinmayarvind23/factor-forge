@@ -61,6 +61,11 @@ kept on a separate orphan Git branch after Release asset transfers failed. This 
 a 21 MB Git object but permits authenticated checkout with read-only CI permissions.
 The source checkout contains no runtime binary. Enabling the image store changes only
 the hosted sandbox job's daemon; local operators must prepare their own supported store.
+The job pins Docker Engine and CLI 29.2.1, matching the locally exercised engine version,
+and retains the imported image inspection even if preflight rejects it. The first hosted
+trial imported successfully under the runner's Docker 28.0.4 but all eight cases stopped
+at `SANDBOX_IMAGE_INVALID` before creating a container. Its log did not retain the image
+inspection, so the particular rejected field is unproven. No compatibility fallback was added.
 
 | Control | Fixed setting |
 | --- | --- |
