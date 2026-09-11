@@ -36,7 +36,8 @@ class RunRecord(ResearchBrief):
     created_at: datetime
     brief: str | None = None
     events: tuple[RunEvent, ...]
-    mode: Literal["local"] = "local"
+    mode: Literal["local", "cognito"] = "local"
+    storage: Literal["memory", "postgres"] = "memory"
 
 
 class RunAccepted(BaseModel):

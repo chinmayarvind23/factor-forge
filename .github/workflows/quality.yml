@@ -5,8 +5,26 @@ permissions:
 jobs:
   python:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: ci-admin-only
+          POSTGRES_DB: factorforge_test_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d factorforge_test_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      FACTORFORGE_TEST_DSN: postgresql://factorforge_ci:ci-test-only@127.0.0.1:5432/factorforge_test_ci
     steps:
       - uses: actions/checkout@v4
+      - name: Create isolated test role
+        run: >-
+          docker exec ${{ job.services.postgres.id }} psql -U postgres -d factorforge_test_ci
+          -v ON_ERROR_STOP=1 -c "CREATE ROLE factorforge_ci LOGIN PASSWORD 'ci-test-only';"
+          -c "ALTER DATABASE factorforge_test_ci OWNER TO factorforge_ci;"
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.8.4"
