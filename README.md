@@ -18,8 +18,10 @@ Monthly fact selection now feeds conditional Polars portfolio targets. A separat
 ledger handles splits, dividends, exits and trade fees against original hand calculations.
 Saved complete NAV paths now produce declared return, drawdown, Sharpe and turnover metrics.
 These components still require strategy admission and execution before they form a backtest.
-Sandbox admission contracts and a pinned Python image are prepared; container execution and
-isolation remain unverified in the recorded status.
+A local Python sandbox now stages verified artifacts, checks container policy before starting
+code, and preserves output, termination and cleanup evidence. Eight original Docker acceptance
+cases pass locally and in hosted CI; the operator command is documented in [sandbox](docs/sandbox.md).
+LEAN verification and integration with admitted strategies remain unfinished.
 The API verifies Cognito access tokens and isolates runs by owner; live Cognito configuration
 and browser sign-in remain pending. The complete research loop described below remains
 the target design. Release benchmark metrics are unmeasured; see

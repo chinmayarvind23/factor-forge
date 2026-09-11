@@ -65,21 +65,43 @@ The [hosted workflow for `29f0d7d`](https://github.com/chinmayarvind23/factor-fo
 passed Python and web jobs. Its DVC audit failed before restoration ran, and the required
 release gate failed. The application dependency audit passed within the Python job.
 
-## Sandbox preparation
+## Python sandbox execution
 
 The official Python image
 `python@sha256:2fe5997d249a808b8eeea52c58a1dbffbba28754dc11699ef5c029f2d818ce79`
-was pulled for local sandbox development. A read-only Docker inspection on 11 September 2026
+was pulled for local sandbox development. A Docker inspection on 11 September 2026
 confirmed `linux/amd64`, image creation time `2026-09-01T00:12:40.129211396Z` and
-46,182,573 bytes. Image acquisition does not establish vulnerability status, successful
-execution or sandbox isolation. No container execution evidence is included in this update.
+46,182,573 bytes. Digest pinning establishes image identity; vulnerability status has not
+been measured for this image.
 
-The experiment admission/controller contracts are committed at `9fce122`. A separate
-[pinned Moby seccomp derivative](../infra/sandbox/README.md) removes socket/network allowances
-while retaining default denial; its 29 static checks pass. Runtime loading, resource limits,
-network denial and cleanup still require Docker probes. As of 09:38 UTC on 11 September,
-the [C8 workflow](https://github.com/chinmayarvind23/factor-forge/actions/runs/34585177883)
-was in progress, with its DVC audit already failed. No complete release pass is claimed.
+The [local operator runner](sandbox.md) now verifies source bytes, stages private inputs,
+checks the created container against the fixed policy and saves bounded output and cleanup
+replies. Its [pinned Moby seccomp derivative](../infra/sandbox/README.md) removes socket/network
+allowances while retaining default denial and the remaining upstream restrictions.
+
+Eight original real-Docker acceptance cases passed locally in 56.39 seconds: arithmetic,
+syscall/filesystem denial, PID exhaustion, memory exhaustion, output limit, deadline,
+cancellation and a child process outliving its Python parent. The cases retain source and
+control artifacts, paired host-canary references and container-removal observations. These
+are bounded engineering probes; they do not establish protection against every escape path.
+A separate installed Windows CLI invocation completed through a work path containing spaces
+and Unicode characters and removed its staging directory.
+
+At clean commit `e439adf`, 1,422 Windows tests passed with seven explicit tooling/platform
+skips and one Starlette warning in 110.17 seconds. Combined statement/branch coverage was
+97.99%; formatting, lint, strict typing and source/wheel builds passed. This predates the
+operator CLI and required Docker acceptance job added in `161a865`.
+
+The [hosted workflow for `161a865`](https://github.com/chinmayarvind23/factor-forge/actions/runs/34587864317)
+passed Python, web and the required real-Docker acceptance job. The Python job included its
+application dependency audit; the web job included browser E2E checks. The separate DVC audit
+failed before restoration, and the complete release gate failed. These are observed job/step
+statuses; the hosted artifact closure has not yet been independently replayed.
+
+The sandbox uses a standard-library Python image and is separate from the research API.
+Canonical run/FactorSpec admission, funding checks, full strategy execution, automatic crash
+reconciliation and independent LEAN execution remain incomplete. A successful Python process
+does not count as a completed research benchmark.
 
 ## Retrieval development pilot
 
