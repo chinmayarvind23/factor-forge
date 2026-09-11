@@ -16,3 +16,11 @@ The evaluation uses the fixed BM25 baseline at `k=3`. Recall@3 and MRR@3 are mac
 All pairs inside this corpus are judged. Papers outside it are unjudged, and expanding the corpus requires a new version and additional judgments. Do not rewrite this version after observing results.
 
 These original summaries, queries, and judgments may be copied and redistributed for research and demonstrations with attribution to this repository. This permission does not cover the linked papers or imply an open license for their PDFs.
+
+Run from a clean installed checkout:
+
+```console
+uv run python -m factorforge.evaluation.cli --corpus data/literature/three-paper-pilot-v1/corpus.json --qrels data/literature/three-paper-pilot-v1/qrels.json --output artifacts/local/retrieval-pilot-v1 --k 3
+```
+
+The command prints the report and a content-addressed record pointer. The record preserves exact input files, configuration, report, installed source snapshots, Python and package versions, and evaluation timing. Source snapshots are provenance, not executable attestation against concurrent local file changes. Use a frozen checkout for evidence collection. The command accepts local JSON files of at most 16 MiB each; schema and corpus limits also apply.
