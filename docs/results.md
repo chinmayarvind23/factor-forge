@@ -223,6 +223,19 @@ Evaluation `dec1812e767f2003adeb7730b74b8097a96490f08c9ca4a39aca6156980070e5`
 contains 5,511 bytes. This remains an exposed original development suite, with
 production promotion and published-factor accuracy measured separately.
 
+Eight additional original validation cases were frozen in `17f2804` before either run.
+The production baseline recorded **2/8 joint passes**; the coherent Qwen candidate
+recorded **6/8**, covering all five explicit rules and the unknown-regime case. The
+long-only and short-only cases did not receive the required uncertainty. The candidate
+therefore does not meet the predeclared selection rule (at least seven passes and all
+three uncertainty cases correct), and production selection remains unchanged.
+Both eight-case runs completed; 52 reachable artifacts verified for each root.
+Baseline evaluation: `7fc60c6dc3a8ca3d03d5a65147bf69caa9c62ec7792c1dd9d5d621794e2c2e38`
+(3,759 bytes). Candidate evaluation:
+`55c313f78e112f7ece8729652391b11cb60b1b28bde304d20a9a05feecfc5fc6` (4,977 bytes).
+These authored validation cases share the project's rubric and authorship and are now
+exposed. They remain separate from the original development and published-paper scores.
+
 ## Local model protocol evidence
 
 A single 32,768-context protocol call timed out during model loading after 120.55 seconds.

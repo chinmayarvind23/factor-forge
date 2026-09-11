@@ -97,6 +97,13 @@ uncertain cases correct, and no regression against the baseline on the same suit
 An accepted validation result is necessary for a versioned production-profile change;
 it does not replace scheduler integration checks or the published-factor benchmark.
 
+The separate validation run recorded 2/8 joint passes for the production baseline and
+6/8 for the candidate. The candidate passed all five explicit directions and the unknown
+regime case; long-only and short-only descriptions received directional guesses. It
+therefore does not meet the frozen selection criteria. Production selection remains
+unchanged. The validation set is now exposed and cannot serve as a fresh holdout for
+subsequent tuning.
+
 What to read next: [observability](../docs/observability.md) for the span substrate,
 [failure modes](../docs/failure-modes.md) for coverage, and
 [research reports](../docs/research-reports.md) for evidence-based execution summaries.
