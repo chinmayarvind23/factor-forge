@@ -4,13 +4,23 @@ Implemented local slice: `domain/research_brief.py` validates immutable requests
 `orchestration/local_runs.py` serializes idempotent creation with a lock, caps the store at 1000
 runs, and records a single normalization transition. `api/app.py` enforces explicit local mode,
 loopback peer/host and exact browser Origin before operations. `api/body_limit.py` caps raw JSON
-bodies at 16 KiB including chunked uploads. No model is called and no backtest is performed.
+bodies at 16 KiB including chunked uploads. This API flow calls no model and performs no backtest.
 The stored original request determines idempotency equality, so differences in internal
 whitespace conflict even when deterministic normalization would produce the same brief.
 The Next.js console keeps an idempotency key with an uncertain submission until the API
 accepts it. Polling reads canonical API events sequentially and stops at normalization,
 an error, or its attempt limit. It validates response shapes and never invents progress.
 The broader modules and state machine below describe the target system.
+
+The independent literature path uses `domain/literature.py` and `retrieval/lexical.py` for
+immutable documents and bounded BM25 ranking. `evaluation/retrieval.py` requires complete binary
+judgments and separates answerable and no-relevant query denominators; its CLI archives the
+input bytes and actual result. `providers/ollama.py` supplies fixed, versioned loopback profiles
+with no tools, retries, endpoint redirection or inferred dollar cost. `retrieval/extraction.py`
+retains raw source pages, a versioned whitespace transform, prepared prompt and provider record.
+`domain/extraction.py` validates observations without treating parsing as accuracy, while
+`domain/formula.py` interprets a closed arithmetic grammar without executing Python. See the
+[extraction contract](extraction-contract.md) and [formula language](formula-language.md).
 
 The durable adapter uses owner issuer/subject predicates and SQL uniqueness for idempotency.
 Dollar values use fixed two-decimal canonical serialization, preserving equality between

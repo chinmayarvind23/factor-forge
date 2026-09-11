@@ -16,6 +16,14 @@ and permitted uses before committing metadata. Large objects stay outside Postgr
 SHA-256 references bind source and policy metadata. The local store and S3 request contracts
 are tested; live AWS storage verification and empirical data coverage remain pending.
 
+The literature development path now runs an in-process BM25 baseline over versioned documents
+and records a frozen pilot's per-query results. A separate one-shot local model adapter archives
+source packets, prompts, delivery and extraction outcomes. This path has no tools or authority
+to execute paper instructions. It is not yet connected to the API's durable research loop.
+The [results](results.md) distinguish measured retrieval behavior and protocol probes from
+unmeasured extraction accuracy and factor replication. Elasticsearch and dense retrieval remain
+planned comparisons under ADR-006.
+
 ## Logical planes
 
 FactorForge contains five logical planes:

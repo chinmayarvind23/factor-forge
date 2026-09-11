@@ -113,10 +113,22 @@ code, lock and installed environment still must match. Altered or missing eviden
 The separate [DVC tooling project](../tools/dvc/README.md) has a blocking dependency audit.
 Its unavailable restoration test is an explicit skip in ordinary tests and a required check
 in the complete release workflow. The original fixture can be inspected from Git without DVC.
-Research, evaluation, infrastructure and cloud commands will be documented when implemented.
+Research orchestration, infrastructure and cloud commands will be documented when implemented.
 
 Install scripts are disabled because this workspace currently requires none. The single web
 package has its own lockfile. Root commands delegate by directory without creating workspace
 symbolic links, which this Windows environment cannot traverse.
 
 No command silently downloads a replacement benchmark dataset when a pinned snapshot is unavailable.
+
+## Reproduce the literature retrieval pilot
+
+```console
+uv run --locked python -m factorforge.evaluation.cli --corpus data/literature/three-paper-pilot-v1/corpus.json --qrels data/literature/three-paper-pilot-v1/qrels.json --output artifacts/local/retrieval-pilot-v1 --k 3
+```
+
+This prints the per-query report and an immutable evaluation record reference. It uses the three
+original summaries checked into Git and makes no network or model call. The record retains exact
+inputs, ranking configuration, report, installed source snapshots and environment versions.
+See the [pilot policy](../data/literature/three-paper-pilot-v1/README.md) for frozen input hashes,
+separate metric denominators and the limits of this small development sample.

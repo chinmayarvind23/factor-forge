@@ -8,9 +8,12 @@ normalization events, and recover after interrupted requests or API restarts in 
 The data foundation now verifies immutable objects, publishes owner-scoped dataset manifests
 and selects facts and historical membership using explicit point-in-time rules. A fixture
 command saves a verifiable data-selection bundle and replays it from stored artifacts.
+A BM25 literature baseline has a frozen three-paper evaluation, including failed abstention
+cases. Strict source extraction and bounded arithmetic preserve model attempts and validate
+their structure; paper-extraction accuracy remains unmeasured.
 The API verifies Cognito access tokens and isolates runs by owner; live Cognito configuration
-and browser sign-in remain pending. The research pipeline described below is
-the target design and is not implemented yet. Benchmark metrics are unmeasured; see
+and browser sign-in remain pending. The complete research loop described below remains
+the target design. Release benchmark metrics are unmeasured; see
 [results](docs/results.md) for the evidence status and [commands](docs/commands.md) for runnable setup.
 
 FactorForge turns a loose investment idea into a structured, reviewable research program. It retrieves relevant literature, extracts and proposes typed factor hypotheses, runs bounded experiments in sandboxes, validates strategies with time-series-aware statistics, independently verifies selected results in LEAN, records the full experiment lineage, and produces a research report that explains what worked, what failed, and why.
