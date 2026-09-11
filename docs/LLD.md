@@ -1,5 +1,11 @@
 # FactorForge Low-Level Design
 
+`factors/source_strategy.py` compiles [source observations into monthly drafts](source-strategy.md)
+using explicit reviewed execution bindings. Source choices replace formula, direction,
+bucket count, formation lag and lookback; unresolved choices remain reason-coded outcomes.
+The complete request is retained, and the existing raw contract validates executable drafts.
+Source review and artifact admission remain separate responsibilities.
+
 Implemented local slice: `domain/research_brief.py` validates immutable requests and records;
 `orchestration/local_runs.py` serializes idempotent creation with a lock, caps the store at 1000
 runs, and records a single normalization transition. `api/app.py` enforces explicit local mode,
