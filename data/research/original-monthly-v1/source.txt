@@ -1,0 +1,16 @@
+Original score strategy
+
+This is an original software integration fixture, not a published equity factor.
+At the last trading session close of each month, rank historically eligible
+securities by the current dimensionless input named score. The signal formula is
+score. There is no trailing return lookback. The fixed formation lag is zero months.
+Divide securities into two buckets using all eligible securities, with stable
+security-ID tie ordering. Go long the high-score bucket and short the low-score
+bucket, weighting securities equally within each bucket. Reconstitute monthly
+and hold each cohort for one month, without overlapping cohorts. Trade at the next
+session open. Formation rule: Last session close each month.
+
+The accompanying original two-security data uses a declared UTC weekday calendar,
+raw prices, six basis points of commission and four basis points of slippage.
+These fixture values demonstrate reproducible accounting and source extraction;
+they establish no empirical return, factor-reproduction or investment claim.
