@@ -10,8 +10,9 @@ import polars as pl
 from pydantic import ValidationError
 
 from factorforge.domain.errors import ResearchError
-from factorforge.domain.factors import CostSpec, PortfolioSpec
+from factorforge.domain.factors import AllocationSpec, CostSpec, PortfolioSpec
 from factorforge.domain.targets import (
+    AllocationTemplate,
     BucketPosition,
     CrossSection,
     PositionWeight,
@@ -28,10 +29,41 @@ def build_targets(
     *,
     missing_signal: Literal["fail", "exclude_at_formation"],
 ) -> TargetPlan:
-    """Partition selected signals; source, point-in-time and funding checks remain separate."""
+    """Preserve the v2 pre-trade record while sharing only the policy-independent partition."""
+    try:
+        portfolio = PortfolioSpec.model_validate(portfolio)
+        allocation = AllocationSpec.model_validate(
+            {
+                key: value
+                for key, value in portfolio.model_dump().items()
+                if key in AllocationSpec.model_fields
+            }
+        )
+        template = build_allocation(panel, allocation, missing_signal=missing_signal)
+        return TargetPlan(
+            input_sha256=template.input_sha256,
+            portfolio_sha256=portfolio.sha256,
+            portfolio=portfolio,
+            formation=template.formation,
+            positions=template.positions,
+            excluded=template.excluded,
+        )
+    except (ValueError, TypeError, ValidationError, ResearchError):
+        raise ResearchError(
+            "TARGET_INPUT_INVALID", "Conditional target inputs are invalid.", 422
+        ) from None
+
+
+def build_allocation(
+    panel: CrossSection,
+    portfolio: AllocationSpec,
+    *,
+    missing_signal: Literal["fail", "exclude_at_formation"],
+) -> AllocationTemplate:
+    """Partition exact selected signals into unit sleeves, with no execution sizing claim."""
     try:
         panel = CrossSection.model_validate(panel)
-        portfolio = PortfolioSpec.model_validate(portfolio)
+        portfolio = AllocationSpec.model_validate(portfolio)
         if missing_signal not in {"fail", "exclude_at_formation"}:
             raise ValueError("Missing-signal policy is unsupported")
         observed = {row.security_id: row for row in panel.observations}
@@ -104,19 +136,19 @@ def build_targets(
         inputs["universe"] = sorted(inputs["universe"])
         inputs["observations"] = sorted(inputs["observations"], key=lambda row: row["security_id"])
         inputs["missing_signal"] = missing_signal
-        return TargetPlan(
+        return AllocationTemplate(
             input_sha256=hashlib.sha256(
                 json.dumps(inputs, sort_keys=True, separators=(",", ":")).encode()
             ).hexdigest(),
-            portfolio_sha256=portfolio.sha256,
-            portfolio=portfolio,
+            allocation_sha256=portfolio.sha256,
+            allocation=portfolio,
             formation=panel.formation,
             positions=tuple(positions),
             excluded=excluded,
         )
     except (ValueError, TypeError, ValidationError, pl.exceptions.PolarsError):
         raise ResearchError(
-            "TARGET_INPUT_INVALID", "Conditional target inputs are invalid.", 422
+            "ALLOCATION_INPUT_INVALID", "Unit allocation inputs are invalid.", 422
         ) from None
 
 

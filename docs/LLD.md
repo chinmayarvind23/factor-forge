@@ -42,7 +42,10 @@ terminal outcomes block accounting. This [conditional ledger](conditional-accoun
 hand-worked engineering references; it is not yet a strategy executor or funding admission gate.
 
 `domain/targets.py` and `factors/targets.py` produce conditional target weights from selected
-scalar signals. Polars joins and partitions the eligible table, with exact Decimal ordinals
+scalar signals. The shared [allocation template](allocations.md) has its own identity and
+declares unit sleeves independently of execution sizing. The existing v2 target wrapper
+retains its original canonical bytes and pre-trade NAV convention.
+Polars joins and partitions the eligible table, with exact Decimal ordinals
 and rational sleeve weights. Removed target identities remain in drift-based turnover and
 trade-fee estimates. The [target contract](conditional-targets.md) preserves the distinction
 between these calculations and source selection, funding or order execution.

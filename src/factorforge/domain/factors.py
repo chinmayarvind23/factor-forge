@@ -173,9 +173,8 @@ class TimingSpec(Contract):
         return self
 
 
-class PortfolioSpec(Contract):
-    """The first long-short contract fixes gross exposures and records every weighting
-    convention."""
+class AllocationSpec(Contract):
+    """Ranking and unit-sleeve partition choices are independent of account funding and sizing."""
 
     direction: Literal["long_high_short_low", "long_low_short_high"]
     bucket_count: Annotated[int, Field(ge=2, le=100)]
@@ -185,11 +184,6 @@ class PortfolioSpec(Contract):
     breakpoints: Literal["all_eligible"]
     ties: Literal["stable_security_id"]
     minimum_bucket_size: Annotated[int, Field(ge=1, le=1000)]
-    long_exposure: Annotated[int, Field(ge=1, le=1)]
-    short_exposure: Annotated[int, Field(ge=1, le=1)]
-    sizing_basis: Literal["pre_trade_nav"]
-    short_proceeds: Literal["segregated"]
-    cash_return: Literal["zero"]
 
     @model_validator(mode="after")
     def explicit_weight_input(self) -> Self:
@@ -198,6 +192,16 @@ class PortfolioSpec(Contract):
         if (self.weighting == "value_weight") != (self.weight_input is not None):
             raise ValueError("Weighting input does not match weighting convention")
         return self
+
+
+class PortfolioSpec(AllocationSpec):
+    """The unchanged v2 portfolio adds pre-trade sizing to the shared allocation choices."""
+
+    long_exposure: Annotated[int, Field(ge=1, le=1)]
+    short_exposure: Annotated[int, Field(ge=1, le=1)]
+    sizing_basis: Literal["pre_trade_nav"]
+    short_proceeds: Literal["segregated"]
+    cash_return: Literal["zero"]
 
 
 class CostSpec(Contract):

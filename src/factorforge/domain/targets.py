@@ -10,7 +10,14 @@ from pydantic import Field, field_validator, model_validator
 
 from factorforge.domain.artifacts import ArtifactRef
 from factorforge.domain.calendar import FormationPlan
-from factorforge.domain.factors import Contract, CostSpec, Digest, Identifier, PortfolioSpec
+from factorforge.domain.factors import (
+    AllocationSpec,
+    Contract,
+    CostSpec,
+    Digest,
+    Identifier,
+    PortfolioSpec,
+)
 
 
 def bounded_fraction(value: Fraction) -> Fraction:
@@ -114,6 +121,64 @@ class BucketPosition(PositionWeight):
     bucket: Annotated[int, Field(ge=0, le=99)]
 
 
+def _validate_partition(
+    rule: AllocationSpec,
+    positions: tuple[BucketPosition, ...],
+    excluded: tuple[str, ...],
+) -> None:
+    """Shared inventory arithmetic binds unit sleeves without asserting any funding convention."""
+    ids = {row.security_id for row in positions}
+    if (
+        len(ids) != len(positions)
+        or len(set(excluded)) != len(excluded)
+        or ids & set(excluded)
+        or len(positions) + len(excluded) > 10000
+        or excluded != tuple(sorted(excluded))
+    ):
+        raise ValueError("Target and exclusion identities must be distinct and unique")
+    q, r = divmod(len(positions), rule.bucket_count)
+    if q < rule.minimum_bucket_size:
+        raise ValueError("Every bucket must meet its minimum")
+    expected = tuple(bucket for bucket in range(rule.bucket_count) for _ in range(q + (bucket < r)))
+    if tuple(row.bucket for row in positions) != expected:
+        raise ValueError("Target bucket inventory does not match the partition policy")
+    low_sign = -1 if rule.direction == "long_high_short_low" else 1
+    totals = [Fraction(0) for _ in range(rule.bucket_count)]
+    for row in positions:
+        weight = row.weight.as_fraction()
+        sign = (
+            low_sign if row.bucket == 0 else -low_sign if row.bucket == rule.bucket_count - 1 else 0
+        )
+        if (sign == 0 and weight != 0) or (sign != 0 and not 0 < sign * weight <= 1):
+            raise ValueError("Position sign is inconsistent with its bucket")
+        if rule.weighting == "equal_weight" and weight != Fraction(sign, q + (row.bucket < r)):
+            raise ValueError("Equal weights must agree within each bucket")
+        totals[row.bucket] = bounded_fraction(totals[row.bucket] + weight)
+    if totals[0] != low_sign or totals[-1] != -low_sign:
+        raise ValueError("Extreme sleeves must normalize exactly to unit exposure")
+
+
+class AllocationTemplate(Contract):
+    """A preselected unit-sleeve template requires later source, funding and execution admission."""
+
+    schema_version: Literal["allocation-template-v1"] = "allocation-template-v1"
+    scope: Literal["unit-sleeve-template"] = "unit-sleeve-template"
+    input_sha256: Digest
+    allocation_sha256: Digest
+    allocation: AllocationSpec
+    formation: FormationPlan
+    positions: Annotated[tuple[BucketPosition, ...], Field(min_length=2, max_length=10000)]
+    excluded: Annotated[tuple[Identifier, ...], Field(max_length=10000)]
+
+    @model_validator(mode="after")
+    def coherent_allocation(self) -> Self:
+        """Copied and loaded templates must retain their exact policy and normalized partition."""
+        if self.allocation_sha256 != self.allocation.sha256:
+            raise ValueError("Allocation policy identity does not match")
+        _validate_partition(self.allocation, self.positions, self.excluded)
+        return self
+
+
 class TargetPlan(Contract):
     """Target inventories enforce partition and sleeve arithmetic, not execution permission."""
 
@@ -134,41 +199,7 @@ class TargetPlan(Contract):
         rule = self.portfolio
         if self.portfolio_sha256 != rule.sha256:
             raise ValueError("Target policy identity does not match")
-        ids = {row.security_id for row in self.positions}
-        if (
-            len(ids) != len(self.positions)
-            or len(set(self.excluded)) != len(self.excluded)
-            or ids & set(self.excluded)
-            or len(self.positions) + len(self.excluded) > 10000
-            or self.excluded != tuple(sorted(self.excluded))
-        ):
-            raise ValueError("Target and exclusion identities must be distinct and unique")
-        q, r = divmod(len(self.positions), rule.bucket_count)
-        if q < rule.minimum_bucket_size:
-            raise ValueError("Every bucket must meet its minimum")
-        expected = tuple(
-            bucket for bucket in range(rule.bucket_count) for _ in range(q + (bucket < r))
-        )
-        if tuple(row.bucket for row in self.positions) != expected:
-            raise ValueError("Target bucket inventory does not match the partition policy")
-        low_sign = -1 if rule.direction == "long_high_short_low" else 1
-        totals = [Fraction(0) for _ in range(rule.bucket_count)]
-        for row in self.positions:
-            weight = row.weight.as_fraction()
-            sign = (
-                low_sign
-                if row.bucket == 0
-                else -low_sign
-                if row.bucket == rule.bucket_count - 1
-                else 0
-            )
-            if (sign == 0 and weight != 0) or (sign != 0 and not 0 < sign * weight <= 1):
-                raise ValueError("Position sign is inconsistent with its bucket")
-            if rule.weighting == "equal_weight" and weight != Fraction(sign, q + (row.bucket < r)):
-                raise ValueError("Equal weights must agree within each bucket")
-            totals[row.bucket] = bounded_fraction(totals[row.bucket] + weight)
-        if totals[0] != low_sign or totals[-1] != -low_sign:
-            raise ValueError("Extreme sleeves must normalize exactly to unit exposure")
+        _validate_partition(rule, self.positions, self.excluded)
         return self
 
 
