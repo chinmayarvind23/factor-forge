@@ -24,7 +24,36 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3.10"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.4"
+      - run: uv sync --locked
       - run: bun install --cwd apps/web --frozen-lockfile --ignore-scripts
       - run: bun run check
       - run: bun run test
       - run: bun run build
+      - run: bun audit --cwd apps/web
+      - run: bun run --cwd apps/web playwright install --with-deps chromium
+      - name: Start local services
+        env:
+          FACTORFORGE_MODE: local
+        run: |
+          uv run uvicorn factorforge.api.app:app --host 127.0.0.1 --port 8001 --no-proxy-headers > /tmp/factorforge-api.log 2>&1 &
+          bun run --cwd apps/web start > /tmp/factorforge-web.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8001/ready && curl --fail --silent --output /dev/null http://127.0.0.1:3001; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/factorforge-api.log /tmp/factorforge-web.log
+          exit 1
+      - run: bun run --cwd apps/web e2e
+        env:
+          FACTORFORGE_E2E_OUTPUT: ${{ github.workspace }}/artifacts/local/web-e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-evidence
+          path: artifacts/local/web-e2e
+          retention-days: 14

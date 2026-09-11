@@ -1,6 +1,13 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.13/schema.json",
-  "formatter": { "indentStyle": "space", "indentWidth": 2 },
-  "linter": { "enabled": true },
-  "files": { "includes": ["**", "!dist"] }
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "linter": {
+    "enabled": true
+  },
+  "files": {
+    "includes": ["**", "!dist", "!!.next", "!next-env.d.ts"]
+  }
 }

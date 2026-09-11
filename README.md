@@ -2,9 +2,9 @@
 
 **Autonomous quantitative research with reproducible evidence**
 
-Implementation status: local API skeleton. The packaged FastAPI application accepts an idea,
-returns an idempotent run receipt, and records deterministic brief normalization in bounded
-in-memory state. The browser is under development. The research pipeline described below is
+Implementation status: local browser/API skeleton. Submit an idea, set limits, inspect the
+stable run ID and recorded brief-normalization events, and recover from an interrupted request.
+State is bounded and in memory. The research pipeline described below is
 the target design and is not implemented yet. Benchmark metrics are unmeasured; see
 [results](docs/results.md) for the evidence status and [commands](docs/commands.md) for runnable setup.
 

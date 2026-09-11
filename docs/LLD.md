@@ -7,6 +7,9 @@ loopback peer/host and exact browser Origin before operations. `api/body_limit.p
 bodies at 16 KiB including chunked uploads. No model is called and no backtest is performed.
 The stored original request determines idempotency equality, so differences in internal
 whitespace conflict even when deterministic normalization would produce the same brief.
+The Next.js console keeps an idempotency key with an uncertain submission until the API
+accepts it. Polling reads canonical API events sequentially and stops at normalization,
+an error, or its attempt limit. It validates response shapes and never invents progress.
 The broader modules and state machine below describe the target system.
 
 ## 1. Domain modules

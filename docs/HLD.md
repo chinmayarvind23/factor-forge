@@ -1,9 +1,10 @@
 # FactorForge High-Level Design
 
-Current implementation: one local FastAPI process with opt-in development identity and a
+Current implementation: a Next.js browser console and one local FastAPI process with opt-in development identity and a
 bounded in-memory run store. It creates receipts and normalizes brief text only. PostgreSQL,
 agent research, isolated execution and the cloud planes below remain planned. This local
 slice establishes the HTTP/event contract before durability is added.
+The browser performs bounded polling and validates responses before rendering progress.
 
 ## Logical planes
 
