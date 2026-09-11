@@ -111,3 +111,7 @@ database schema and artifact directory to resume/recover prior work. Preserve th
 captured evaluation clock. Changing the request creates a distinct operator run
 with its own brief budget; this should be an intentional new research request.
 Pending reservations still require reconciliation rather than repeated execution.
+
+After execution, use the result reference with the [offline report exporter](research-reports.md)
+to read candidate outcomes, direction judgments and linked evidence. Reporting consumes
+no additional model calls or experiment budget and supports all three saved plan versions.

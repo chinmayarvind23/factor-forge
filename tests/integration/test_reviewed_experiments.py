@@ -19,7 +19,8 @@ from factorforge.orchestration.research_experiments import (
     ReviewedResearchExperiments,
     research_experiments,
 )
-from factorforge.orchestration.research_strategies import ResearchStrategies
+from factorforge.orchestration.research_report import build_report, render_report
+from factorforge.orchestration.research_strategies import ResearchStrategies, _publish
 from factorforge.providers.ollama import GenerationRequest, GenerationResult
 from factorforge.retrieval.direction_review import DirectionReview
 from infra.research.prepare_original import main as prepare_original
@@ -132,6 +133,10 @@ def test_review_gates_dispatch_and_replays(
         artifacts = LocalArtifactStore(object_path)
         actual = research_experiments(store, run.run_id, owner, plan, artifacts)
         assert isinstance(actual, ReviewedResearchExperiments)
+        report = build_report(_publish(actual, artifacts), artifacts)
+        assert len(report.candidates) == 1 and report.factor_promotion == "not_assessed"
+        assert report.candidates[0].result == actual.execution.experiments[0].result
+        assert "[Scheduler result](sha256/" in render_report(report)
         row = actual.execution.experiments[0]
         assert row.status == (
             "completed"

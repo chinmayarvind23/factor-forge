@@ -1,5 +1,9 @@
 # FactorForge Low-Level Design
 
+[Research reports](research-reports.md) verify a bounded reachable artifact closure and
+bind typed execution verdicts to source, review, amendment, monthly and validation evidence.
+The offline exporter publishes stable JSON/Markdown without model or database work.
+
 [Quote-first revision probes](revision-experiments.md) retain contextual and source-only
 experiments outside production scheduling. They share strict byte/citation checks and
 use exclusive receipts to prevent accidental repeat delivery. Neither tested variant

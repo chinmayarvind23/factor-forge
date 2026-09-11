@@ -25,8 +25,10 @@ from factorforge.orchestration.research_experiments import (
     ResearchExperiments,
     research_experiments,
 )
+from factorforge.orchestration.research_report import build_report, render_report
 from factorforge.orchestration.research_strategies import (
     ReviewedStrategyBinding,
+    _publish,
     research_strategies,
 )
 from factorforge.providers.ollama import GenerationRequest, GenerationResult
@@ -169,6 +171,24 @@ def test_source_drafts_publish_and_replay(
             monkeypatch.setattr("factorforge.orchestration.monthly_worker.run_monthly", no_repeat)
         scheduled = research_experiments(store, run.run_id, owner, plan, artifacts)
         assert isinstance(scheduled, ResearchExperiments)
+        report = build_report(_publish(scheduled, artifacts), artifacts)
+        assert len(report.candidates) == 1 and report.factor_promotion == "not_assessed"
+        assert report.candidates[0].result == scheduled.experiments[0].result
+        assert "[Scheduler result](sha256/" in render_report(report)
+        if outcome == "compiled":
+            assert report.candidates[0].terminal_nav_usd == Decimal("1057.98")
+            altered = scheduled.model_copy(
+                update={
+                    "experiments": (
+                        scheduled.experiments[0].model_copy(update={"status": "skipped"}),
+                    )
+                }
+            )
+            with pytest.raises(ResearchError) as report_error:
+                build_report(_publish(altered, artifacts), artifacts)
+            assert report_error.value.code == "REPORT_EVIDENCE_INVALID"
+        else:
+            assert report.candidates[0].terminal_nav_usd is None
         assert scheduled.experiments[0].status == (
             "completed" if outcome == "compiled" else "skipped"
         )

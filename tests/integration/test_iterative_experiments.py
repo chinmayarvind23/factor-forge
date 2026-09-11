@@ -21,7 +21,8 @@ from factorforge.orchestration.research_experiments import (
     IterativeResearchExperiments,
     research_experiments,
 )
-from factorforge.orchestration.research_strategies import ResearchStrategies
+from factorforge.orchestration.research_report import build_report, render_report
+from factorforge.orchestration.research_strategies import ResearchStrategies, _publish
 from factorforge.providers.ollama import GenerationRequest, GenerationResult
 from infra.research.prepare_original import main as prepare_original
 
@@ -170,6 +171,10 @@ def test_one_revision_amends_or_holds_and_replays(
             monkeypatch.setattr("factorforge.orchestration.monthly_worker.run_monthly", no_repeat)
         actual = research_experiments(store, run.run_id, owner, plan, artifacts)
         assert isinstance(actual, IterativeResearchExperiments)
+        report = build_report(_publish(actual, artifacts), artifacts)
+        assert len(report.candidates) == 1 and report.factor_promotion == "not_assessed"
+        assert report.candidates[0].result == actual.execution.experiments[0].result
+        assert "[Scheduler result](sha256/" in render_report(report)
         row = actual.execution.experiments[0]
         completed = judgment in {"confirmed", "crash", "agree"}
         assert row.status == (
