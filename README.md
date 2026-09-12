@@ -13,6 +13,9 @@ source packets, durable model extraction, source-derived strategy drafts, monthl
 experiments and retained HAC diagnostics. PostgreSQL stores run budgets, operation
 results and LangGraph experiment checkpoints. `--workflow` adds a resumable research,
 report and memory graph; `--memory-query` finds saved completion evidence by idea.
+The [trajectory exporter](docs/research-trajectories.md) preserves operation histories,
+prompts, responses and decisions as local provenance-linked JSONL for review and later
+evaluation or training. It does not automatically assign rewards or train a model.
 Version-two plans add a separate,
 source-cited direction review before experiment dispatch. Version-three plans permit
 one recorded revision and a separately identified direction amendment. The operator
