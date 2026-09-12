@@ -7,6 +7,7 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
+from opentelemetry.trace import StatusCode
 from pydantic import Field, ValidationError
 
 from factorforge.auth.principal import Principal
@@ -14,6 +15,7 @@ from factorforge.data.artifacts import LocalArtifactStore
 from factorforge.domain.errors import ResearchError
 from factorforge.domain.factors import Contract
 from factorforge.domain.research_brief import ResearchBrief
+from factorforge.observability import local_trace, tracer
 from factorforge.orchestration.postgres_budgets import read_budget
 from factorforge.orchestration.postgres_runs import PostgresRunStore
 from factorforge.orchestration.report_export import ResearchCompletion, export_report
@@ -66,6 +68,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--artifacts", type=Path, required=True)
     parser.add_argument("--schema", default="factorforge")
     parser.add_argument("--report", action="store_true")
+    parser.add_argument("--trace", type=Path)
     args = parser.parse_args(argv)
     try:
         request = _request(args.request)
@@ -83,8 +86,28 @@ def main(argv: Sequence[str] | None = None) -> int:
                 ),
                 flush=True,
             )
-            result = research_experiments(runs, run.run_id, OPERATOR, request.plan, artifacts)
-            result_ref = _publish(result, artifacts)
+            with (
+                local_trace(args.trace),
+                tracer().start_as_current_span(
+                    "research_execution",
+                    attributes={
+                        "factorforge.run.id": str(run.run_id),
+                        "factorforge.request.sha256": request_ref.sha256,
+                    },
+                    record_exception=False,
+                    set_status_on_exception=False,
+                ) as span,
+            ):
+                try:
+                    result = research_experiments(
+                        runs, run.run_id, OPERATOR, request.plan, artifacts
+                    )
+                    result_ref = _publish(result, artifacts)
+                except Exception:
+                    span.set_status(StatusCode.ERROR)
+                    span.set_attribute("error.type", "research_execution_error")
+                    raise
+                span.set_attribute("factorforge.result.sha256", result_ref.sha256)
             print(
                 json.dumps(
                     {"run_id": str(run.run_id), "result": result_ref.model_dump(mode="json")}

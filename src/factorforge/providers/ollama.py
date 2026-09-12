@@ -9,11 +9,13 @@ from enum import StrEnum
 from typing import Annotated, Literal, cast
 
 import httpx
+from opentelemetry.trace import SpanKind, StatusCode, get_current_span
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
 
 from factorforge.data.artifacts import ArtifactStore
 from factorforge.domain.artifacts import ArtifactRef
 from factorforge.domain.errors import ResearchError
+from factorforge.observability import tracer
 
 MAX_RESPONSE_BYTES = 512 * 1024
 MAX_REQUEST_BYTES = 24 * 1024
@@ -285,6 +287,35 @@ class OllamaProvider:
     def generate(self, request: GenerationRequest, store: ArtifactStore) -> GenerationResult:
         """Archive one attempt without retries or output repair, returning no unverified success."""
         request, encoded = _request_payload(request)
+        with tracer().start_as_current_span(
+            "chat " + request.model,
+            kind=SpanKind.CLIENT,
+            attributes={
+                "gen_ai.operation.name": "chat",
+                "gen_ai.provider.name": "ollama",
+                "gen_ai.request.model": request.model,
+                "factorforge.generation.profile": request.profile.value,
+            },
+            record_exception=False,
+            set_status_on_exception=False,
+        ) as span:
+            try:
+                result = self._generate_admitted(request, encoded, store)
+            except Exception:
+                span.set_status(StatusCode.ERROR)
+                span.set_attribute("error.type", "provider_execution_error")
+                raise
+            span.set_attribute("factorforge.provider_record.sha256", result.record.sha256)
+            span.set_attribute("factorforge.provider.outcome", result.status)
+            if result.status != "success":
+                span.set_status(StatusCode.ERROR)
+                span.set_attribute("error.type", result.status)
+            return result
+
+    def _generate_admitted(
+        self, request: GenerationRequest, encoded: bytes, store: ArtifactStore
+    ) -> GenerationResult:
+        """Run exactly one admitted attempt; trace metadata never changes the retained payload."""
         limits = request.profile.limits
         request_ref = store.put(encoded, media_type="application/json")
         started = time.monotonic()
@@ -386,6 +417,11 @@ class OllamaProvider:
             output_tokens=parsed.eval_count if parsed else None,
             provider_duration_ns=parsed.total_duration if parsed else None,
         )
+        span = get_current_span()
+        if record.prompt_tokens is not None:
+            span.set_attribute("gen_ai.usage.input_tokens", record.prompt_tokens)
+        if record.output_tokens is not None:
+            span.set_attribute("gen_ai.usage.output_tokens", record.output_tokens)
         return GenerationResult(
             status=status,
             content=content,

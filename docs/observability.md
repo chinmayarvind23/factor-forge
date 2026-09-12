@@ -1,5 +1,15 @@
 # Observability
 
+Implemented local slice: `factorforge-research --trace NEW_FILE.jsonl` exports an OTel
+research-execution span and child spans for actual Ollama calls. The file must be new;
+replays use a new trace file and preserve existing operation results. Spans carry run
+and artifact hashes, model/profile, delivery outcome and available token counts.
+Prompt/response text, exception messages and database credentials are not emitted.
+The synchronous local exporter flushes on scope exit; it is diagnostic output, not the
+authoritative operation ledger or proof of complete lineage. No remote exporter is
+configured. API, tool, experiment and cross-process spans plus LangSmith integration
+remain to be added. These checks do not establish the 1,200-span release target.
+
 ## Objectives
 
 Observability must answer:
