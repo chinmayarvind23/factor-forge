@@ -15,7 +15,10 @@ from factorforge.data.synthesis_fixture import prepare_synthesis_fixture
 from factorforge.domain.errors import ResearchError
 from factorforge.orchestration.postgres_budgets import read_budget
 from factorforge.orchestration.postgres_runs import PostgresRunStore
-from factorforge.orchestration.synthesis_command import execute_synthesis_research
+from factorforge.orchestration.synthesis_command import (
+    QwenSynthesisResearchRequest,
+    execute_synthesis_research,
+)
 from factorforge.providers.ollama import GenerationRequest, GenerationResult
 from factorforge.retrieval.direction_review import REVIEW_PROMPT
 from factorforge.retrieval.extraction import SYSTEM_PROMPT
@@ -23,8 +26,9 @@ from factorforge.retrieval.synthesis import SYNTHESIS_PROMPT
 
 
 @pytest.mark.parametrize("outcome", ["completed", "abstained", "uncertain_review", "pending"])
+@pytest.mark.parametrize("qwen_extraction", [False, True])
 def test_full_synthesis_path_reuses_all_operations(
-    store: PostgresRunStore, monkeypatch: pytest.MonkeyPatch, outcome: str
+    store: PostgresRunStore, monkeypatch: pytest.MonkeyPatch, outcome: str, qwen_extraction: bool
 ) -> None:
     """Five controlled model calls produce one hybrid; held cases remain fully inspectable."""
     calls = []
@@ -37,6 +41,7 @@ def test_full_synthesis_path_reuses_all_operations(
         payload = json.loads(request.user)
         wire: dict[str, Any]
         if request.system == SYSTEM_PROMPT:
+            assert request.model == ("qwen3:8b" if qwen_extraction else "llama3.1:8b")
             name = "quality" if "quality" in payload["selected_strategy"] else "score"
             wire = dict(
                 status="extracted",
@@ -55,6 +60,7 @@ def test_full_synthesis_path_reuses_all_operations(
                 source_pages=[1],
             )
         elif request.system == REVIEW_PROMPT:
+            assert request.model == "llama3.1:8b"
             wire = dict(
                 direction="long_high_short_low",
                 quote=payload["pages"][0]["text"],
@@ -98,6 +104,12 @@ def test_full_synthesis_path_reuses_all_operations(
     with TemporaryDirectory() as directory:
         artifacts = LocalArtifactStore(Path(directory))
         request = prepare_synthesis_fixture(Path(__file__).resolve().parents[2], artifacts)
+        if qwen_extraction:
+            request = QwenSynthesisResearchRequest.model_validate_json(
+                request.model_copy(
+                    update={"schema_version": "synthesis-research-request-v2"}
+                ).model_dump_json()
+            )
         run = store.create(request.brief, "synthesis", owner)
         if outcome == "pending":
 

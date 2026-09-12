@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import Field, TypeAdapter
 
 from factorforge.auth.principal import Principal
 from factorforge.data.artifacts import LocalArtifactStore
@@ -37,16 +37,35 @@ from factorforge.retrieval.selection import LiteratureCatalog
 from factorforge.retrieval.synthesis import SynthesisCandidate, SynthesisRequest
 
 
-class SynthesisResearchRequest(Contract):
+class _SynthesisResearchFields(Contract):
     """The operator supplies source/data bindings; the model selects the actual composition."""
 
-    schema_version: Literal["synthesis-research-request-v1"] = "synthesis-research-request-v1"
     brief: ResearchBrief
     catalog: LiteratureCatalog
     bindings: Annotated[tuple[ReviewedStrategyBinding, ...], Field(max_length=32)]
     initial_cash_usd: Positive
     evaluated_at: Instant
     max_cost_per_model_microusd: Annotated[int, Field(ge=1, le=100000000)] = 1000000
+
+
+class SynthesisResearchRequest(_SynthesisResearchFields):
+    """Original profile retains Llama extraction and direction review without changed identities."""
+
+    schema_version: Literal["synthesis-research-request-v1"] = "synthesis-research-request-v1"
+
+
+class QwenSynthesisResearchRequest(_SynthesisResearchFields):
+    """Opt-in Qwen extraction changes only its recorded profile; review remains independent."""
+
+    schema_version: Literal["synthesis-research-request-v2"] = "synthesis-research-request-v2"
+
+
+_REQUEST: TypeAdapter[SynthesisResearchRequest | QwenSynthesisResearchRequest] = TypeAdapter(
+    Annotated[
+        SynthesisResearchRequest | QwenSynthesisResearchRequest,
+        Field(discriminator="schema_version"),
+    ]
+)
 
 
 class SynthesisResearchResult(Contract):
@@ -68,7 +87,7 @@ def execute_synthesis_research(
     runs: PostgresRunStore,
     run_id: UUID,
     principal: Principal,
-    request: SynthesisResearchRequest,
+    request: SynthesisResearchRequest | QwenSynthesisResearchRequest,
     artifacts: LocalArtifactStore,
 ) -> SynthesisResearchResult:
     """Run source extraction, independent direction review, synthesis and one durable hybrid.
@@ -78,7 +97,7 @@ def execute_synthesis_research(
     No automatic retry, response repair or hidden alternate synthesis attempt is permitted.
     """
     principal.require("execute_research")
-    request = SynthesisResearchRequest.model_validate(request)
+    request = _REQUEST.validate_python(request)
     with runs._connection() as connection:
         owner = runs._owned(connection, run_id, principal)
         if ResearchBrief.model_validate(owner["request_json"]) != request.brief:
@@ -97,6 +116,9 @@ def execute_synthesis_research(
             request.bindings,
             artifacts,
             max_cost_per_source_microusd=request.max_cost_per_model_microusd,
+            extraction_model="qwen3:8b"
+            if isinstance(request, QwenSynthesisResearchRequest)
+            else "llama3.1:8b",
         )
         strategies_ref = publish(strategies, artifacts)
         candidates = []
@@ -189,7 +211,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             raw = source.read(4 * 2**20 + 1)
         if len(raw) > 4 * 2**20:
             raise ValueError("Request exceeds limit")
-        request = SynthesisResearchRequest.model_validate_json(raw)
+        request = _REQUEST.validate_json(raw)
         dsn = os.environ.get("RDS_DSN")
         if not dsn:
             raise ResearchError("OPERATOR_DATABASE_REQUIRED", "RDS_DSN is required.", 422)

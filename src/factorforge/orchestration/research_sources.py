@@ -1,7 +1,7 @@
 """The canonical research idea selects retained literature packets for budgeted extraction."""
 
 import hashlib
-from typing import Annotated, Self
+from typing import Annotated, Literal, Self
 from uuid import UUID
 
 from pydantic import Field, model_validator
@@ -13,6 +13,7 @@ from factorforge.domain.errors import ResearchError
 from factorforge.domain.factors import Contract
 from factorforge.orchestration.extraction_worker import (
     ExtractionCommand,
+    QwenExtractionCommand,
     execute_extraction_operation,
 )
 from factorforge.orchestration.postgres_budgets import read_budget
@@ -44,6 +45,7 @@ def research_sources(
     artifacts: ArtifactStore,
     *,
     max_cost_per_source_microusd: int,
+    extraction_model: Literal["llama3.1:8b", "qwen3:8b"] = "llama3.1:8b",
 ) -> ResearchSources:
     """Retrieve from the canonical idea and process the selected packets through durable workers.
 
@@ -65,7 +67,9 @@ def research_sources(
             runs,
             run_id,
             principal,
-            ExtractionCommand(source=source, max_cost_microusd=max_cost_per_source_microusd),
+            (QwenExtractionCommand if extraction_model == "qwen3:8b" else ExtractionCommand)(
+                source=source, max_cost_microusd=max_cost_per_source_microusd
+            ),
             artifacts,
         )
         for source in selection.sources

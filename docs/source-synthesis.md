@@ -16,6 +16,16 @@ Set `RDS_DSN` using the existing PostgreSQL setup and run Ollama with `llama3.1:
 their fixed Llama profiles. A new fixed Qwen profile handles synthesis only. The original
 example needs up to five model calls and one experiment, all under the brief's budget.
 
+Use `--profile qwen-extraction-v1` with the preparation script to select the separately
+versioned Qwen extraction candidate (`synthesis-research-request-v2`). This changes
+extraction only; direction review still uses Llama. The original request/profile remains
+the default and retains its original command identities and replay receipts.
+
+The first live run on the frozen original two-source case retained 37 reachable artifacts
+and settled both extraction attempts. Both drafts required a formation lag that the model
+left unknown, so execution stopped at source admission. These original engineering inputs
+are a development case; they do not measure published-factor accuracy.
+
 Each selected source is extracted into a typed draft. Only drafts with a supported,
 agreeing source-only direction review enter synthesis. The synthesis model must select
 at least two known parent IDs, cite a literal passage/page for each and supply positive

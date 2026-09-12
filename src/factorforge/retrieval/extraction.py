@@ -140,7 +140,11 @@ def _observation(content: str, source: SourcePacket) -> SourceExtraction | None:
 
 
 def extract_source(
-    source: SourcePacket, provider: TextProvider, store: ArtifactStore
+    source: SourcePacket,
+    provider: TextProvider,
+    store: ArtifactStore,
+    *,
+    model: Literal["llama3.1:8b", "qwen3:8b"] = "llama3.1:8b",
 ) -> ExtractionResult:
     """Archive admission failures and one-shot outcomes; missing evidence never returns success."""
     source = SourcePacket.model_validate(source)
@@ -154,7 +158,7 @@ def extract_source(
     )
     try:
         request = GenerationRequest(
-            model="llama3.1:8b",
+            model=model,
             system=cast(str, prompt["system"]),
             user=cast(str, prompt["user"]),
             response_schema=cast(dict[str, JsonValue], prompt["response_schema"]),

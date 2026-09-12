@@ -39,11 +39,21 @@ class ExtractionCommand(Contract):
     max_cost_microusd: Annotated[int, Field(ge=1, le=100000000)]
 
 
+class QwenExtractionCommand(Contract):
+    """An explicit opt-in profile preserves the original Llama command's canonical identity."""
+
+    schema_version: Literal["extraction-command-v2"] = "extraction-command-v2"
+    profile: Literal["ollama-qwen3-8b-extraction-32k-v1"] = "ollama-qwen3-8b-extraction-32k-v1"
+    prompt_sha256: Digest = PROMPT_SHA256
+    source: SourcePacket
+    max_cost_microusd: Annotated[int, Field(ge=1, le=100000000)]
+
+
 class ExtractionOperationResult(Contract):
     """The durable result binds the exact worker command to the extractor's full evidence record."""
 
     schema_version: Literal["extraction-operation-result-v1"] = "extraction-operation-result-v1"
-    command: ExtractionCommand
+    command: ExtractionCommand | QwenExtractionCommand = Field(discriminator="schema_version")
     extraction: ExtractionResult
 
 
@@ -51,7 +61,7 @@ def execute_extraction_operation(
     runs: PostgresRunStore,
     run_id: UUID,
     principal: Principal,
-    command: ExtractionCommand,
+    command: ExtractionCommand | QwenExtractionCommand,
     artifacts: ArtifactStore,
 ) -> ExtractionResult:
     """Reserve before the fixed local provider call and settle with explicitly unknown dollar cost.
@@ -61,7 +71,11 @@ def execute_extraction_operation(
     of the exact command recovers its original result, including refusals and delivery failures.
     """
     principal.require("execute_research")
-    command = ExtractionCommand.model_validate(command)
+    command = (
+        QwenExtractionCommand.model_validate(command)
+        if isinstance(command, QwenExtractionCommand)
+        else ExtractionCommand.model_validate(command)
+    )
     if command.prompt_sha256 != PROMPT_SHA256:
         raise ResearchError(
             "EXTRACTION_PROFILE_UNSUPPORTED", "The extraction profile is unavailable.", 409
@@ -84,7 +98,10 @@ def execute_extraction_operation(
     runs._inject("after_extraction_reservation")
     remaining = max(0.0, (ledger.deadline - assessed_at).total_seconds())
     extracted = extract_source(
-        command.source, OllamaProvider(deadline=monotonic_start + remaining), artifacts
+        command.source,
+        OllamaProvider(deadline=monotonic_start + remaining),
+        artifacts,
+        model="qwen3:8b" if isinstance(command, QwenExtractionCommand) else "llama3.1:8b",
     )
     result = ExtractionOperationResult(command=command, extraction=extracted)
     raw = result.canonical_bytes()
@@ -110,7 +127,7 @@ def execute_extraction_operation(
 
 
 def _recover(
-    artifacts: ArtifactStore, ref: ArtifactRef, command: ExtractionCommand
+    artifacts: ArtifactStore, ref: ArtifactRef, command: ExtractionCommand | QwenExtractionCommand
 ) -> ExtractionResult:
     """Validate immutable output bytes and their exact source/profile binding before reuse."""
     try:

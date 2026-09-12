@@ -70,6 +70,7 @@ def research_strategies(
     artifacts: ArtifactStore,
     *,
     max_cost_per_source_microusd: int,
+    extraction_model: Literal["llama3.1:8b", "qwen3:8b"] = "llama3.1:8b",
 ) -> ResearchStrategies:
     """Compose canonical source retrieval, durable extraction and deterministic draft publication.
 
@@ -95,6 +96,7 @@ def research_strategies(
         catalog,
         artifacts,
         max_cost_per_source_microusd=max_cost_per_source_microusd,
+        extraction_model=extraction_model,
     )
     candidates = []
     for source, extraction in zip(sources.selection.sources, sources.extractions, strict=True):
