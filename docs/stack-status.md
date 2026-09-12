@@ -10,7 +10,7 @@ deployed service. This map describes the current code and retained execution evi
 | LangGraph | Durable workflow transitions and resume | [Orchestration](../src/factorforge/orchestration/), PostgreSQL checkpoints |
 | Deep Agents | Bounded investment-idea planning | [Planner](../tools/planning/README.md), retained local model planning execution |
 | Polars | Historical panel processing and deterministic numerical research | [Study](../src/factorforge/evaluation/historical_study.py), 30,192 input rows |
-| PySpark | Optional offline monthly panel materialization | [Spark SQL job](../tools/spark/README.md), partitioned Parquet and readback implementation; runtime unmeasured |
+| PySpark | Optional offline monthly panel materialization | [Spark SQL job](../tools/spark/README.md), actual Spark 4.0.1 run: 30,192 daily rows to 1,440 monthly rows with readback; optional 4.2 environment unexecuted |
 | LEAN / C# / gRPC | Independent execution and accounting comparison | [LEAN integration](../infra/lean/execution/README.md), actual reference fills and valuations |
 | PostgreSQL | Research state, budgets, idempotency and operation receipts | [PostgreSQL stores](../src/factorforge/orchestration/), exercised local database paths |
 | SQS | Optional asynchronous research delivery | [FIFO adapter](sqs-research.md), offline acknowledgement checks; AWS execution unmeasured |

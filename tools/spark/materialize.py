@@ -5,15 +5,22 @@ import hashlib
 import json
 import re
 import shutil
-from datetime import UTC, datetime
+import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+# The cached Spark compatibility image uses Python 3.10.
+UTC = timezone.utc  # noqa: UP017
 
 
 def digest(path: Path) -> str:
     """Stream hashes so input and output provenance does not require driver-sized buffers."""
     with path.open("rb") as stream:
-        return hashlib.file_digest(stream, "sha256").hexdigest()
+        checksum = hashlib.sha256()
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            checksum.update(block)
+        return checksum.hexdigest()
 
 
 def monthly_panel(frame: Any) -> Any:
@@ -56,6 +63,7 @@ def main() -> None:
         lock_sha256=digest(Path(__file__).with_name("uv.lock")),
         partitions=args.partitions,
         master="local[2]",
+        python_version=sys.version,
         scope="Retrospective adjusted-price observations; no backtest or timing admission",
     )
     receipt_path = args.output / "receipt.json"
