@@ -1,0 +1,24 @@
+{
+  "schema_version": "demo-recording-v2",
+  "source_url": "https://chinmayarvind-factorforge.static.hf.space/",
+  "duration_seconds": 44.96,
+  "viewport": [
+    1440,
+    1000
+  ],
+  "live_inference": false,
+  "scenes": [
+    "Completed reference experiment",
+    "Two-signal hybrid",
+    "Twelve-return validation",
+    "Execution guard",
+    "Historical study: 45 signal/cost experiments",
+    "Historical study: 10 bps",
+    "Historical study: 25 bps"
+  ],
+  "page_errors": [],
+  "files": {
+    "demo.mp4": "66fce179840320a058a07dbfc775db855b6c4478dd8182dfd6a3bf033e6930f0",
+    "demo.gif": "fac98212a75818506f75f1c8870cc2c7231451191b4d3ad94a5bc582fa2d2127"
+  }
+}

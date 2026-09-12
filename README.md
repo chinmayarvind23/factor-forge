@@ -14,8 +14,9 @@ inspectable, so an experiment can be reviewed or replayed without repeating infe
 
 ![FactorForge evidence walkthrough](docs/assets/demo.gif)
 
-The recording shows four saved, originally authored scenarios. The hosted dashboard
-verifies downloaded evidence in the browser; new model-driven research runs locally.
+The 45-second recording shows four saved, originally authored scenarios followed by
+the historical-study dashboard and its transaction-cost controls. The hosted dashboard
+displays retained evidence; new model-driven research runs locally.
 [Download the demo video](docs/assets/demo.mp4).
 
 ## What is implemented

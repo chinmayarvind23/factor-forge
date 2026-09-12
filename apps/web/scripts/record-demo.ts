@@ -48,6 +48,30 @@ try {
       await page.getByRole("button", { name: label }).scrollIntoViewIfNeeded();
     }
   }
+  await page
+    .getByRole("link", { name: /Explore 45 historical signal experiments/ })
+    .click();
+  await expect(page.locator(".cards")).toContainText("45 / 45");
+  await expect(page.locator(".cards")).toContainText("30,192");
+  await expect(page.locator("#rows tr")).toHaveCount(15);
+  scenes.push({
+    label: "45 historical signal-and-cost experiments",
+    status: "Saved study",
+  });
+  await page.screenshot({
+    path: path.join(destination, "historical.png"),
+    fullPage: true,
+  });
+  await page.waitForTimeout(5000);
+  for (const cost of ["10", "25"]) {
+    await page.locator("#cost").selectOption(cost);
+    await expect(page.locator("#rows tr")).toHaveCount(15);
+    scenes.push({
+      label: `${cost} bps historical cost setting`,
+      status: "Saved study",
+    });
+    await page.waitForTimeout(4000);
+  }
   if (errors.length) throw new Error("Browser reported script errors.");
 } finally {
   await context.close();
