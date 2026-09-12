@@ -35,6 +35,10 @@ displays retained evidence; new model-driven research runs locally.
   strategy, with actual orders, fills, fees and portfolio valuations.
 - **Memory and observability:** PostgreSQL checkpoints, searchable retained outcomes,
   content-addressed lineage, trajectory exports, local OpenTelemetry and MLflow tracking.
+- **Optional service integrations:** [GraphQL and MCP evidence tools](tools/explorer/README.md),
+  [Elasticsearch literature search](tools/search/README.md),
+  [Kafka archived-quote replay](tools/streaming/README.md), and
+  [provisioned Grafana/Prometheus](tools/observability/README.md).
 
 ## Verified engineering results
 

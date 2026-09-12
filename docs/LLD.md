@@ -706,3 +706,14 @@ and payment phase once before observation and same-clock trading. `_observe` rec
 cash, fees, shares and complete claims with full ledger replay. `_batch` validates staged
 cash reserves before committing generated fills. Action-free accounts retain cached
 ledger valuation. [Contract and limitations](pending-cash-claims.md).
+
+## 20. Optional query, search, streaming and monitoring services
+
+`tools/explorer/evidence.py` supplies an allowlisted, bounded file loader to Strawberry
+GraphQL and official MCP SDK stdio tools. GraphQL limits body size, document tokens,
+depth and pagination. `tools/search/search.py` replays retained discovery captures before
+content-addressed Elasticsearch indexing and bounds metadata queries. Kafka quote envelopes
+retain source hashes and deterministic keys; the consumer validates admitted bytes and
+commits offsets after SQLite append/deduplication. `tools/observability` provisions Grafana
+and Prometheus; its exporter derives explicitly retained gauges and the report hash.
+Each optional dependency environment has its own lock. [Setup and limits](optional-services.md).

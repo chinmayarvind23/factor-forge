@@ -1,0 +1,5 @@
+[project]
+name = "factorforge-explorer"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = ["strawberry-graphql>=0.280,<0.400", "uvicorn>=0.35,<1", "mcp>=1.20,<2", "httpx>=0.28,<1"]

@@ -1,0 +1,11 @@
+[project]
+name = "factorforge-search"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = ["factorforge", "elasticsearch>=9.1,<10"]
+
+[tool.uv.sources]
+factorforge = { path = "../..", editable = true }
+
+[dependency-groups]
+dev = ["pytest>=8,<10"]

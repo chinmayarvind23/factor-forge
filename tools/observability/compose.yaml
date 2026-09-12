@@ -1,0 +1,38 @@
+name: factorforge-observability
+services:
+  exporter:
+    image: python@sha256:2fe5997d249a808b8eeea52c58a1dbffbba28754dc11699ef5c029f2d818ce79
+    command: [python, /app/exporter.py, --report, /data/report.json, --host, 0.0.0.0]
+    volumes:
+      - ./exporter.py:/app/exporter.py:ro
+      - ../../reports/historical-study-v1.json:/data/report.json:ro
+    read_only: true
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 32
+    cap_drop: [ALL]
+  prometheus:
+    image: quay.io/prometheus/prometheus@sha256:5ce7540c3c00ef4ab0c9d2c995c6a5b9c421f44b4a115d97a2c7af3b1c21cbb0
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+    ports: [127.0.0.1:9097:9090]
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 64
+    cap_drop: [ALL]
+  grafana:
+    image: mirror.gcr.io/grafana/grafana@sha256:6ac590e7cabc2fbe8d7b8fc1ce9c9f0582177b334e0df9c927ebd9670469440f
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    volumes:
+      - ./provisioning:/etc/grafana/provisioning:ro
+      - ./dashboards:/var/lib/grafana/dashboards:ro
+    ports: [127.0.0.1:3007:3000]
+    mem_limit: 384m
+    cpus: 0.5
+    pids_limit: 128
+    cap_drop: [ALL]

@@ -1,0 +1,26 @@
+{
+  "schema_version": "local-tool-evidence-v1",
+  "tool": "tools/streaming/replay.py",
+  "date": "2026-09-12",
+  "status": "passed_transport_fake_and_real_sqlite",
+  "checks": [
+    "uv sync and isolated uv.lock resolution: kafka-python 2.2.17",
+    "ruff check and format",
+    "CLI --help",
+    "stable event identities and source hash separation",
+    "durable SQLite append survives Kafka commit failure and journal reopen",
+    "retry deduplicates the same event without a second row",
+    "only processed partition offset + 1 committed",
+    "invalid message key fails before commit",
+    "journal write failure prevents Kafka commit",
+    "duplicate messages count against finite consumer budget",
+    "producer event budget and expired deadline"
+  ],
+  "not_verified": [
+    "live Kafka connectivity or broker delivery",
+    "Kafka replication or consumer rebalance",
+    "filesystem power-loss durability",
+    "research outcomes or economic execution"
+  ],
+  "command": "uv run --project tools/streaming --locked python tools/streaming/verify.py"
+}

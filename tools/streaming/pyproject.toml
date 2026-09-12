@@ -1,0 +1,8 @@
+[project]
+name = "factorforge-streaming"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = ["factorforge", "kafka-python==2.2.17"]
+
+[tool.uv.sources]
+factorforge = { path = "../..", editable = true }

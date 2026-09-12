@@ -1,0 +1,30 @@
+{
+  "schema_version": "graphql-mcp-smoke-v1",
+  "scope": "Saved public evidence only; actual MCP stdio subprocess and in-process ASGI HTTP, no external network test or research execution",
+  "command": "uv run --project tools/explorer --locked tools/explorer/selftest.py",
+  "exit_code": 0,
+  "stdout_result": {
+    "status": "passed",
+    "receipts": 7,
+    "experiments": 45,
+    "graphql_http": true,
+    "mcp_stdio": true
+  },
+  "checks": [
+    "all seven allowlisted evidence files validate",
+    "unknown and traversal evidence IDs rejected",
+    "GraphQL typed experiment query succeeds",
+    "GraphQL pagination above 100 rejected",
+    "GraphQL mutation rejected",
+    "GraphQL document above 500 tokens rejected",
+    "ASGI HTTP GraphQL evidence catalog query succeeds",
+    "ASGI HTTP body above 16384 bytes rejected",
+    "untrusted Host rejected",
+    "actual MCP stdio initialization and four-tool discovery succeed",
+    "all MCP tools advertise readOnlyHint",
+    "MCP saved receipt read succeeds",
+    "MCP traversal and excess pagination rejected"
+  ],
+  "dependencies": {"strawberry-graphql": "0.327.7", "mcp": "1.30.0"},
+  "limitations": ["Receipt validation is structural, not independent claim verification", "No external socket test", "No research evaluations run"]
+}

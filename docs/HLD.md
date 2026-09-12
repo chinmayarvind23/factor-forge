@@ -194,3 +194,8 @@ the diagram remain future stages. No training improvement is asserted by this im
 The monthly execution engine supports opt-in corporate actions through independent
 rational balances reconciled against Decimal ledger replay. Pending cash claims contribute
 to NAV while settlement controls spendable cash. See [the decision](adr/monthly-corporate-actions.md).
+
+Optional service paths now include GraphQL/MCP over a shared public evidence catalog,
+Elasticsearch over verified literature captures, Kafka over admitted archived quotes,
+and Grafana/Prometheus over retained evidence gauges. These run outside the static Space
+and keep the existing research scheduler unchanged. See [service boundaries](optional-services.md).
