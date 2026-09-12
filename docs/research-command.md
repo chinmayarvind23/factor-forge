@@ -1,5 +1,29 @@
 # Local research operator
 
+## Complete a resumable workflow
+
+```powershell
+uv run factorforge-research --request research-request.json --artifacts artifacts/research --workflow
+uv run factorforge-research --artifacts artifacts/research --memory-query "momentum"
+```
+
+`--workflow` connects research execution, verified report publication and searchable
+outcome memory in a PostgreSQL-checkpointed LangGraph. It includes report export and
+preserves the existing three stdout receipt formats. All three plan versions work.
+The full brief, plan and captured evaluation clock remain part of the stable identity.
+
+The research node retains a canonical result and budget receipt before advancing.
+After that receipt exists, restart recovers the entire research stage without entering
+its scheduler or calling models/backtests again. Report and memory publication resume
+from their own checkpoints. Earlier provider crashes retain the existing pending-operation
+reconciliation rule. Completion verifies the request/result/budget/report artifact closure.
+
+`--memory-query` performs a bounded literal search of the operator's saved research ideas
+and returns completion references for inspection. It includes completed, held and stopped
+candidate outcomes. These are reusable evidence locators, not automatic factor promotion
+or an evaluated learned-memory policy. Direct database and local artifact access remain
+trusted operator capabilities. Existing commands without `--workflow` retain their behavior.
+
 The `factorforge-research` command runs the implemented retrieval, extraction,
 strategy compilation, monthly execution and requested HAC pipeline against PostgreSQL.
 It uses the fixed trusted operator identity `factorforge-operator/local-worker`.

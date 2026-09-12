@@ -1,5 +1,16 @@
 # Research Memory and Failed-Experiment Ledger
 
+## Implemented operator memory
+
+`factorforge-research --workflow` saves verified completion receipts in PostgreSQL's
+`research_workflows` table. An owner-scoped literal idea search is available through
+`--memory-query`. Each hit links the full request, result, budget and reports, including
+held and stopped candidates. Publication is idempotent and follows report verification.
+See the [workflow command](research-command.md).
+
+This initial memory is an evidence index. Automatic prompt augmentation, semantic/graph
+retrieval, Neo4j materialization and learned trajectory reuse below remain planned.
+
 ## Purpose
 
 FactorForge remembers research outcomes so later runs can reuse evidence instead of repeating the same work. The memory system preserves successful experiments, failed experiments, rejected hypotheses, engine disagreements, and methodological invalidations.

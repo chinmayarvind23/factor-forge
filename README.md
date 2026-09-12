@@ -11,7 +11,9 @@ optional architecture extensions.
 Implementation status: a trusted local command now connects a research idea to ranked
 source packets, durable model extraction, source-derived strategy drafts, monthly
 experiments and retained HAC diagnostics. PostgreSQL stores run budgets, operation
-results and LangGraph experiment checkpoints. Version-two plans add a separate,
+results and LangGraph experiment checkpoints. `--workflow` adds a resumable research,
+report and memory graph; `--memory-query` finds saved completion evidence by idea.
+Version-two plans add a separate,
 source-cited direction review before experiment dispatch. Version-three plans permit
 one recorded revision and a separately identified direction amendment. The operator
 can publish a verified report and completion receipt with `--report`. Prompts, observations,

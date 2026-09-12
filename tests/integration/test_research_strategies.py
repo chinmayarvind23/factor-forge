@@ -1,6 +1,7 @@
 """Actual PostgreSQL source workers feed retained, executable strategy drafts."""
 
 import json
+from contextlib import closing
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -41,10 +42,15 @@ from factorforge.validation.monthly import MonthlyHACResult
 
 
 @pytest.mark.parametrize("outcome", ["compiled", "unbound", "needs_review", "source_unavailable"])
+@pytest.mark.parametrize(
+    "workflow_pause",
+    ["after_workflow_research_receipt", "before_workflow_report", "before_workflow_memory"],
+)
 def test_source_drafts_publish_and_replay(
     store: PostgresRunStore,
     monkeypatch: pytest.MonkeyPatch,
     outcome: str,
+    workflow_pause: str,
     database: tuple[str, str],
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -302,3 +308,62 @@ def test_source_drafts_publish_and_replay(
             assert resumed.out == with_report.out and resumed.err == ""
             assert len(calls) == 2
             assert read_budget(store, operator_run_id, OPERATOR) == before_report
+
+            assert operator_main([*args, "--workflow"]) == 0
+            workflow_output = capsys.readouterr()
+            assert workflow_output.out == with_report.out and workflow_output.err == ""
+            assert operator_main([*args, "--memory-query", "score"]) == 0
+            memory_output = json.loads(capsys.readouterr().out)
+            assert len(memory_output) == 1
+            assert memory_output[0]["completion"] == receipt["completion"]
+
+        from factorforge.orchestration.research_workflow import ResearchWorkflow, search_memory
+
+        workflow_request = OperatorRequest(
+            brief=ResearchBrief(idea="original score", max_experiments=1), plan=plan
+        )
+        workflow = ResearchWorkflow(store, run.run_id, owner, workflow_request, artifacts)
+        before_workflow = read_budget(store, run.run_id, owner)
+        before_calls = len(calls)
+
+        def stop_after_research(stage: str) -> None:
+            """Crash after canonical research publication but before the report checkpoint."""
+            if stage == workflow_pause:
+                raise RuntimeError("workflow report interruption")
+
+        store.failpoint = stop_after_research
+        with pytest.raises(RuntimeError, match="workflow report interruption"):
+            workflow.finish()
+        store.failpoint = None
+
+        def no_research_repeat(*args: object, **kwargs: object) -> None:
+            """Resume must recover the whole research result without entering the scheduler."""
+            raise AssertionError("duplicate research scheduling")
+
+        monkeypatch.setattr(
+            "factorforge.orchestration.research_workflow.research_experiments", no_research_repeat
+        )
+        with closing(
+            PostgresRunStore(database[0], schema=database[1], require_test_database=True)
+        ) as fresh:
+            resumed_workflow = ResearchWorkflow(
+                fresh, run.run_id, owner, workflow_request, artifacts
+            )
+            completed = resumed_workflow.finish()
+            assert resumed_workflow.finish() == completed
+            assert read_budget(fresh, run.run_id, owner) == before_workflow
+            assert len(calls) == before_calls
+            memory = search_memory(fresh, owner, "score")
+            assert len(memory) == 1 and memory[0].completion == completed
+            assert search_memory(fresh, owner, "unrelated") == ()
+            stranger = Principal("fixture", "stranger", owner.capabilities)
+            assert search_memory(fresh, stranger, "score") == ()
+            with pytest.raises(ResearchError, match="No run exists"):
+                ResearchWorkflow(fresh, run.run_id, stranger, workflow_request, artifacts).finish()
+            resumed_workflow.graph.update_state(
+                {"configurable": {"thread_id": resumed_workflow.thread}},
+                {"result": "{}"},
+                as_node="remember",
+            )
+            with pytest.raises(ResearchError):
+                resumed_workflow.finish()

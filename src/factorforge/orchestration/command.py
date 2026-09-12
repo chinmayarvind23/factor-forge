@@ -8,39 +8,25 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from opentelemetry.trace import StatusCode
-from pydantic import Field, ValidationError
+from pydantic import ValidationError
 
 from factorforge.auth.principal import Principal
 from factorforge.data.artifacts import LocalArtifactStore
 from factorforge.domain.errors import ResearchError
-from factorforge.domain.factors import Contract
-from factorforge.domain.research_brief import ResearchBrief
 from factorforge.observability import local_trace, tracer
+from factorforge.orchestration.operator_request import OperatorRequest as OperatorRequest
 from factorforge.orchestration.postgres_budgets import read_budget
 from factorforge.orchestration.postgres_runs import PostgresRunStore
 from factorforge.orchestration.report_export import ResearchCompletion, export_report
-from factorforge.orchestration.research_experiments import (
-    ExperimentPlan,
-    IterativeExperimentPlan,
-    ReviewedExperimentPlan,
-    research_experiments,
-)
+from factorforge.orchestration.research_experiments import research_experiments
 from factorforge.orchestration.research_strategies import _publish
+from factorforge.orchestration.research_workflow import ResearchWorkflow, search_memory
 
 OPERATOR = Principal(
     "factorforge-operator",
     "local-worker",
     frozenset({"create_run", "read_own_run", "execute_research"}),
 )
-
-
-class OperatorRequest(Contract):
-    """A complete retained brief and plan define the operator's stable idempotency key."""
-
-    brief: ResearchBrief
-    plan: ExperimentPlan | ReviewedExperimentPlan | IterativeExperimentPlan = Field(
-        discriminator="schema_version"
-    )
 
 
 def _request(path: Path) -> OperatorRequest:
@@ -64,20 +50,35 @@ def main(argv: Sequence[str] | None = None) -> int:
     a trusted local process with direct database access, never an HTTP authentication path.
     """
     parser = argparse.ArgumentParser(prog="factorforge-research")
-    parser.add_argument("--request", type=Path, required=True)
+    parser.add_argument("--request", type=Path)
     parser.add_argument("--artifacts", type=Path, required=True)
     parser.add_argument("--schema", default="factorforge")
     parser.add_argument("--report", action="store_true")
     parser.add_argument("--trace", type=Path)
+    parser.add_argument("--workflow", action="store_true")
+    parser.add_argument("--memory-query")
     args = parser.parse_args(argv)
     try:
-        request = _request(args.request)
+        if args.memory_query is None and args.request is None:
+            raise ResearchError("OPERATOR_REQUEST_INVALID", "A research request is required.", 422)
+        request = _request(args.request) if args.memory_query is None else None
         dsn = os.environ.get("RDS_DSN")
         if not dsn:
             raise ResearchError("OPERATOR_DATABASE_REQUIRED", "RDS_DSN is required.", 422)
         artifacts = LocalArtifactStore(args.artifacts)
         runs = PostgresRunStore(dsn, schema=args.schema)
         try:
+            if args.memory_query is not None:
+                print(
+                    json.dumps(
+                        [
+                            hit.model_dump(mode="json")
+                            for hit in search_memory(runs, OPERATOR, args.memory_query)
+                        ]
+                    )
+                )
+                return 0
+            assert request is not None
             run = runs.create(request.brief, "operator:" + request.sha256, OPERATOR)
             request_ref = _publish(request, artifacts)
             print(
@@ -99,10 +100,19 @@ def main(argv: Sequence[str] | None = None) -> int:
                 ) as span,
             ):
                 try:
-                    result = research_experiments(
-                        runs, run.run_id, OPERATOR, request.plan, artifacts
-                    )
-                    result_ref = _publish(result, artifacts)
+                    if args.workflow:
+                        completed_ref = ResearchWorkflow(
+                            runs, run.run_id, OPERATOR, request, artifacts
+                        ).finish()
+                        completed = ResearchCompletion.model_validate_json(
+                            artifacts.get(completed_ref)
+                        )
+                        result_ref = completed.result
+                    else:
+                        result = research_experiments(
+                            runs, run.run_id, OPERATOR, request.plan, artifacts
+                        )
+                        result_ref = _publish(result, artifacts)
                 except Exception:
                     span.set_status(StatusCode.ERROR)
                     span.set_attribute("error.type", "research_execution_error")
@@ -114,7 +124,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 ),
                 flush=True,
             )
-            if args.report:
+            if args.report or args.workflow:
                 exported, path = export_report(result_ref, artifacts)
                 completion = ResearchCompletion(
                     run_id=run.run_id,

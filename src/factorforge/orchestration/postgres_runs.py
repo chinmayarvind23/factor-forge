@@ -124,7 +124,11 @@ class PostgresRunStore:
             )
             self._pool.open(wait=True, timeout=5)
             with self._connection() as connection:
-                for name in ("001_research_runs.sql", "002_research_budgets.sql"):
+                for name in (
+                    "001_research_runs.sql",
+                    "002_research_budgets.sql",
+                    "003_research_workflows.sql",
+                ):
                     migration = Path(__file__).with_name("migrations") / name
                     connection.execute(migration.read_text(encoding="utf-8"), prepare=False)
             self._checkpoint_connection = psycopg.connect(
