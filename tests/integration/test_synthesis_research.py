@@ -13,6 +13,8 @@ from factorforge.auth.principal import Principal
 from factorforge.data.artifacts import ArtifactStore, LocalArtifactStore
 from factorforge.data.synthesis_fixture import prepare_synthesis_fixture
 from factorforge.domain.errors import ResearchError
+from factorforge.evaluation.synthesis import grade_synthesis
+from factorforge.factors.hybrid import publish
 from factorforge.orchestration.postgres_budgets import read_budget
 from factorforge.orchestration.postgres_runs import PostgresRunStore
 from factorforge.orchestration.synthesis_command import (
@@ -131,6 +133,9 @@ def test_full_synthesis_path_reuses_all_operations(
         assert result.status == ("completed" if outcome == "completed" else "held")
         assert (result.hybrid is not None) == (outcome == "completed")
         assert len(calls) == (4 if outcome == "uncertain_review" else 5)
+        grade = grade_synthesis(publish(result, artifacts), artifacts)
+        assert grade["passed"] == (outcome == "completed")
+        assert grade["checks"]["operation_limits"] is True
         before = read_budget(store, run.run_id, owner)
         assert sum(row.operation.kind == "experiment" for row in before.operations) == int(
             outcome == "completed"

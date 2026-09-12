@@ -26,6 +26,24 @@ and settled both extraction attempts. Both drafts required a formation lag that 
 left unknown, so execution stopped at source admission. These original engineering inputs
 are a development case; they do not measure published-factor accuracy.
 
+On the same original inputs, Qwen extraction retained the correct formulas, directions
+and known zero-month lags. Its formation-rule text included the source sentence's final
+period; the reviewed label omitted it, so the exact-match gate retained both drafts for
+review. `--source-literal-timing` prepares a separate development request whose reviewed
+label includes that source period. This changes the curated binding and request identity;
+it does not amend an existing result or relax the matching rule.
+
+Grade a saved command receipt without inference or database access:
+
+```powershell
+uv run python -m factorforge.evaluation.synthesis --receipt synthesis-receipt.json --artifacts artifacts/synthesis --output synthesis-scorecard.json
+```
+
+The grader verifies all reachable artifacts and checks the original case's formulas,
+directions, compiled parents, weights, literal citations, initial capital, terminal NAV
+and operation limits. Each scorecard retains the request identity so development variants
+can be distinguished. These checks do not measure economic rationale or paper replication.
+
 Each selected source is extracted into a typed draft. Only drafts with a supported,
 agreeing source-only direction review enter synthesis. The synthesis model must select
 at least two known parent IDs, cite a literal passage/page for each and supply positive

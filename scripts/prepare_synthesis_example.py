@@ -16,6 +16,7 @@ def main() -> None:
     parser.add_argument(
         "--profile", choices=("original-v1", "qwen-extraction-v1"), default="original-v1"
     )
+    parser.add_argument("--source-literal-timing", action="store_true")
     args = parser.parse_args()
     request = prepare_synthesis_fixture(
         Path(__file__).resolve().parents[1], LocalArtifactStore(args.artifacts)
@@ -25,6 +26,17 @@ def main() -> None:
             request.model_copy(
                 update={"schema_version": "synthesis-research-request-v2"}
             ).model_dump_json()
+        )
+    if args.source_literal_timing:
+        request = request.model_copy(
+            update={
+                "bindings": tuple(
+                    binding.model_copy(
+                        update={"reviewed_formation_rule": binding.reviewed_formation_rule + "."}
+                    )
+                    for binding in request.bindings
+                )
+            }
         )
     with args.request.open("xb") as output:
         output.write(request.canonical_bytes())
