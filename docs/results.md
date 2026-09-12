@@ -236,6 +236,32 @@ Baseline evaluation: `7fc60c6dc3a8ca3d03d5a65147bf69caa9c62ec7792c1dd9d5d621794e
 These authored validation cases share the project's rubric and authorship and are now
 exposed. They remain separate from the original development and published-paper scores.
 
+## Source-to-hybrid development evidence
+
+The complete controlled source-to-hybrid pipeline passes 12 PostgreSQL integration cases
+across original extraction, Qwen extraction and Qwen with upfront reviewed timing aliases.
+Each profile covers completed execution, synthesis abstention, uncertain direction review
+and interrupted synthesis recovery. Five alias tests require explicit source-bound approval
+and reject descriptions absent from the supplied source. These are engineering tests.
+
+The live reviewed-alias development run compiled **2/2 source strategies** and obtained
+**2/2 agreeing independent direction reviews**. Qwen then abstained from composing the
+fictional sources, citing the absence of empirical support. The system retained the decision
+and dispatched no experiment. This does not meet the frozen case's requested completed
+hybrid outcome. All **five model operations** settled and **62 reachable artifacts** verified.
+Result: `2439619faec2c08b3d004b53a2477060802c8c5bc839e1cb0273fa3c477eee98`.
+Request: `c6c31ff474ac54c8396942a5c7471fb2a69e1baddb4c54a2b6ccda5ae7c4ec94`.
+
+All four saved development requests replayed to identical results with model and accounting
+dispatch forbidden and unchanged budgets. Their evidence closures contain 37, 37, 44 and
+62 objects respectively; shared objects are not counted as distinct across runs. Earlier
+requests remain retained with their original profiles and exact timing bindings. No result
+was repaired, no benchmark labels changed and no published-factor accuracy is inferred.
+
+Use the [source-synthesis commands](source-synthesis.md) to prepare the explicit development
+profiles and grade saved evidence. Local dollar cost and release benchmark metrics remain
+separate from these engineering results.
+
 ## Local model protocol evidence
 
 A single 32,768-context protocol call timed out during model loading after 120.55 seconds.

@@ -25,6 +25,13 @@ direction-aligned source strategies. Compatible parents feed the same durable mo
 runner; source evidence, composition rules, accounting results and reports remain linked.
 The public demo includes an original two-signal example.
 
+The [source-to-hybrid command](docs/source-synthesis.md) adds model-proposed composition
+after source extraction and independent direction review. Its saved-result grader checks
+the original engineering case without inference. The latest live development run compiled
+both source strategies, passed both direction reviews and retained a synthesis abstention
+with five settled model operations and 62 verified artifacts. Controlled integration cases
+also exercise the complete hybrid backtest and replay path.
+
 The monthly engine currently executes the original integration fixture using verified
 point-in-time inputs, declared formation/trade timing, exact funding and transaction
 costs. Walk-forward/purged splitters have boundary tests and HAC calculations have
