@@ -38,3 +38,23 @@ completed through OSV with 110 dependencies, no reported vulnerabilities and no 
 MLflow's [backend-store documentation](https://mlflow.org/docs/latest/self-hosting/architecture/backend-store/)
 describes SQLite tracking storage; its [tracking API](https://mlflow.org/docs/latest/ml/tracking/)
 documents experiment metrics and artifacts.
+
+## Historical study tracking
+
+Archive an existing historical study in a separate local MLflow experiment:
+
+```powershell
+uv run --project tools/tracking --locked python tools/tracking/historical_export.py --study PATH_TO_STUDY --database artifacts/study-tracking/mlflow.db --tracking-artifacts artifacts/study-tracking/files --receipt artifacts/study-receipt.json
+uv run --project tools/tracking --locked python tools/tracking/verify_historical_tracking.py PATH_TO_STUDY
+```
+
+The exporter stages a bounded copy, verifies the study manifest and full experiment
+inventory, logs counts and all files, and compares every downloaded byte. Serial
+replay reuses the finished run and repeats readback. Interrupted or duplicate exports
+require inspection; concurrent exporters are not supported. Raw source data stays
+local. This experiment records numerical historical studies, separately from model
+research trajectories.
+
+The recorded 45-case study passed readback for **64 files: 63 study artifacts plus
+their manifest**, including 30,192 source observations and 7,516 backtest spans.
+Real SQLite MLflow checks cover replay, stored-artifact corruption and source corruption.
