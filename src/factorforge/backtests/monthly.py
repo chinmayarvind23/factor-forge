@@ -495,6 +495,13 @@ def _loan(state: _Execution, security: str, quantity: Fraction, at: datetime) ->
     )
     if len(grants) != 1:
         raise _fail("MONTHLY_BORROW_UNAVAILABLE_OR_AMBIGUOUS")
+    expected_permission = (
+        "observed_source_short_loan"
+        if state.admitted.spec.policies.dataset_kind == "observed"
+        else "original_fixture_short_loan"
+    )
+    if grants[0].permission != expected_permission:
+        raise _fail("MONTHLY_BORROW_PROVENANCE")
     return grants[0]
 
 

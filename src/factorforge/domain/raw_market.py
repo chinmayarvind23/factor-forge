@@ -21,7 +21,7 @@ class MarketQuote(PriceMark):
 
 
 class BorrowGrant(LedgerInput):
-    """Original loan permission carries a finite exact share limit and explicit zero carry."""
+    """Declared loan provenance carries finite terms; source authenticity needs external review."""
 
     source_id: Identifier
     security_id: Identifier
@@ -30,7 +30,7 @@ class BorrowGrant(LedgerInput):
     valid_through: Instant
     maximum_short_shares: Positive
     annual_borrow_bps: Annotated[int, Field(ge=0, le=0)]
-    permission: Literal["original_fixture_short_loan"]
+    permission: Literal["original_fixture_short_loan", "observed_source_short_loan"]
 
     @model_validator(mode="after")
     def ordered_term(self) -> Self:

@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 from test_monthly_admission import AT, MemoryStore, original_strategy
-from test_monthly_backtest import execute
+from test_monthly_backtest import execute, replace_source
 
 from factorforge.backtests.admission import admit_monthly
 from factorforge.domain.datasets import ObservedDatasetManifest, dataset_references
@@ -16,9 +16,18 @@ from factorforge.domain.errors import ResearchError
 from factorforge.domain.raw_strategy import RawStrategySpec
 
 
-def declared_observed() -> tuple[RawStrategySpec, MemoryStore]:
+def declared_observed(
+    *, permission: str = "observed_source_short_loan"
+) -> tuple[RawStrategySpec, MemoryStore]:
     """Exercise the trusted declaration boundary using explicitly controlled test-only evidence."""
     spec, store = original_strategy()
+
+    def declare_grants(value: dict[str, Any]) -> None:
+        """Test declarations remain controlled assertions, not verified lender permissions."""
+        for row in value["borrow_grants"]:
+            row["permission"] = permission
+
+    spec = replace_source(spec, store, "market", declare_grants)
     manifest = json.loads(store.get(spec.datasets[0].manifest))
     raw = store.put(b"controlled source response", media_type="text/plain")
     code = store.put(b"# controlled normalizer", media_type="text/x-python")
@@ -103,6 +112,31 @@ def test_identity_normalization_can_share_source_bytes() -> None:
 
     spec = rewrite_manifest(spec, store, change)
     assert admit_monthly(spec, store, evaluated_at=AT).receipt.scope == "observed-source-admission"
+
+
+def test_observed_short_cannot_use_original_fixture_permission() -> None:
+    """A source provenance declaration cannot promote a synthetic loan into observed borrowing."""
+    spec, store = declared_observed(permission="original_fixture_short_loan")
+    result = execute(spec, store)
+    assert result.status == "failed"
+    assert result.failure_code == "MONTHLY_BORROW_PROVENANCE"
+    assert result.fills == ()
+
+
+def test_original_short_cannot_use_observed_source_permission() -> None:
+    """Original fixtures must retain their own explicit loan provenance on execution."""
+    spec, store = original_strategy()
+
+    def observed_grants(value: dict[str, Any]) -> None:
+        """Change only the grant declarations while preserving the original dataset policy."""
+        for row in value["borrow_grants"]:
+            row["permission"] = "observed_source_short_loan"
+
+    spec = replace_source(spec, store, "market", observed_grants)
+    result = execute(spec, store)
+    assert result.status == "failed"
+    assert result.failure_code == "MONTHLY_BORROW_PROVENANCE"
+    assert result.fills == ()
 
 
 @pytest.mark.parametrize("case", ["missing", "rights", "budget", "aggregate", "conflict", "role"])
