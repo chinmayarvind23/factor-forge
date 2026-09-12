@@ -36,7 +36,7 @@ def test_scalar_translation_uses_source_sample_and_capital() -> None:
     )
 
 
-@pytest.mark.parametrize("kind", ["formula", "cash", "tamper"])
+@pytest.mark.parametrize("kind", ["formula", "cash", "tamper", "whole_shares"])
 def test_unsupported_or_corrupt_translation_is_rejected(kind: str) -> None:
     """The translator cannot silently erase richer formulas or bypass artifact admission."""
     spec, store = original_strategy()
@@ -44,6 +44,14 @@ def test_unsupported_or_corrupt_translation_is_rejected(kind: str) -> None:
         spec = spec.model_copy(update={"formula": "delta(score)"})
     if kind == "tamper":
         store.values[spec.market.table.artifact.sha256] = b"{}"
+    if kind == "whole_shares":
+        spec = spec.model_copy(
+            update={
+                "portfolio": spec.portfolio.model_copy(
+                    update={"quantity": "whole_shares_toward_zero_v1"}
+                )
+            }
+        )
     from factorforge.domain.errors import ResearchError
 
     with pytest.raises((ValueError, ResearchError)):

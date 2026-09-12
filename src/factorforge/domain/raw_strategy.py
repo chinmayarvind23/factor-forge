@@ -144,7 +144,7 @@ class RawPortfolio(Contract):
     short_exposure: Annotated[int, Field(ge=1, le=1)]
     sizing_basis: Literal["post_fee_nav"]
     collateral: Literal["current_short_liability_cash_reserve_v1"]
-    quantity: Literal["exact_terminating_decimal_18_v1"]
+    quantity: Literal["exact_terminating_decimal_18_v1", "whole_shares_toward_zero_v1"]
     cash_return: Literal["zero"]
 
     @model_validator(mode="after")

@@ -27,6 +27,7 @@ from factorforge.backtests.funding import (
     solve_post_fee,
 )
 from factorforge.backtests.performance import compute_performance
+from factorforge.backtests.whole_shares import SharePrice, WholeSharePlan, size_whole_shares
 from factorforge.data.artifacts import ArtifactStore, reference
 from factorforge.data.monthly_signals import assemble_monthly_signals
 from factorforge.domain.accounting import ConditionalFill, LedgerSnapshot, PriceMark
@@ -54,6 +55,7 @@ CODE_FILES = (
     "backtests/admission.py",
     "backtests/accounting.py",
     "backtests/funding.py",
+    "backtests/whole_shares.py",
     "backtests/performance.py",
     "data/artifacts.py",
     "data/monthly_signals.py",
@@ -181,7 +183,7 @@ class MonthlyBatch(Contract):
     batch_id: Identifier
     at: Instant
     purpose: Literal["rebalance", "liquidate"]
-    funding: FundingPlan
+    funding: FundingPlan | WholeSharePlan
     fill_ids: Annotated[tuple[Identifier, ...], Field(max_length=8)]
     allocation_sha256: Digest | None
     execution: ExecutionBatch
@@ -320,6 +322,10 @@ class MonthlyRun(Contract):
         ):
             raise ValueError("Generated fill and batch identities must be unique")
         for batch in self.batches:
+            if isinstance(batch.funding, WholeSharePlan) != (
+                spec.portfolio.quantity == "whole_shares_toward_zero_v1"
+            ):
+                raise ValueError("Funding quantity policy differs from the strategy")
             if batch.funding.request.costs != spec.costs:
                 raise ValueError("Batch costs differ from the strategy")
             if batch.allocation_sha256 is not None:
@@ -337,6 +343,10 @@ class MonthlyRun(Contract):
                 if row.trade_notional_usd.as_fraction()
             }
             emitted = [fills[identity] for identity in batch.fill_ids]
+            if isinstance(batch.funding, WholeSharePlan):
+                sizing_prices = {row.security_id: row.price_usd for row in batch.funding.prices}
+                if any(sizing_prices[row.security_id] != row.quote.price_usd for row in emitted):
+                    raise ValueError("Whole-share prices differ from emitted execution quotes")
             if (
                 len(emitted) != len(expected)
                 or any(row.executed_at != batch.at for row in emitted)
@@ -605,14 +615,23 @@ def _batch(
         for key, quantity in sorted(state.holdings.items())
         if quantity
     )
-    funding = solve_post_fee(
-        FundingRequest(
-            pre_trade_nav_usd=_rational(Fraction(before.snapshot.nav_usd)),
-            old_notionals=old,
-            target_weights=weights,
-            costs=state.request.spec.costs,
-            purpose="liquidate" if allocation is None else "rebalance",
+    funding_request = FundingRequest(
+        pre_trade_nav_usd=_rational(Fraction(before.snapshot.nav_usd)),
+        old_notionals=old,
+        target_weights=weights,
+        costs=state.request.spec.costs,
+        purpose="liquidate" if allocation is None else "rebalance",
+    )
+    funding: FundingPlan | WholeSharePlan = (
+        size_whole_shares(
+            funding_request,
+            tuple(
+                SharePrice(security_id=key, price_usd=quotes[key].price_usd)
+                for key in sorted(required)
+            ),
         )
+        if state.request.spec.portfolio.quantity == "whole_shares_toward_zero_v1"
+        else solve_post_fee(funding_request)
     )
     batch_id = f"batch-{len(state.batches):04d}"
     staged_fills = []

@@ -25,7 +25,11 @@ when consumed. An expired held loan stops execution at the next required observa
 
 Each opening rebalance uses the previously formed allocation. The engine solves exact
 post-fee notionals and checks every quantity, fee and balance before adding the atomic
-fill batch. It never rounds a rejected share quantity or injects cash to repair funding.
+fill batch. The exact quantity policy rejects unrepresentable shares. Operators can instead
+declare `portfolio.quantity = "whole_shares_toward_zero_v1"` before execution; this
+policy truncates ideal signed holdings toward zero and recomputes fees from actual trades.
+It retains residual cash, requires both sleeves to survive, and rejects any rounded
+exposure above actual post-fee NAV. Neither policy injects cash or silently falls back.
 Every required open and close checks raw marks, ledger balances and current-short-liability
 cash reserves. Terminal close liquidates all positions with costs. Missing data or a
 funding failure retains the observed prefix and disables completed sample metrics.
@@ -56,3 +60,22 @@ late observations, loan failures, collateral deficits, source corruption and alt
 results. These are engineering fixtures, not historical returns or published-factor
 replications. Cloud execution, strategy-wide budget integration and independent LEAN
 verification are not established by this simulator.
+
+## Whole-share execution
+
+The whole-share policy uses a separate `whole-share-funding-plan-v1` receipt containing
+the continuous funding request, admitted sizing prices, rounded notionals and actual
+costs. Existing holdings must be whole shares. Missing prices, fractional carry, erased
+sleeves and infeasible rounded rebalances fail before emitting the batch. Decimal inputs
+retain the ledger's precision bounds before rational conversion. Liquidation uses the
+same policy and closes the actual holdings.
+
+An authored flat-price case at $101 and $97 enters nine long shares and ten short shares,
+then closes both positions. At 10 basis points total costs and $1,002 initial cash, the
+four fills incur $3.758 and leave $998.242. Disk verification covers all 36 reachable
+objects, and identical execution reproduces the result. This is engineering evidence;
+observed historical-data admission and larger portfolios still need implementation.
+
+The current independent LEAN translator rejects the new quantity policy until its
+rounding behavior is implemented and separately compared. See
+[the sizing decision](adr/whole-share-sizing.md) for the constraints and tradeoff.
