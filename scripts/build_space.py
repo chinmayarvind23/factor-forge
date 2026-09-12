@@ -82,7 +82,16 @@ def build(output: Path) -> None:
         cases=cases,
     )
     (output / "evidence.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    for name in ("index.html", "app.js", "style.css", "README.md"):
+    for name in (
+        "index.html",
+        "app.js",
+        "style.css",
+        "README.md",
+        "journey.html",
+        "journey.css",
+        "journey.js",
+        "journey.json",
+    ):
         shutil.copyfile(REPO / "apps/demo" / name, output / name)
     print(
         json.dumps(

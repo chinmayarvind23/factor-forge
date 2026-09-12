@@ -1,37 +1,71 @@
-# Recorded demo
+# Research journey demo
 
-[Open the hosted dashboard](https://huggingface.co/spaces/chinmayarvind/factorforge)
-or [watch the video](assets/demo.mp4).
+[Watch the 64-second recording](assets/research-journey.mp4) or
+[open the interactive replay](https://chinmayarvind-factorforge.static.hf.space/journey.html).
 
-![Evidence walkthrough](assets/demo.gif)
+![Research journey](assets/research-journey.gif)
 
-The recording walks through four saved scenarios built from original repository
-fixtures: a monthly experiment, a weighted two-signal hybrid, a twelve-return
-validation path, and an execution guard. The validation view shows three contiguous
-test blocks. The browser verifies the downloaded records before rendering results.
-The free hosted dashboard displays saved evidence; run new research locally using
-[the research command](research-command.md).
+The recording follows one actual retained local-model run through seven stages:
 
-## Re-record
+1. Enter its recorded research idea.
+2. Inspect the selected source passage from the reviewed catalog.
+3. Read the unchanged structured model extraction.
+4. Inspect the compiled strategy, timing and costs.
+5. See the borrowing gate stop the attempted backtest before any fills.
+6. Read the outcome and inspect its artifact identity.
+7. Compare with a separately authored, successful deterministic reference.
 
-Install the web workspace dependencies and Playwright Chromium. From `apps/web`,
-compile the recorder for Node so Playwright's video process runs in its supported
-runtime. Set an absolute, fresh output directory outside the repository:
+The model interpreted the direction differently from the source. The recording retains
+that result and the execution stop. The reference is explicitly separate; it is not an
+automatic correction by the agent. All inputs are authored integration fixtures.
+This is an evidence replay, not new inference, live literature search or an investment
+performance claim. Each screen keeps that scope visible.
+
+The walkthrough export verified 48 objects reachable from the scheduler result. The
+recorder checked all seven scenes, the expected guard and reference result, and browser
+errors. Desktop/mobile screenshots and an MP4-decoded frame were inspected. Encoding
+changes only the format; the video contains real browser navigation through the replay.
+The [recording receipt](assets/research-journey-recording.json) retains hashes and scope.
+
+## Open locally
+
+From the repository root, serve the checked-in replay without running any evaluation:
 
 ```powershell
-bun install --frozen-lockfile
-bun x playwright install chromium
-bun build scripts/record-demo.ts --target node --packages external --outfile node_modules/.cache/factorforge-record-demo.mjs
-$env:FACTORFORGE_DEMO_URL='https://chinmayarvind-factorforge.static.hf.space'
-$env:FACTORFORGE_DEMO_RECORDING='C:/path/to/fresh-recording-directory'
-node node_modules/.cache/factorforge-record-demo.mjs
+python -m http.server 8769 --bind 127.0.0.1 --directory apps/demo
 ```
 
-The script checks each scene's status and accounting result, captures an overview,
-and records browser errors. A successful run writes `recording.json` and a WebM
-video. Keep that original and receipt together. Export the video to MP4 and GIF
-with FFmpeg for the README; those exports change encoding and size only.
+Open http://127.0.0.1:8769/journey.html. The idea field accepts the recorded question;
+use “Use recorded idea” to fill it. New research uses [the local operator](research-command.md).
 
-The current walkthrough demonstrates the saved execution paths. Published-factor
-benchmark results and trained-policy comparisons need their own completed studies
-before they can appear in a release demo.
+## Record again
+
+Install the web workspace dependencies and Playwright Chromium, then run from the root:
+
+```powershell
+$env:FACTORFORGE_DEMO_URL='http://127.0.0.1:8769/journey.html'
+$env:FACTORFORGE_DEMO_RECORDING='C:/path/to/fresh-recording-directory'
+node apps/web/scripts/record-journey.mjs
+```
+
+Add `--check` for a short, non-recording desktop/mobile verification. The recorder writes
+seven screenshots, a WebM and `recording.json`. Keep the original WebM with its receipt.
+Export to MP4 with H.264/yuv420p and GIF with a reduced palette using FFmpeg.
+
+`apps/demo/journey.json` is the checked-in display projection. To rebuild it from an
+existing retained original capture and an existing reference-demo artifact store:
+
+```powershell
+uv run python scripts/build_journey.py --run PATH_TO_CAPTURE --reference-demo dist/space --output apps/demo/journey.json
+```
+
+The exporter verifies artifact closure and matching strategy inputs before selecting
+public display fields. It does not rerun or edit inference. The normal Space builder
+copies the four journey assets alongside its dashboard assets.
+
+## Earlier dashboard tour
+
+The [45-second dashboard recording](assets/demo.mp4) and [GIF](assets/demo.gif) show four
+saved execution scenarios, time-series validation and the historical study's cost controls.
+Its recorder remains `apps/web/scripts/record-demo.ts`. Both recordings display saved
+research evidence; neither establishes the autonomous release benchmark.

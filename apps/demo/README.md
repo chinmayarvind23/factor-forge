@@ -10,10 +10,13 @@ pinned: false
 
 # FactorForge
 
-Explore verified quantitative-research evidence from three original synthetic fixture
-executions. The demo shows a complete monthly backtest and a capital-precision guard,
-and a two-signal hybrid, with actual portfolio observations, fills, inputs, code
-snapshots and result hashes.
+Follow one recorded local-model research journey from its idea and selected source
+through extraction, compilation, attempted execution and an explained borrowing guard.
+The comparison shows a separately authored successful reference, not an agent correction.
+Open `journey.html` for the guided replay.
+
+The dashboard also contains four saved synthetic execution scenarios and a historical
+signal-and-cost study, with portfolio observations, fills and retained evidence.
 
 This free static Space displays saved Python execution results. It does not run an
 LLM, accept private research, execute generated code, or claim published-factor returns.

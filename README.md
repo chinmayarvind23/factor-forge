@@ -14,12 +14,19 @@ inspectable, so an experiment can be reviewed or replayed without repeating infe
 | [Claims and evidence](docs/evidence-guide.md)
 | [Stack roles](docs/stack-status.md)
 
-![FactorForge evidence walkthrough](docs/assets/demo.gif)
+![FactorForge research journey](docs/assets/research-journey.gif)
 
-The 45-second recording shows four saved, originally authored scenarios followed by
-the historical-study dashboard and its transaction-cost controls. The hosted dashboard
-displays retained evidence; new model-driven research runs locally.
-[Download the demo video](docs/assets/demo.mp4).
+The research-journey recording follows one captured idea through source selection,
+model extraction, strategy compilation, a backtest attempt and an explained execution
+guard. It ends with a separately authored successful reference for comparison.
+This is an evidence replay of an actual local-model run on synthetic integration inputs;
+it does not simulate live inference or an automatic correction.
+[Watch the recording](docs/assets/research-journey.mp4) ·
+[Open the interactive journey](https://chinmayarvind-factorforge.static.hf.space/journey.html) ·
+[Demo scope and recording instructions](docs/demo.md).
+
+The [earlier dashboard tour](docs/assets/demo.mp4) covers four execution scenarios and
+the historical study's transaction-cost controls. New model-driven research runs locally.
 
 ## What is implemented
 
