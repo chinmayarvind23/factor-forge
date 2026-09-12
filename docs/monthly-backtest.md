@@ -38,6 +38,8 @@ Net and benchmark reports use the complete calendar-derived close inventory and 
 aligned benchmark/risk-free intervals. Entry fees belong to the first genuine interval;
 drawdown includes the baseline and closes. Intraday funding checks remain distinct.
 Benchmark data do not affect formation. Undefined statistics remain explicitly unavailable.
+Archived real market/risk-free reference imports are described in
+[French daily normalization](french-daily-normalization.md).
 
 Between trades, execution reuses its privately derived ledger and values it at the
 current marks. A changed fill inventory triggers full replay. This optimization requires
