@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="QuantConnect.Lean.Engine"><HintPath>/runtime/QuantConnect.Lean.Engine.dll</HintPath></Reference>
+    <Reference Include="QuantConnect.Algorithm"><HintPath>/runtime/QuantConnect.Algorithm.dll</HintPath></Reference>
+    <Reference Include="QuantConnect.Common"><HintPath>/runtime/QuantConnect.Common.dll</HintPath></Reference>
+    <Reference Include="QuantConnect.Indicators"><HintPath>/runtime/QuantConnect.Indicators.dll</HintPath></Reference>
+    <Reference Include="NodaTime"><HintPath>/runtime/NodaTime.dll</HintPath></Reference>
+    <Reference Include="Python.Runtime"><HintPath>/runtime/Python.Runtime.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>
