@@ -10,9 +10,11 @@ from pathlib import Path
 from factorforge.backtests.monthly import run_monthly
 from factorforge.data.artifacts import LocalArtifactStore
 from factorforge.data.hybrid_fixture import prepare_hybrid_fixture
+from factorforge.data.validation_fixture import prepare_validation_fixture
 from factorforge.domain.raw_strategy import RawStrategySpec
 from factorforge.factors.hybrid import compile_hybrid
 from factorforge.lineage.closure import verify_closure
+from factorforge.validation.research import ValidationRequest, validate_research
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -30,8 +32,11 @@ def build(output: Path) -> None:
         ("completed", "A complete monthly experiment", "1002"),
         ("precision", "An execution guard in action", "1000"),
         ("hybrid", "A two-signal hybrid", "1002"),
+        ("validation", "A validated twelve-return path", "1002"),
     ):
         active_spec = spec
+        if key == "validation":
+            active_spec = prepare_validation_fixture(REPO, store)
         if key == "hybrid":
             draft = compile_hybrid(prepare_hybrid_fixture(REPO, store), store)
             if draft.strategy is None:
@@ -45,12 +50,27 @@ def build(output: Path) -> None:
         )
         root = store.put(result.canonical_bytes(), media_type="application/json")
         refs = verify_closure(root, store)
+        validation_ref = None
+        if key == "validation":
+            validation = validate_research(
+                ValidationRequest(
+                    result=root,
+                    initial_train_size=3,
+                    test_size=3,
+                    hac_lags=1,
+                    embargo_seconds=86400,
+                ),
+                store,
+            )
+            validation_ref = store.put(validation.canonical_bytes(), media_type="application/json")
+            refs = verify_closure(validation_ref, store)
         cases.append(
             dict(
                 id=key,
                 title=title,
                 root=root.model_dump(),
                 objects=len(refs),
+                validation=validation_ref.model_dump() if validation_ref else None,
             )
         )
     manifest = dict(

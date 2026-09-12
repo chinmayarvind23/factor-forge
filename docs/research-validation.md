@@ -50,3 +50,23 @@ The actual saved original hybrid result was assessed through the CLI: 41 reachab
 verified, three full-sample return observations and one test interval. Its fold-level HAC
 is explicitly unavailable because one observation is insufficient. Replay returned the
 same result with model and backtest dispatch disabled.
+
+## Executed longer example
+
+```powershell
+uv run python scripts/run_validation_example.py --artifacts artifacts/validation-example
+```
+
+Set `RDS_DSN` using the local PostgreSQL setup. The command runs a separate original
+twelve-return market fixture through the durable monthly graph, then assesses three
+contiguous test blocks with one-lag HAC. Repeating it with the same schema and artifact
+directory recovers the original experiment and produces identical validation evidence.
+It uses one experiment operation and no model calls.
+
+The authored prices alternate upward and downward movements for fictional security A
+while B stays at $100. Starting capital is $1002; ten shares on each leg incur $2 entry
+cost and $2.11 final liquidation cost. The independently checked terminal NAV is $1107.89.
+All twelve intermediate closes are asserted, and the fold inputs equal returns from the
+actual execution. This establishes execution-to-validation behavior on an engineering
+fixture, not statistical power or historical factor performance. The free demo includes
+this path and verifies the downloadable validation record separately in the browser.

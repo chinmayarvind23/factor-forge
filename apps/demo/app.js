@@ -36,20 +36,34 @@ function drawChart(observations) {
   }
 }
 
-/** Verify the fetched result bytes against their published content address before rendering. */
-async function selectCase(item) {
-  const current = ++selection;
-  document.querySelectorAll("#cases button").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.id === item.id)));
-  const response = await fetch(`objects/sha256/${item.root.sha256.slice(0, 2)}/${item.root.sha256}`);
+/** Verify every displayed evidence record against its exact published content identity. */
+async function readEvidence(ref) {
+  const response = await fetch(`objects/sha256/${ref.sha256.slice(0, 2)}/${ref.sha256}`);
   if (!response.ok) throw new Error("Execution evidence is unavailable.");
   const bytes = await response.arrayBuffer();
   const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), (b) => b.toString(16).padStart(2, "0")).join("");
-  if (digest !== item.root.sha256 || bytes.byteLength !== item.root.size_bytes) throw new Error("Execution evidence did not match its recorded identity.");
-  const result = JSON.parse(new TextDecoder().decode(bytes));
+  if (digest !== ref.sha256 || bytes.byteLength !== ref.size_bytes) throw new Error("Execution evidence did not match its recorded identity.");
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+/** Keep execution and validation identities bound before rendering the selected case. */
+async function selectCase(item) {
+  const current = ++selection;
+  document.querySelectorAll("#cases button").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.id === item.id)));
+  const result = await readEvidence(item.root);
+  const validation = item.validation ? await readEvidence(item.validation) : null;
+  if (validation && validation.request.result.sha256 !== item.root.sha256) throw new Error("Validation evidence did not match this execution.");
+  const digest = item.root.sha256;
   if (current !== selection) return;
   document.querySelector("#title").textContent = item.title;
   document.querySelector("#status").textContent = result.status === "completed" ? "Completed" : "Guard applied";
   const metrics = document.querySelector("#metrics"); metrics.replaceChildren();
+  const validationPanel = document.querySelector("#validation-panel");
+  validationPanel.hidden = !validation;
+  if (validation) {
+    document.querySelector("#validation-summary").textContent = `${validation.periods.length} executed return intervals feed ${validation.folds.length} contiguous test blocks. Each block retains walk-forward and purged partitions, an explicit embargo, and a HAC mean diagnostic. This assesses a fixed strategy; it does not fit parameters or establish investment performance.`;
+    document.querySelector("#validation-download").href = `objects/sha256/${item.validation.sha256.slice(0, 2)}/${item.validation.sha256}`;
+  }
   for (const [label, value] of [["Initial capital", money(result.request.initial_cash_usd)], ["Terminal NAV", result.performance ? money(result.performance.terminal_nav_usd) : "No trades"], ["Verified artifacts at build", String(item.objects)]]) {
     const card = element("div", "", "metric"); card.append(element("span", label), element("strong", value)); metrics.append(card);
   }
@@ -70,6 +84,14 @@ async function selectCase(item) {
 
 /** Surface missing evidence explicitly rather than replacing it with simulated success. */
 function showError(error) {
+  document.querySelector("#status").textContent = "";
+  document.querySelector("#validation-panel").hidden = true;
+  document.querySelector("#metrics").replaceChildren();
+  document.querySelector("#chart").replaceChildren();
+  document.querySelector("#fills").replaceChildren();
+  document.querySelector("#raw").textContent = "";
+  document.querySelector("#decision").textContent = "";
+  document.querySelector("#download").removeAttribute("href");
   document.querySelector("#title").textContent = "Evidence could not be loaded";
   document.querySelector("#integrity").textContent = error.message;
 }

@@ -18,6 +18,7 @@
         <div class="metrics" id="metrics"></div>
         <section class="panel"><h3>Portfolio value</h3><p id="chart-note"></p><svg id="chart" viewBox="0 0 700 200" role="img" aria-label="Portfolio net asset value over the original fixture observations"></svg></section>
         <section class="panel"><h3>Research decision</h3><p id="decision"></p><p class="muted">This tiny accounting fixture demonstrates execution mechanics. It does not establish investment performance.</p></section>
+        <section class="panel" id="validation-panel" hidden><h3>Time-series validation</h3><p id="validation-summary"></p><a id="validation-download" download="validation-result.json">Download verified validation JSON</a></section>
         <section class="panel"><h3>Executed trades</h3><div class="table-wrap"><table><thead><tr><th>Security</th><th>Signed quantity</th><th>Raw quote (USD)</th><th>Executed at</th></tr></thead><tbody id="fills"></tbody></table></div></section>
         <section class="panel"><h3>Evidence you can inspect</h3><p id="integrity" role="status"></p><a id="download" download="monthly-result.json">Download execution JSON ↓</a><details><summary>Result identity & raw record</summary><pre id="raw"></pre></details></section>
       </article>
