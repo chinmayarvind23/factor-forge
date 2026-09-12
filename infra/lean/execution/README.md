@@ -1,4 +1,4 @@
-# Original long/short execution trial
+# Source-driven scalar execution
 
 This separate profile extends the seeded-price spike to actual LEAN orders for the
 original twelve-return fixture. The translator stages the source strategy, point-in-time
@@ -27,7 +27,10 @@ Use the same bounded, network-denied execution policy as the seeded spike, repla
 environment marker with `FACTORFORGE_LEAN_EXECUTION=1`. Do not enable the seeded gRPC
 profile for this different execution contract.
 
-The current implementation is deliberately restricted to this original source fixture.
+The v2 translator accepts admitted original scalar strategies with the A/B security
+namespace, one formation, two equal-weight buckets, zero formation lag, one scalar
+input and zero annual financing/interest/borrow charges. LEAN requires distinct signals,
+unambiguous known membership, valid short permission and exact integer shares.
 It does not establish general FactorSpec translation, historical exchange coverage,
 arbitrary borrow/margin policies, corporate actions, financing charges or published-factor
 reproduction. A successful compilation is not engine-verification evidence; actual trial
@@ -47,3 +50,24 @@ as evidence from this short authored sample.
 The fee and margin interfaces were checked against the pinned upstream
 [FeeModel](https://github.com/QuantConnect/Lean/blob/8ee075a39918f2df6fe9e0a5944e366fb60d10dc/Common/Orders/Fees/FeeModel.cs)
 and [SecurityMarginModel](https://github.com/QuantConnect/Lean/blob/8ee075a39918f2df6fe9e0a5944e366fb60d10dc/Common/Securities/SecurityMarginModel.cs).
+
+
+## Source contract v2
+
+`build_strategy_files(repository, artifacts, spec, initial_cash=..., evaluated_at=...)`
+admits and snapshots actual source bytes before staging. The engine derives its
+formation, entry and exit clocks from the source calendar and sample dates, selects
+the declared scalar concept and direction, and uses declared capital and costs.
+No Python allocation, fills or NAV enter the source contract. Unsupported arithmetic
+and time-series formulas are rejected. Ambiguous signal revisions are rejected by
+this profile rather than resolved implicitly.
+
+One compiled v2 image verified both original samples: 13 closing valuations and four
+fills for the twelve-return case, and four closing valuations and four fills for the
+short monthly case. Every comparison includes fees. Both engine runs exited cleanly
+and their containers were removed. See the [v2 comparison](../../../data/verification/lean-scalar-v2/comparison.json).
+This verifies source-driven sample dates in one executable; it does not establish
+historical factor replication or general exchange/calendar coverage.
+
+The earlier v1 trial and image above remain historical evidence. The v2 compiled image
+is `sha256:c5a622dfe8f8612dfc6b0ada3c5aa894dc5dcd2aed895b1ff9ae539b443e04db`.

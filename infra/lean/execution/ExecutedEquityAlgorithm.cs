@@ -14,9 +14,10 @@ public sealed class ExecutedEquityAlgorithm : QCAlgorithm
 {
     private readonly Dictionary<string, Symbol> _symbols = new();
     private readonly List<DateTime> _clocks = new();
+    private readonly HashSet<DateTime> _closes = new();
     private DateTime _formation, _entry, _exit;
     private string _long = "", _short = "";
-    private decimal _cash, _rate;
+    private decimal _cash, _rate, _shortLimit;
     private int _seen, _fills;
 
     /// <summary>Read only source observations and declared policy; no holdings or NAV are seeded.</summary>
@@ -25,32 +26,57 @@ public sealed class ExecutedEquityAlgorithm : QCAlgorithm
         Require(File.Exists("/.dockerenv") && Environment.GetEnvironmentVariable("FACTORFORGE_LEAN_EXECUTION") == "1", "Owned execution container required.");
         using var source = JsonDocument.Parse(File.ReadAllBytes("/input/source.json"));
         var root = source.RootElement;
-        Require(root.GetProperty("schema_version").GetString() == "original-lean-execution-v1", "Unsupported source.");
+        Require(root.GetProperty("schema_version").GetString() == "original-lean-execution-v2", "Unsupported source.");
         _cash = Exact(root.GetProperty("initial_cash_usd"));
         var strategy = root.GetProperty("strategy");
-        Require(strategy.GetProperty("formula").GetString() == "score", "Unsupported formula.");
-        _formation = Clock("2024-04-30T20:00:00Z");
-        _entry = Clock("2024-05-01T13:30:00Z");
-        _exit = Clock("2024-05-16T20:00:00Z");
+        var inputs = strategy.GetProperty("signal_inputs");
+        Require(inputs.GetArrayLength() == 1 && strategy.GetProperty("formula").GetString() == inputs[0].GetProperty("name").GetString(), "Scalar formula required.");
+        var concept = inputs[0].GetProperty("concept").GetString();
+        var evaluation = strategy.GetProperty("evaluation");
+        var start = Clock(evaluation.GetProperty("sample_start").GetString()!).Date;
+        var end = Clock(evaluation.GetProperty("sample_end").GetString()!).Date;
+        var calendar = root.GetProperty("calendar").GetProperty("sessions").EnumerateArray().ToArray();
+        var sessions = calendar.Where(row => Clock(row.GetProperty("session_date").GetString()!).Date >= start
+            && Clock(row.GetProperty("session_date").GetString()!).Date <= end).ToArray();
+        Require(sessions.Length >= 2, "At least two sessions required.");
+        _formation = Clock(sessions[0].GetProperty("closes_at").GetString()!);
+        _entry = Clock(sessions[1].GetProperty("opens_at").GetString()!);
+        _exit = Clock(sessions[^1].GetProperty("closes_at").GetString()!);
+        _closes.UnionWith(sessions.Select(row => Clock(row.GetProperty("closes_at").GetString()!)));
+        var members = root.GetProperty("signals").GetProperty("membership").EnumerateArray()
+            .Where(row => Clock(row.GetProperty("available_at").GetString()!) <= _formation
+                && Clock(row.GetProperty("effective_at").GetString()!) <= _formation).ToArray();
+        Require(members.Length == 2 && members.All(row => row.GetProperty("included").GetBoolean())
+            && members.Select(row => row.GetProperty("security_id").GetString()).Order().SequenceEqual(new[] { "A", "B" }), "Two unambiguous eligible members required.");
         _rate = (strategy.GetProperty("costs").GetProperty("commission_bps").GetDecimal()
             + strategy.GetProperty("costs").GetProperty("slippage_bps").GetDecimal()) / 10000m;
         var scores = root.GetProperty("signals").GetProperty("facts").EnumerateArray()
-            .Where(row => row.GetProperty("concept").GetString() == "original-score"
-                && Clock(row.GetProperty("available_at").GetString()!) <= _formation)
+            .Where(row => row.GetProperty("concept").GetString() == concept
+                && Clock(row.GetProperty("available_at").GetString()!) <= _formation
+                && Clock(row.GetProperty("period_end").GetString()!).Date == new DateTime(_formation.Year, _formation.Month, DateTime.DaysInMonth(_formation.Year, _formation.Month)))
             .ToDictionary(row => row.GetProperty("security_id").GetString()!, row => Exact(row.GetProperty("value")));
         Require(scores.Count == 2 && scores["A"] != scores["B"], "Two distinct known signals required.");
-        _long = scores.OrderByDescending(row => row.Value).First().Key;
-        _short = scores.OrderBy(row => row.Value).First().Key;
-        var grant = root.GetProperty("market").GetProperty("borrow_grants")[0];
+        var direction = strategy.GetProperty("portfolio").GetProperty("allocation").GetProperty("direction").GetString();
+        Require(direction is "long_high_short_low" or "long_low_short_high", "Unknown direction.");
+        _long = (direction == "long_high_short_low" ? scores.OrderByDescending(row => row.Value) : scores.OrderBy(row => row.Value)).First().Key;
+        _short = scores.Single(row => row.Key != _long).Key;
+        var grant = root.GetProperty("market").GetProperty("borrow_grants").EnumerateArray()
+            .Single(row => row.GetProperty("security_id").GetString() == _short);
         Require(grant.GetProperty("security_id").GetString() == _short
             && Clock(grant.GetProperty("available_at").GetString()!) <= _formation
+            && Clock(grant.GetProperty("valid_from").GetString()!) <= _entry
+            && grant.GetProperty("annual_borrow_bps").GetDecimal() == 0m
             && Clock(grant.GetProperty("valid_through").GetString()!) >= _exit,
             "Declared short permission unavailable.");
+        _shortLimit = Exact(grant.GetProperty("maximum_short_shares"));
+        Require(root.GetProperty("market").GetProperty("actions").GetArrayLength() == 0, "Corporate actions require another profile.");
+        Require(root.GetProperty("market").GetProperty("quotes").EnumerateArray().All(row =>
+            Clock(row.GetProperty("available_at").GetString()!) <= Clock(row.GetProperty("observed_at").GetString()!)), "Quote unavailable at execution.");
         _clocks.AddRange(root.GetProperty("market").GetProperty("quotes").EnumerateArray()
             .Select(row => Clock(row.GetProperty("observed_at").GetString()!)).Distinct().Order());
         SetTimeZone(TimeZones.Utc);
-        SetStartDate(2024, 4, 30);
-        SetEndDate(2024, 5, 16);
+        SetStartDate(start.Year, start.Month, start.Day);
+        SetEndDate(end.Year, end.Month, end.Day);
         SetCash(_cash);
         SetBenchmark(_ => 1m);
         SetRiskFreeInterestRateModel(new ConstantRiskFreeRateInterestRateModel(0m));
@@ -82,6 +108,7 @@ public sealed class ExecutedEquityAlgorithm : QCAlgorithm
             decimal postFeeNav = _cash / (1m + 2m * _rate);
             decimal longQuantity = postFeeNav / Securities[_symbols[_long]].Price;
             decimal shortQuantity = postFeeNav / Securities[_symbols[_short]].Price;
+            Require(shortQuantity <= _shortLimit, "Declared short quantity exceeded.");
             Require(longQuantity == decimal.Truncate(longQuantity) && shortQuantity == decimal.Truncate(shortQuantity), "Exact integer shares required.");
             MarketOrder(_symbols[_long], longQuantity);
             MarketOrder(_symbols[_short], -shortQuantity);
@@ -91,7 +118,7 @@ public sealed class ExecutedEquityAlgorithm : QCAlgorithm
             foreach (var symbol in _symbols.Values)
                 MarketOrder(symbol, -Portfolio[symbol].Quantity);
         }
-        if (UtcTime.Hour == 20)
+        if (_closes.Contains(UtcTime))
             Console.WriteLine("FACTORFORGE_EXECUTION_NAV:" + JsonSerializer.Serialize(new
             {
                 at = UtcTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture),

@@ -3,19 +3,69 @@
 import hashlib
 import io
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from zipfile import ZIP_STORED, ZipFile, ZipInfo
 
+from factorforge.backtests.admission import admit_monthly
 from factorforge.data.artifacts import ArtifactStore, verify_bytes
 from factorforge.data.validation_fixture import prepare_validation_fixture
+from factorforge.domain.calendar import plan_formations
+from factorforge.domain.raw_strategy import RawStrategySpec
 from infra.lean.spike.prepare import build_files as seeded_files
 
 
 def build_files(repository: Path, artifacts: ArtifactStore) -> dict[str, bytes]:
-    """Stage only original strategy, raw market and signals; no Python execution is invoked."""
+    """Keep the original example as a wrapper around the source-driven scalar translator."""
     spec = prepare_validation_fixture(repository, artifacts)
+    return build_strategy_files(
+        repository,
+        artifacts,
+        spec,
+        initial_cash=Decimal("1002"),
+        evaluated_at=datetime(2026, 9, 11, 12, tzinfo=UTC),
+    )
+
+
+def build_strategy_files(
+    repository: Path,
+    artifacts: ArtifactStore,
+    spec: RawStrategySpec,
+    *,
+    initial_cash: Decimal,
+    evaluated_at: datetime,
+) -> dict[str, bytes]:
+    """Translate admitted two-ID scalar source data, never Python holdings or performance.
+
+    The current LEAN profile supports one formation and integer-share funding. Reject
+    richer formulas or policies here rather than silently translating a different strategy.
+    """
+    admission = admit_monthly(spec, artifacts, evaluated_at=evaluated_at)
+    spec = admission.spec
+    plans = plan_formations(
+        admission.calendar,
+        spec.timing,
+        start=spec.evaluation.sample_start,
+        end=spec.evaluation.sample_end,
+    )
+    if (
+        len(spec.signal_inputs) != 1
+        or spec.formula != spec.signal_inputs[0].name
+        or spec.signal_inputs[0].history_observations != 1
+        or spec.timing.formation_lag_months != 0
+        or len(plans) != 1
+        or spec.portfolio.allocation.bucket_count != 2
+        or spec.portfolio.allocation.minimum_bucket_size != 1
+        or spec.costs.annual_borrow_bps != 0
+        or spec.costs.annual_financing_bps != 0
+        or spec.costs.annual_interest_bps != 0
+        or plans[0].formation_at.date() != spec.evaluation.sample_start
+        or not initial_cash.is_finite()
+        or initial_cash <= 0
+    ):
+        raise ValueError("Unsupported LEAN scalar strategy")
+    artifacts = admission.store
     inputs = {}
     for name, ref in (
         ("market", spec.market.table.artifact),
@@ -24,6 +74,15 @@ def build_files(repository: Path, artifacts: ArtifactStore) -> dict[str, bytes]:
         raw = artifacts.get(ref)
         verify_bytes(raw, ref)
         inputs[name] = json.loads(raw)
+    if {row["security_id"] for row in inputs["market"]["quotes"]} != {"A", "B"}:
+        raise ValueError("LEAN scalar profile requires the original A/B security namespace")
+    sessions = [
+        row
+        for row in admission.calendar.sessions
+        if spec.evaluation.sample_start <= row.session_date <= spec.evaluation.sample_end
+    ]
+    if any(row.session_date.weekday() >= 5 for row in sessions):
+        raise ValueError("LEAN scalar profile supports weekday UTC sessions")
     base = seeded_files((repository / "infra/lean/spike/source.json").read_bytes())
     files = {
         name: base[name]
@@ -33,8 +92,9 @@ def build_files(repository: Path, artifacts: ArtifactStore) -> dict[str, bytes]:
         )
     }
     source = dict(
-        schema_version="original-lean-execution-v1",
-        initial_cash_usd="1002",
+        schema_version="original-lean-execution-v2",
+        initial_cash_usd=str(initial_cash),
+        calendar=admission.calendar.model_dump(mode="json"),
         strategy=spec.model_dump(mode="json"),
         **inputs,
     )
