@@ -34,7 +34,9 @@ physical-page artifacts, create a reviewed `SourcePacket`, and bind it to a matc
 `PaperDocument` in a `LiteratureCatalog`. The existing source selector ranks that
 catalog and supplies extraction packets. Discovery does not fabricate page numbers,
 infer reuse rights, download arbitrary result links, or automatically approve a source.
-That acquisition/admission step remains separate from this command.
+The [PDF admission command](source-ingestion.md) now builds that catalog from a
+permitted local PDF and reviewed page selection. Download and identity/rights review
+remain explicit local ingestion steps.
 
 The existing HTTP client dependency avoids adding a provider SDK or service.
 [Crossref's official REST documentation](https://www.crossref.org/documentation/retrieve-metadata/rest-api/)

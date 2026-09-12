@@ -9,8 +9,8 @@ implementation are outside the current delivery path. Broader diagrams below des
 optional architecture extensions.
 
 [Live paper discovery](docs/literature-discovery.md) searches Crossref from an idea and
-retains ranked DOI/title candidates with offline replay. Reviewed source acquisition
-connects those candidates to the extraction catalog.
+retains ranked DOI/title candidates with offline replay. [PDF admission](docs/source-ingestion.md)
+converts permitted local papers and reviewed physical pages into the extraction catalog.
 
 Implementation status: a trusted local command now connects a research idea to ranked
 source packets, durable model extraction, source-derived strategy drafts, monthly
