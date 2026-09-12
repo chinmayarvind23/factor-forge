@@ -41,6 +41,7 @@ CODE_MODULES = (
     "factorforge.evaluation.cli",
     "factorforge.evaluation.extraction",
     "factorforge.retrieval.extraction",
+    "factorforge.retrieval.evidence_first",
     "factorforge.providers.ollama",
     "factorforge.domain.extraction",
     "factorforge.domain.formula",
@@ -114,6 +115,7 @@ def run_source_trial(
     *,
     provider: TextProvider | None = None,
     model: Literal["llama3.1:8b", "qwen3:8b"] = "llama3.1:8b",
+    style: Literal["original-v1", "evidence-first-v1"] = "original-v1",
 ) -> dict[str, object]:
     """Run one admitted case; the caller freezes inputs before observing model output."""
     try:
@@ -134,7 +136,7 @@ def run_source_trial(
         verify_bytes(store.get(page.artifact), page.artifact)
     expected_bytes = store.get(expected)
     verify_bytes(expected_bytes, expected)
-    prompt = prepare_prompt(packet, store)
+    prompt = prepare_prompt(packet, store, style=style)
     try:
         request = GenerationRequest(
             model=model,
@@ -166,7 +168,9 @@ def run_source_trial(
             "paper_id": packet.paper_id,
             "started_at": started_at,
             "gold_sha256": gold.sha256,
-            "prompt_version": PROMPT_VERSION,
+            "prompt_version": PROMPT_VERSION
+            if style == "original-v1"
+            else "source-evidence-first-v1",
             "text_identity": "utf8-lf-v1",
             "provider_kind": "ollama-loopback" if provider is None else "injected",
             **{name: ref.model_dump(mode="json") for name, ref in components.items()},
@@ -179,7 +183,7 @@ def run_source_trial(
         guarded = _FrozenProvider(
             provider if provider is not None else OllamaProvider(), expected_bytes
         )
-        result = extract_source(packet, guarded, store, model=model)
+        result = extract_source(packet, guarded, store, model=model, style=style)
         store.get(result.record)
         grade = grade_extraction(result.observation, gold, result.status)
         result_ref = _save(store, result.model_dump(mode="json"))
@@ -230,6 +234,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--expected-request", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--model", choices=("llama3.1:8b", "qwen3:8b"), default="llama3.1:8b")
+    parser.add_argument(
+        "--style", choices=("original-v1", "evidence-first-v1"), default="original-v1"
+    )
     args = parser.parse_args(argv)
     try:
         if not args.output.is_dir():
@@ -240,6 +247,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.expected_request,
             LocalArtifactStore(args.output),
             model=args.model,
+            style=args.style,
         )
         print(json.dumps(result, sort_keys=True))
         return 0

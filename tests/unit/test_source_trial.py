@@ -156,6 +156,51 @@ def test_qwen_requires_its_own_frozen_wire_request(tmp_path: Path) -> None:
     assert CaseGrade.model_validate(result["grade"]).matched_fields == 9
 
 
+def test_evidence_style_flows_through_frozen_trial(tmp_path: Path) -> None:
+    """The wrapper reaches the provider and its nested observation reaches the unchanged grader."""
+    packet, goldpath, expected, store, gold = inputs(tmp_path)
+    prompt = prepare_prompt(
+        SourcePacket.model_validate_json(packet.read_bytes()), store, style="evidence-first-v1"
+    )
+    request = GenerationRequest.model_validate(dict(model="qwen3:8b", **prompt))
+    expected.write_text(
+        store.put(_request_payload(request)[1], media_type="application/json").model_dump_json()
+    )
+    fields = [
+        name
+        for name, value in gold.expected.model_dump().items()
+        if name not in {"status", "refusal_reason", "refusal_category", "source_pages"}
+        and value is not None
+        and value != []
+    ]
+    provider = Provider(
+        json.dumps(
+            {
+                "evidence": [
+                    {
+                        "fields": fields,
+                        "pdf_page": 1,
+                        "quote": "An original fictional strategy description.",
+                    }
+                ],
+                "observation": gold.expected.model_dump(),
+            }
+        )
+    )
+    result = run_source_trial(
+        packet,
+        goldpath,
+        expected,
+        store,
+        provider=provider,
+        model="qwen3:8b",
+        style="evidence-first-v1",
+    )
+    assert provider.calls == 1 and CaseGrade.model_validate(result["grade"]).matched_fields == 9
+    start = json.loads(store.get(ArtifactRef.model_validate(result["start"])))
+    assert start["prompt_version"] == "source-evidence-first-v1"
+
+
 @pytest.mark.parametrize("change", ["paper", "source", "pages", "request", "missing_page"])
 def test_preflight_mismatch_never_calls_provider(tmp_path: Path, change: str) -> None:
     """Declared source and exact wire identity fail before admission or a model request."""

@@ -41,3 +41,24 @@ matched 8/27. Both scored 0/3 on all-nine-fields case accuracy. The Qwen run ret
 one response-timeout outcome and two parsed extractions, with all three cases kept
 in the denominator. Its evidence bundle verifies 70 reachable objects. These results
 guide further extraction work; model defaults remain unchanged.
+
+## Evidence-first development profile
+
+Add `--style evidence-first-v1` to either command to evaluate the experimental
+`source-evidence-first-v1` prompt. It asks for short literal quotations before a nested
+strategy observation. Each quotation lists the fields it supports and its physical
+page. The parser checks page membership, whitespace-normalized quote membership and
+coverage of all non-null strategy fields and nonempty required inputs. Unsupported
+fields must remain null or empty. Invalid evidence makes the whole observation invalid;
+the raw answer remains in provider artifacts.
+
+This check establishes literal source membership and declared field coverage, not
+semantic entailment of a formula or investment claim. The existing nine-field grader
+still determines development accuracy. Neither the prompt nor its parser sees gold.
+The original profile remains the default. The new schema omits descriptive titles and
+descriptions to fit the existing request bound; types, enums, required fields and
+validation bounds remain intact. Original source pages are neither truncated nor edited.
+
+The first live evidence-first comparison retained three response-timeout outcomes
+under the unchanged 120-second response limit (0/27 graded fields). Its 67-object
+evidence closure verifies. The profile remains experimental and is not the default.

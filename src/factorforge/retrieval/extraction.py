@@ -10,6 +10,7 @@ from factorforge.domain.artifacts import ArtifactRef
 from factorforge.domain.errors import ResearchError
 from factorforge.domain.extraction import SourceExtraction, parse_extraction
 from factorforge.providers.ollama import GenerationRequest, GenerationResult
+from factorforge.retrieval.evidence_first import evidence_prompt, parse_evidence
 
 PROMPT_VERSION = "source-extraction-v1"
 SYSTEM_PROMPT = """Extract the selected investment strategy from the supplied source pages.
@@ -99,7 +100,12 @@ def _save(store: ArtifactStore, value: object) -> ArtifactRef:
     )
 
 
-def prepare_prompt(source: SourcePacket, store: ArtifactStore) -> dict[str, object]:
+def prepare_prompt(
+    source: SourcePacket,
+    store: ArtifactStore,
+    *,
+    style: Literal["original-v1", "evidence-first-v1"] = "original-v1",
+) -> dict[str, object]:
     """Normalize whitespace once and retain full raw pages through their artifact references."""
     source = SourcePacket.model_validate(source)
     pages: list[dict[str, object]] = []
@@ -111,7 +117,7 @@ def prepare_prompt(source: SourcePacket, store: ArtifactStore) -> dict[str, obje
         raise ResearchError(
             "EXTRACTION_SOURCE_INVALID", "Source passage encoding is invalid.", 422
         ) from None
-    return {
+    prompt: dict[str, object] = {
         "system": SYSTEM_PROMPT,
         "user": json.dumps(
             {
@@ -126,6 +132,7 @@ def prepare_prompt(source: SourcePacket, store: ArtifactStore) -> dict[str, obje
         ),
         "response_schema": SourceExtraction.model_json_schema(),
     }
+    return evidence_prompt(prompt) if style == "evidence-first-v1" else prompt
 
 
 def _observation(content: str, source: SourcePacket) -> SourceExtraction | None:
@@ -145,10 +152,11 @@ def extract_source(
     store: ArtifactStore,
     *,
     model: Literal["llama3.1:8b", "qwen3:8b"] = "llama3.1:8b",
+    style: Literal["original-v1", "evidence-first-v1"] = "original-v1",
 ) -> ExtractionResult:
     """Archive admission failures and one-shot outcomes; missing evidence never returns success."""
     source = SourcePacket.model_validate(source)
-    prompt = prepare_prompt(source, store)
+    prompt = prepare_prompt(source, store, style=style)
     source_ref = _save(store, source.model_dump(mode="json"))
     prompt_ref = _save(store, prompt)
     provider_ref: ArtifactRef | None = None
@@ -177,14 +185,20 @@ def extract_source(
             if generation.status != "success" or generation.content is None:
                 status = "provider_failed"
             else:
-                observation = _observation(generation.content, source)
+                observation = (
+                    parse_evidence(generation.content, prompt)
+                    if style == "evidence-first-v1"
+                    else _observation(generation.content, source)
+                )
                 status = observation.status if observation else "invalid"
     observation_ref = _save(store, observation.model_dump(mode="json")) if observation else None
     record = _save(
         store,
         {
             "schema_version": "source-extraction-record-v1",
-            "prompt_version": PROMPT_VERSION,
+            "prompt_version": PROMPT_VERSION
+            if style == "original-v1"
+            else "source-evidence-first-v1",
             "source_transform": "utf8-whitespace-collapse-v1",
             "status": status,
             "source": source_ref.model_dump(mode="json"),

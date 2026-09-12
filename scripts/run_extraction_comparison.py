@@ -20,6 +20,9 @@ def main() -> None:
     parser.add_argument("--baseline", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--model", choices=("llama3.1:8b", "qwen3:8b"), required=True)
+    parser.add_argument(
+        "--style", choices=("original-v1", "evidence-first-v1"), default="original-v1"
+    )
     args = parser.parse_args()
     baseline = LocalArtifactStore(args.baseline / "objects")
     prepared = json.loads((args.baseline / "prepared-gold-v1.json").read_bytes())
@@ -40,7 +43,7 @@ def main() -> None:
             verify_bytes(raw, page.artifact)
             if store.put(raw, media_type=page.artifact.media_type) != page.artifact:
                 raise ValueError("Page identity changed during copy")
-        prompt = prepare_prompt(packet, store)
+        prompt = prepare_prompt(packet, store, style=args.style)
         request = GenerationRequest.model_validate(dict(model=args.model, **prompt))
         wire = store.put(_request_payload(request)[1], media_type="application/json")
         paths = [args.output / f"{index}-{name}.json" for name in ("packet", "gold", "wire")]
@@ -56,6 +59,7 @@ def main() -> None:
         json.dump(
             {
                 "model": args.model,
+                "style": args.style,
                 "attempts_per_case": 1,
                 "scope": "existing-paper-development-comparison",
                 "inputs": [
@@ -76,7 +80,9 @@ def main() -> None:
     with local_trace(args.output / "traces.jsonl"):
         for case, paths in zip(cases, inputs, strict=True):
             print(json.dumps({"event": "starting", "case": case.case_id}), flush=True)
-            result = run_source_trial(paths[0], paths[1], paths[2], store, model=args.model)
+            result = run_source_trial(
+                paths[0], paths[1], paths[2], store, model=args.model, style=args.style
+            )
             with (args.output / f"{case.paper_id}-result.json").open(
                 "x", encoding="utf-8"
             ) as output:
@@ -96,6 +102,7 @@ def main() -> None:
             {
                 "schema_version": "extraction-comparison-v1",
                 "model": args.model,
+                "style": args.style,
                 "freeze": store.put(
                     (args.output / "freeze.json").read_bytes(), media_type="application/json"
                 ).model_dump(),
