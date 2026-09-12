@@ -1,251 +1,121 @@
 # FactorForge
 
-**Autonomous quantitative research with reproducible evidence**
+**Quantitative research agents with inspectable evidence.**
 
-[Local MLflow tracking](tools/tracking/README.md) exports verified research histories,
-metrics and artifact bundles to SQLite, with complete readback verification and reuse
-of finished projections on serial replay.
+FactorForge connects investment ideas, literature, typed factor hypotheses, hybrid
+strategies and backtests in a resumable research workflow. It keeps model proposals,
+deterministic execution rules and the evidence behind each decision separately
+inspectable, so an experiment can be reviewed or replayed without repeating inference.
 
-Explore the [free Hugging Face evidence demo](https://huggingface.co/spaces/chinmayarvind/factorforge), with the
-full research runner available locally. Build it with `python scripts/build_space.py`;
-see [deployment and optional AWS setup](docs/deployment.md). AWS provisioning and EKS
-implementation are outside the current delivery path. Broader diagrams below describe
-optional architecture extensions.
+[Open the free Hugging Face demo](https://huggingface.co/spaces/chinmayarvind/factorforge)
+| [Run research locally](docs/research-command.md)
+| [Architecture](docs/system-design.md)
 
-[Live paper discovery](docs/literature-discovery.md) searches Crossref from an idea and
-retains ranked DOI/title candidates with offline replay. [PDF admission](docs/source-ingestion.md)
-converts permitted local papers and reviewed physical pages into the extraction catalog.
+![FactorForge evidence walkthrough](docs/assets/demo.gif)
 
-Implementation status: a trusted local command now connects a research idea to ranked
-source packets, durable model extraction, source-derived strategy drafts, monthly
-experiments and retained HAC diagnostics. PostgreSQL stores run budgets, operation
-results and LangGraph experiment checkpoints. `--workflow` adds a resumable research,
-report and memory graph; `--memory-query` finds saved completion evidence by idea.
-The [trajectory exporter](docs/research-trajectories.md) preserves operation histories,
-prompts, responses and decisions as local provenance-linked JSONL for review and later
-evaluation or training. It does not automatically assign rewards or train a model.
-Version-two plans add a separate,
-source-cited direction review before experiment dispatch. Version-three plans permit
-one recorded revision and a separately identified direction amendment. The operator
-can publish a verified report and completion receipt with `--report`. Prompts, observations,
-input references, results and review decisions remain available for replay. See the
-[research command](docs/research-command.md) and [direction review](docs/direction-review.md).
+The recording shows four saved, originally authored scenarios. The hosted dashboard
+verifies downloaded evidence in the browser; new model-driven research runs locally.
+[Download the demo video](docs/assets/demo.mp4).
 
-[Hybrid experiments](docs/hybrid-research.md) combine two to four explicitly weighted,
-direction-aligned source strategies. Compatible parents feed the same durable monthly
-runner; source evidence, composition rules, accounting results and reports remain linked.
-The public demo includes an original two-signal example.
+## What is implemented
 
-The [source-to-hybrid command](docs/source-synthesis.md) adds model-proposed composition
-after source extraction and independent direction review. Its saved-result grader checks
-the original engineering case without inference. The latest live development run compiled
-both source strategies, passed both direction reviews and retained a synthesis abstention
-with five settled model operations and 62 verified artifacts. Controlled integration cases
-also exercise the complete hybrid backtest and replay path.
+- **Literature to source evidence:** Crossref discovery, reviewed local PDF admission,
+  physical-page provenance and deterministic source selection.
+- **Research workflow:** typed extraction, strategy compilation, independent direction
+  review, bounded revision, model-proposed synthesis and compatible weighted hybrids.
+- **Execution and validation:** point-in-time checks, signed-share accounting, explicit
+  transaction costs, retained return paths, walk-forward/purged splits and HAC diagnostics.
+- **Independent verification:** a resource-limited LEAN execution of an authored reference
+  strategy, with actual orders, fills, fees and portfolio valuations.
+- **Memory and observability:** PostgreSQL checkpoints, searchable retained outcomes,
+  content-addressed lineage, trajectory exports, local OpenTelemetry and MLflow tracking.
 
-The monthly engine currently executes the original integration fixture using verified
-point-in-time inputs, declared formation/trade timing, exact funding and transaction
-costs. Walk-forward/purged splitters have boundary tests and HAC calculations have
-independent statsmodels reference checks. The [validation command](docs/research-validation.md)
-now connects those components to retained account paths with per-block diagnostics;
-full statistical research decisions and published-factor reproduction remain to be
-composed and evaluated. The frozen three-paper extraction pilot matched 11 of 27
-critical fields; release FactorSpec accuracy remains unmeasured.
+## Verified engineering results
 
-A Docker sandbox stages verified artifacts and retains execution, termination and
-cleanup evidence. Eight original acceptance cases pass locally and in hosted CI.
-A separate real LEAN execution now matches all 13 closing NAVs and four long/short fills
-of the original longer fixture, including $4.11 in costs and final NAV $1107.89.
-General strategy translation and published-factor verification remain in progress. See
-[sandbox setup](docs/sandbox.md) and [results](docs/results.md).
+| Check | Recorded result | Evidence |
+|---|---|---|
+| Independent LEAN reference execution | 13 portfolio valuations and 4 fills, including fees, match the reference | [Comparison](data/verification/lean-execution-v1/comparison.json) |
+| MLflow evidence projection | 64 objects read back and verified; serial replay reuses the run | [Tracking integration](tools/tracking/README.md) |
+| Hosted evidence dashboard | 4 saved execution/research scenarios with browser hash checks | [Demo](https://huggingface.co/spaces/chinmayarvind/factorforge) |
+| Hybrid strategy compiler | Supports 2 to 4 compatible source strategies with explicit weights | [Hybrid research](docs/hybrid-research.md) |
 
-The browser/API supports research briefs and owner-scoped run inspection. Cognito
-access-token verification is implemented; live sign-in and cloud deployment remain
-planned. The broader research loop and architecture below describe the target system.
-Release benchmark metrics are unmeasured. Use the [commands](docs/commands.md) and
-linked component documentation for the implemented command surface.
+These results describe specific engineering/reference cases. Published-factor reproduction,
+full FactorSpec accuracy and the 45-case autonomous release benchmark are separate research
+measurements. Development extraction comparisons and their full denominators remain in
+[extraction evaluation](docs/extraction-comparison.md); chronological engineering evidence
+remains in [results](docs/results.md).
 
-FactorForge turns a loose investment idea into a structured, reviewable research program. It retrieves relevant literature, extracts and proposes typed factor hypotheses, runs bounded experiments in sandboxes, validates strategies with time-series-aware statistics, independently verifies selected results in LEAN, records the full experiment lineage, and produces a research report that explains what worked, what failed, and why.
+## Run the evidence dashboard
 
-FactorForge is a research system. It does not place live trades or move capital.
+Python 3.12+, uv and a browser are sufficient for the saved-evidence demo:
 
-## Core research loop
+```powershell
+uv sync --locked
+uv run python scripts/build_space.py
+uv run python -m http.server 8766 --bind 127.0.0.1 --directory dist/space
+```
+
+Open `http://127.0.0.1:8766`. The builder uses original repository fixtures and verifies
+the artifact closure. This path makes no model calls and needs no database or cloud account.
+
+## Run research
+
+The local research path also needs PostgreSQL and the named Ollama models. Set `RDS_DSN`
+in the operator environment, then prepare an original example and preserve its request:
+
+```powershell
+uv run python infra/research/prepare_original.py --artifacts artifacts/research-original --request artifacts/research-original/request.json
+uv run factorforge-research --request artifacts/research-original/request.json --artifacts artifacts/research-original --workflow
+```
+
+See the [operator guide](docs/research-command.md) for model setup, budgets, replay and
+memory queries. Use [discovery](docs/literature-discovery.md) and
+[PDF admission](docs/source-ingestion.md) for permitted papers, or the
+[source-to-hybrid command](docs/source-synthesis.md) for reviewed multi-paper inputs.
+The pipeline retains model observations and explicit terminal decisions as produced.
+
+## How it fits together
 
 ```mermaid
 flowchart LR
-    I[Research idea] --> L[Literature retrieval]
-    L --> H[Typed hypotheses]
-    H --> P[Research plan]
-    P --> E[Sandboxed experiments]
-    E --> V[Statistical validation]
-    V --> C[Critic and decision]
-    C -->|iterate| H
-    C -->|promote| Q[LEAN verification]
-    Q --> M[Research memory]
-    M --> R[Research report]
+    A[Investment idea] --> B[Literature discovery]
+    B --> C[Reviewed source pages and data bindings]
+    C --> D[Extraction and strategy compilation]
+    D --> E[Direction review and synthesis]
+    E --> F[Budgeted experiment execution]
+    F --> G[Accounting and validation]
+    G --> H[Report and research memory]
+    F --> I[Independent LEAN reference verification]
+    C & D & E & F & G & H --> J[Content-addressed evidence]
+    J --> K[MLflow and trajectory exports]
+    J --> L[Evidence dashboard]
 ```
 
-LangGraph owns the durable state machine, budgets, stop conditions, retries, checkpoints, and legal transitions. Deep Agents handles bounded long-horizon work such as literature synthesis, hypothesis refinement, and critique. Deterministic code owns point-in-time rules, statistics, portfolio accounting, sandbox policy, and lineage validation.
+LangGraph and PostgreSQL retain workflow state and operation receipts. Deterministic
+Python/Polars code owns accounting and validation. Model output proposes research
+content; it does not change authorization, data timing, execution policy or budgets.
 
-## Architecture at a glance
+## Stack and remaining work
 
-```text
-Browser on Vercel
-        |
-TypeScript + Bun
-        |
-       REST
-        |
-FastAPI control plane
-        |
-        +--> Cognito identity
-        +--> LangGraph research state machine
-        |       +--> Deep Agents bounded research workers
-        |       +--> MCP tool adapters
-        |       +--> checkpoint, permission, and budget gates
-        |
-        +--> RDS PostgreSQL: durable run state and lineage index
-        +--> S3 + DVC: datasets, generated code, results, reports
-        +--> Redis: ephemeral state, cache, rate limits, locks
-        +--> Elasticsearch: literature and experiment search
-        +--> Neo4j: derived research relationship graph
-        +--> MLflow: experiments, registry, promotion metadata
-        |
-        +--> SQS: durable experiment jobs
-                |
-                v
-        sandbox worker plane
-        Docker locally, EKS Jobs in the cloud
-                |
-                +--> Polars fast research engine
-                +--> PySpark offline scale path
-                +--> LEAN verification over internal gRPC
-                +--> R statistical cross-checks
-                +--> RL environment + PyTorch / TRL trajectory learning and RLVR lab
+The implemented core uses **Python, LangGraph, Polars, PostgreSQL, Ollama, Docker,
+LEAN, OpenTelemetry and MLflow**, with a free static **Hugging Face** deployment.
+AWS adapters/configuration exist for S3/Cognito; [optional AWS operator setup](docs/deployment.md)
+is documented separately. Kubernetes/EKS is an optional architecture extension.
 
-Observability:
-LangSmith + OpenTelemetry + Prometheus/Grafana + CloudWatch
-```
+[LangSmith trace imports](tools/tracking/LANGSMITH.md) are SDK/HTTP-contract tested;
+hosted account verification remains. The [Neo4j projection](tools/tracking/NEO4J.md)
+is implemented with source-integrity tests; server verification remains.
+[DVC tooling](tools/dvc/README.md) retains its dependency-audit gate.
+Deep Agents orchestration, PyTorch/TRL training and the full historical-data benchmark
+remain development work. Trajectory export alone is not model training.
 
-The API workload is small compared with the research workload. The planned Kubernetes deployment runs isolated, parallel, resource-bounded experiment jobs on EKS. Current execution is local; EKS infrastructure and Kubernetes manifests are not yet implemented.
+The next research improvements are dependable source extraction, broader point-in-time
+historical data support, frozen end-to-end evaluation, and measured runtime/cost studies.
+Large-scale distributed processing and AWS infrastructure follow those requirements.
 
-## Key features
+## Further documentation
 
-- Natural-language idea to typed `FactorSpec`
-- Literature retrieval with lexical, dense, and citation-graph signals
-- Explicit plan, execute, verify research loop
-- Point-in-time data contracts that make lookahead leakage testable
-- Fast vectorized factor experiments with Polars
-- Walk-forward and purged cross-validation with embargo
-- Transaction-cost, turnover, drawdown, Sharpe, Sortino, IC, and HAC t-stat analysis
-- Independent LEAN verification for promoted strategies
-- Sandboxed generated code with no live-trading permissions
-- Research memory across successful and failed experiments
-- Reproducible lineage across prompts, data, code, configs, seeds, traces, and results
-- Outcome and execution-path evaluation kept as separate scorecards
-- LangSmith and OpenTelemetry traces for agent decisions, tools, latency, and cost
-- MCP tool interoperability and an A2A cross-framework interoperability path
-- Offline PyTorch/TRL learning from verified research trajectories
-- RL environment with typed states/actions, verifiable rewards, RLVR, and benchmarked multi-step agentic RL
-
-## Research pipeline canon
-
-The research lifecycle explicitly implements the nine-stage autonomous-research sequence:
-
-```text
-Evaluation Harness
-Hypothesis Generator
-Literature Retrieval
-Experiment Runner
-Result Evaluator
-Paper Writer
-Critic Loop
-Iteration Scheduler
-End-to-End Research Demo
-```
-
-See [docs/research-pipeline.md](docs/research-pipeline.md).
-
-The post-MVP learning path adds a versioned research environment, successful and failed trajectory datasets, preference learning, RLVR with deterministic/reference-based rewards, and multi-step agentic RL. The learned policy remains inside the same hard harness boundaries. See [docs/agentic-rl.md](docs/agentic-rl.md).
-
-Documentation
-
-- [Product requirements](PRD.md)
-- [System design](docs/system-design.md)
-- [High-level design](docs/HLD.md)
-- [Low-level design](docs/LLD.md)
-- [Architecture alternatives](docs/architecture-alternatives.md)
-- [API contracts](docs/api-contracts.md)
-- [Data model and lineage](docs/data-and-lineage.md)
-- [Quant methodology](docs/quant-methodology.md)
-- [Research pipeline](docs/research-pipeline.md)
-- [Agentic RL and RLVR](docs/agentic-rl.md)
-- [Agent harness](docs/harness.md)
-- [Research memory and failed-experiment ledger](docs/research-memory.md)
-- [Evaluation methodology](docs/evaluation.md)
-- [Benchmark methodology](docs/benchmark-methodology.md)
-- [Security](docs/security.md)
-- [Threat model](docs/threat-model.md)
-- [Observability](docs/observability.md)
-- [Performance and scalability](docs/performance.md)
-- [Failure modes](docs/failure-modes.md)
-- [Deployment](docs/deployment.md)
-- [Interoperability](docs/interoperability.md)
-- [Reproducibility](docs/reproducibility.md)
-- [Quality gates](docs/quality-gates.md)
-- [Results](docs/results.md)
-- [Demo plan](docs/demo.md)
-- [Technical blog outline](docs/blog-outline.md)
-- [Commands](docs/commands.md)
-- [References](docs/references.md)
-- [Architecture decision records](docs/adr/)
-
-## Repository shape
-
-```text
-apps/
-  api/
-  web/
-src/factorforge/
-  api/
-  auth/
-  domain/
-  orchestration/
-  agents/
-  tools/
-  retrieval/
-  data/
-  factors/
-  backtests/
-  validation/
-  memory/
-  lineage/
-  sandbox/
-  telemetry/
-  interop/
-tests/
-evals/
-benchmarks/
-data/
-research/
-artifacts/
-infra/
-monitoring/
-scripts/
-docs/
-```
-
-The tree grows as components are implemented. Stable module boundaries are planned up front, but a directory does not justify creating unused abstractions.
-
-## First useful path
-
-Local development starts with the smallest end-to-end research loop:
-
-```text
-idea -> typed hypothesis -> tiny fixture dataset -> Polars backtest
-     -> deterministic validation -> research verdict -> report
-```
-
-Cloud infrastructure, distributed workers, additional search systems, A2A, RL environments, RLVR, agentic RL, and large-scale data paths are added after this loop is correct and measurable.
-
-See [docs/commands.md](docs/commands.md) for the intended command surface.
+[Validation](docs/research-validation.md) | [Sandbox](docs/sandbox.md) |
+[LEAN](infra/lean/execution/README.md) | [Trajectories](docs/research-trajectories.md) |
+[Deployment](docs/deployment.md) | [Security](docs/security.md) |
+[Methodology](docs/quant-methodology.md) | [Architecture decisions](docs/adr/)

@@ -1,52 +1,37 @@
-# Demo Plan
+# Recorded demo
 
-## Goal
+[Open the hosted dashboard](https://huggingface.co/spaces/chinmayarvind/factorforge)
+or [watch the video](assets/demo.mp4).
 
-Show research judgment and failure handling, not a chat window.
+![Evidence walkthrough](assets/demo.gif)
 
-## Main screen
+The recording walks through four saved scenarios built from original repository
+fixtures: a monthly experiment, a weighted two-signal hybrid, a twelve-return
+validation path, and an execution guard. The validation view shows three contiguous
+test blocks. The browser verifies the downloaded records before rendering results.
+The free hosted dashboard displays saved evidence; run new research locally using
+[the research command](research-command.md).
 
-Expose:
+## Re-record
 
-```text
-Research idea
-Current state
-Remaining experiment / cost budget
-Literature evidence
-Hypothesis queue
-Active experiments
-Validation results
-LEAN verification
-Research memory links
-Final verdict
-Reproduction bundle
+Install the web workspace dependencies and Playwright Chromium. From `apps/web`,
+compile the recorder for Node so Playwright's video process runs in its supported
+runtime. Set an absolute, fresh output directory outside the repository:
+
+```powershell
+bun install --frozen-lockfile
+bun x playwright install chromium
+bun build scripts/record-demo.ts --target node --packages external --outfile node_modules/.cache/factorforge-record-demo.mjs
+$env:FACTORFORGE_DEMO_URL='https://chinmayarvind-factorforge.static.hf.space'
+$env:FACTORFORGE_DEMO_RECORDING='C:/path/to/fresh-recording-directory'
+node node_modules/.cache/factorforge-record-demo.mjs
 ```
 
-## Sequence
+The script checks each scene's status and accounting result, captures an overview,
+and records browser errors. A successful run writes `recording.json` and a WebM
+video. Keep that original and receipt together. Export the video to MP4 and GIF
+with FFmpeg for the README; those exports change encoding and size only.
 
-1. Start with a vague idea such as: `Does residual momentum survive sector neutralization and realistic turnover costs?`
-2. Show the normalized brief and typed hypotheses.
-3. Show literature evidence and source-backed FactorSpec.
-4. Show dataset version, timing rules, baseline, metrics, cost model, windows, and experiment budget.
-5. Show sandboxed execution with resource policy and generated-code hash.
-6. Show walk-forward, transaction costs, HAC t-stat, turnover, drawdown, and failure criteria.
-7. Show LEAN agreement or disagreement.
-8. Show the memory graph linking paper, hypothesis, experiment, and result.
-9. Run an adversarial generated script that attempts network access and show `SECURITY_BLOCK` with preserved trace.
-10. Show the benchmark table and one reproducible case bundle.
-
-Record a short screen capture and stable screenshots/sample outputs so the project remains understandable even if the live deployment is offline.
-
-## Agentic RL demonstration
-
-After the core product demo, show one held-out research state under:
-
-```text
-prompted baseline
-supervised trajectory policy
-RLVR policy
-```
-
-Display the selected next action, verifier reward breakdown, whether the action advanced research, redundant/invalid action rate, cost/latency, and final hard-path status.
-
-Include a failed-experiment memory item that causes the learned policy to avoid repeating a known bad experiment.
+The current walkthrough demonstrates the saved execution paths. Published-factor
+benchmark results and trained-policy comparisons need their own completed studies
+before they can appear in a release demo.
