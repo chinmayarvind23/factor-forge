@@ -62,7 +62,9 @@ establish that the declared rights cover every referenced source.
 These are trusted ingestion declarations: hashes prove retained identity, not that a
 provider's timestamp is truthful or that a transformation is economically correct.
 Provider-specific normalization and timing review precede publication. A model cannot
-grant data rights or approve its own source interpretation.
+grant data rights or approve its own source interpretation. The
+[SEC concept normalizer](sec-normalization.md) implements an offline fundamental-fact
+adapter with accession-level timing evidence and complete-row accounting.
 
 Controlled fixtures verify observed-declaration admission, offline execution replay,
 complete provenance, aggregate limits and actual PostgreSQL readback. They are not
