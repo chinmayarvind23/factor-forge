@@ -8,6 +8,10 @@ see [deployment and optional AWS setup](docs/deployment.md). AWS provisioning an
 implementation are outside the current delivery path. Broader diagrams below describe
 optional architecture extensions.
 
+[Live paper discovery](docs/literature-discovery.md) searches Crossref from an idea and
+retains ranked DOI/title candidates with offline replay. Reviewed source acquisition
+connects those candidates to the extraction catalog.
+
 Implementation status: a trusted local command now connects a research idea to ranked
 source packets, durable model extraction, source-derived strategy drafts, monthly
 experiments and retained HAC diagnostics. PostgreSQL stores run budgets, operation
