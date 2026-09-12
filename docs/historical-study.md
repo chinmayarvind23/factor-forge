@@ -30,15 +30,27 @@ The independently verified LEAN reference cases retain their own scope.
 
 ## Reproduce and inspect
 
-Supply a JSON mapping from ticker to an archived Yahoo chart-response file. Source symbol,
+Capture the fixed eight-stock universe, or supply a JSON mapping from ticker to an
+archived Yahoo chart-response file. Source symbol,
 currency, calendar alignment and finite positive adjusted closes are checked before scoring.
 Raw sources remain local; the public report contains derived summary metrics.
 
 ```powershell
-uv run python -m factorforge.evaluation.historical_study --sources sources.json --output artifacts/historical-study
+uv run python -m factorforge.data.yahoo_capture --output artifacts/historical-sources
+uv run python -m factorforge.evaluation.historical_study --sources artifacts/historical-sources/sources.json --output artifacts/historical-study
 uv run python scripts/verify_historical_study.py artifacts/historical-study
 uv run python scripts/build_historical_report.py --input artifacts/historical-study/report.json --output dist/space/historical-study.html
 ```
+
+The downloader archives raw responses, request URLs, capture times, HTTP status and
+SHA-256 identities. It uses a fresh directory, bounded response sizes and one request
+per symbol; access failures stop capture and retain a failure receipt. `sources.json`
+is published only after all eight inputs pass the aligned-panel checks. This command
+does not run experiments. Provider revisions can change newly downloaded bytes and
+results; the published study identifies its original vintage in the
+[frozen configuration](../reports/evidence/historical-freeze.json) and
+[artifact manifest](../reports/evidence/historical-manifest.json). Review provider terms
+for your use; the repository publishes derived results and hashes, not raw market data.
 
 The output includes source snapshots, Parquet data, frozen configuration, implementation
 and validation code, every experiment's scores/weights/returns/fees, fold indices, HAC

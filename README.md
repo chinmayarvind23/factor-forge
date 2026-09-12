@@ -11,6 +11,8 @@ inspectable, so an experiment can be reviewed or replayed without repeating infe
 | [Run research locally](docs/research-command.md)
 | [Architecture](docs/system-design.md)
 | [Historical study report](reports/historical-study-v1.json)
+| [Claims and evidence](docs/evidence-guide.md)
+| [Stack roles](docs/stack-status.md)
 
 ![FactorForge evidence walkthrough](docs/assets/demo.gif)
 
