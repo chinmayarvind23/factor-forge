@@ -26,6 +26,8 @@ source-admission, action and history limits remain explicit capability constrain
 
 Verification includes hand arithmetic, missing/duplicate prices, fractional existing
 holdings, erased sleeves, hostile decimal precision, altered receipts, complete entry
-and liquidation, and deterministic replay. LEAN translation rejects this policy until
-independent execution has implemented its semantics; prior LEAN comparisons remain
-scoped to the exact-share policy.
+and liquidation, and deterministic replay. LEAN source contract v4 independently
+implements single-entry whole-share sizing with rational division before truncation.
+The authored flat-price case matches four closing NAV/cash/fee observations and four
+actual fills. The same image verifies the existing exact-share case. Multi-rebalance
+whole-share comparison remains outside that LEAN profile.

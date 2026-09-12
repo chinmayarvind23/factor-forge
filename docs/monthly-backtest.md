@@ -76,6 +76,8 @@ four fills incur $3.758 and leave $998.242. Disk verification covers all 36 reac
 objects, and identical execution reproduces the result. This is engineering evidence;
 observed historical-data admission and larger portfolios still need implementation.
 
-The current independent LEAN translator rejects the new quantity policy until its
-rounding behavior is implemented and separately compared. See
+Independent LEAN source contract v4 now verifies this single-entry whole-share case,
+including all four closing NAVs, cash balances and fee totals, plus the four actual
+fills. The same executable also passes the existing exact-share case. See
+[the comparison](../data/verification/lean-whole-shares-v4/comparison.json) and
 [the sizing decision](adr/whole-share-sizing.md) for the constraints and tradeoff.

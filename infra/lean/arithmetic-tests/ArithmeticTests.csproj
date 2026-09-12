@@ -8,5 +8,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../execution/ExactRatio.cs" Link="ExactRatio.cs" />
+    <Compile Include="../execution/EntrySizing.cs" Link="EntrySizing.cs" />
   </ItemGroup>
 </Project>

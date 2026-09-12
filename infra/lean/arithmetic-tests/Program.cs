@@ -35,3 +35,23 @@ rejected = false;
 try { _ = ExactRatio.Parse("1.2.3"); } catch (InvalidOperationException) { rejected = true; }
 if (!rejected) throw new Exception("Malformed number accepted");
 Console.WriteLine("14 arithmetic and boundary checks passed.");
+var rounded = EntrySizing.Compute(1002m, 0.001m, 101m, 97m, "whole_shares_toward_zero_v1");
+if (rounded != (9m, 10m)) throw new Exception("Rounded shares differ from hand result");
+var integral = EntrySizing.Compute(1002m, 0.001m, 100m, 100m, "exact_terminating_decimal_18_v1");
+if (integral != (10m, 10m)) throw new Exception("Exact policy changed");
+foreach (var policy in new[] { "exact_terminating_decimal_18_v1", "unknown" })
+{
+    rejected = false;
+    try { EntrySizing.Compute(1002m, 0.001m, 101m, 97m, policy); }
+    catch (InvalidOperationException) { rejected = true; }
+    if (!rejected) throw new Exception("Unsupported sizing accepted");
+}
+rejected = false;
+try { EntrySizing.Compute(1002m, 0.001m, 1001m, 97m, "whole_shares_toward_zero_v1"); }
+catch (InvalidOperationException) { rejected = true; }
+if (!rejected) throw new Exception("Erased sleeve accepted");
+rejected = false;
+try { EntrySizing.Compute(2.9999999999999999999999999999m, 0m, 3m, 1m, "whole_shares_toward_zero_v1"); }
+catch (InvalidOperationException) { rejected = true; }
+if (!rejected) throw new Exception("Decimal rounding crossed a whole-share boundary");
+Console.WriteLine("6 independent sizing checks passed.");

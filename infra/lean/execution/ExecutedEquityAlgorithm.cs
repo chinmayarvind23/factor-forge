@@ -17,6 +17,7 @@ public sealed class ExecutedEquityAlgorithm : QCAlgorithm
     private readonly HashSet<DateTime> _closes = new();
     private DateTime _formation, _entry, _exit;
     private string _long = "", _short = "";
+    private string _quantityPolicy = "";
     private decimal _cash, _rate, _shortLimit;
     private int _seen, _fills;
 
@@ -26,9 +27,10 @@ public sealed class ExecutedEquityAlgorithm : QCAlgorithm
         Require(File.Exists("/.dockerenv") && Environment.GetEnvironmentVariable("FACTORFORGE_LEAN_EXECUTION") == "1", "Owned execution container required.");
         using var source = JsonDocument.Parse(File.ReadAllBytes("/input/source.json"));
         var root = source.RootElement;
-        Require(root.GetProperty("schema_version").GetString() == "original-lean-execution-v3", "Unsupported source.");
+        Require(root.GetProperty("schema_version").GetString() == "original-lean-execution-v4", "Unsupported source.");
         _cash = Exact(root.GetProperty("initial_cash_usd"));
         var strategy = root.GetProperty("strategy");
+        _quantityPolicy = strategy.GetProperty("portfolio").GetProperty("quantity").GetString()!;
         var inputs = strategy.GetProperty("signal_inputs");
         Require(inputs.GetArrayLength() >= 1 && inputs.GetArrayLength() <= 32, "Bounded scalar inputs required.");
         var evaluation = strategy.GetProperty("evaluation");
@@ -119,11 +121,9 @@ public sealed class ExecutedEquityAlgorithm : QCAlgorithm
         Require(_seen < _clocks.Count && UtcTime == _clocks[_seen], "Unexpected observation clock.");
         if (UtcTime == _entry)
         {
-            decimal postFeeNav = _cash / (1m + 2m * _rate);
-            decimal longQuantity = postFeeNav / Securities[_symbols[_long]].Price;
-            decimal shortQuantity = postFeeNav / Securities[_symbols[_short]].Price;
+            var (longQuantity, shortQuantity) = EntrySizing.Compute(_cash, _rate,
+                Securities[_symbols[_long]].Price, Securities[_symbols[_short]].Price, _quantityPolicy);
             Require(shortQuantity <= _shortLimit, "Declared short quantity exceeded.");
-            Require(longQuantity == decimal.Truncate(longQuantity) && shortQuantity == decimal.Truncate(shortQuantity), "Exact integer shares required.");
             MarketOrder(_symbols[_long], longQuantity);
             MarketOrder(_symbols[_short], -shortQuantity);
         }

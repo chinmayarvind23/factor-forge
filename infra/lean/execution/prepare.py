@@ -89,7 +89,6 @@ def build_strategy_files(
         or spec.timing.formation_lag_months != 0
         or len(plans) != 1
         or spec.portfolio.allocation.bucket_count != 2
-        or spec.portfolio.quantity != "exact_terminating_decimal_18_v1"
         or spec.portfolio.allocation.minimum_bucket_size != 1
         or spec.costs.annual_borrow_bps != 0
         or spec.costs.annual_financing_bps != 0
@@ -126,7 +125,7 @@ def build_strategy_files(
         )
     }
     source = dict(
-        schema_version="original-lean-execution-v3",
+        schema_version="original-lean-execution-v4",
         expression=arithmetic_tree(spec.formula),
         initial_cash_usd=str(initial_cash),
         calendar=admission.calendar.model_dump(mode="json"),

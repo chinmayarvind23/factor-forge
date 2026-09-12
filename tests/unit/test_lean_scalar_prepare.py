@@ -12,6 +12,31 @@ from infra.lean.execution.prepare import arithmetic_tree, build_files, build_str
 REPO = Path(__file__).resolve().parents[2]
 
 
+def test_whole_share_policy_is_transmitted_without_computed_targets() -> None:
+    """The independent engine receives the declared policy and sources, never Python sizing."""
+    spec, store = original_strategy()
+    spec = spec.model_copy(
+        update={
+            "portfolio": spec.portfolio.model_copy(
+                update={"quantity": "whole_shares_toward_zero_v1"}
+            )
+        }
+    )
+    files = build_strategy_files(REPO, store, spec, initial_cash=Decimal("1002"), evaluated_at=AT)
+    source = json.loads(files["source.json"])
+    assert source["schema_version"] == "original-lean-execution-v4"
+    assert source["strategy"]["portfolio"]["quantity"] == "whole_shares_toward_zero_v1"
+    assert set(source) == {
+        "schema_version",
+        "initial_cash_usd",
+        "calendar",
+        "strategy",
+        "signals",
+        "market",
+        "expression",
+    }
+
+
 def test_scalar_translation_uses_source_sample_and_capital() -> None:
     """Different sample windows and cash need no C# source changes or expected NAV input."""
     spec, store = original_strategy()
@@ -36,7 +61,7 @@ def test_scalar_translation_uses_source_sample_and_capital() -> None:
     )
 
 
-@pytest.mark.parametrize("kind", ["formula", "cash", "tamper", "whole_shares"])
+@pytest.mark.parametrize("kind", ["formula", "cash", "tamper"])
 def test_unsupported_or_corrupt_translation_is_rejected(kind: str) -> None:
     """The translator cannot silently erase richer formulas or bypass artifact admission."""
     spec, store = original_strategy()
@@ -44,14 +69,6 @@ def test_unsupported_or_corrupt_translation_is_rejected(kind: str) -> None:
         spec = spec.model_copy(update={"formula": "delta(score)"})
     if kind == "tamper":
         store.values[spec.market.table.artifact.sha256] = b"{}"
-    if kind == "whole_shares":
-        spec = spec.model_copy(
-            update={
-                "portfolio": spec.portfolio.model_copy(
-                    update={"quantity": "whole_shares_toward_zero_v1"}
-                )
-            }
-        )
     from factorforge.domain.errors import ResearchError
 
     with pytest.raises((ValueError, ResearchError)):

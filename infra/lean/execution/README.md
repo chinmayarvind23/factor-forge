@@ -97,3 +97,27 @@ dotnet run --project infra/lean/arithmetic-tests/ArithmeticTests.csproj
 
 The LEAN algorithm itself continues to compile against the pinned .NET 10 runtime.
 Include both `ExecutedEquityAlgorithm.cs` and `ExactRatio.cs` in the build context.
+
+## Whole-share source contract v4
+
+The current translator preserves the strategy's explicit quantity policy. `EntrySizing.cs`
+independently derives the fresh two-sleeve ideal NAV from capital and total fee rate,
+then divides by source prices using bounded rational arithmetic. The whole-share policy
+truncates toward zero and checks actual costs and funded exposure before placing orders.
+The exact policy continues to require integral quantities in this LEAN profile.
+
+One v4 image executed both the new flat-price whole-share case and the existing exact-share
+case. Each matched four closing valuations (NAV, cash and cumulative fees) and four actual
+fills. Whole-share execution bought nine shares at $101 and shorted ten at $97, then closed
+both positions for $3.758 total fees and $998.242 final NAV. This is an authored engineering
+case, not published-factor replication. See [both comparisons](../../../data/verification/lean-whole-shares-v4/comparison.json).
+
+The compiled image is
+`sha256:bf953fe88702fa76bca7c55f336fe9fd7828d703695283d8e1b79ffd6c1e6b53`.
+Compilation used the pinned runtime, with network access disabled. Both backtest containers
+exited cleanly and were removed. Include `EntrySizing.cs` with the two source files above
+when compiling the v4 algorithm. The standalone .NET checks now include sizing, unknown
+policy rejection, erased sleeves and a near-integer rational boundary.
+
+The LEAN profile still admits one formation, two original securities and no corporate
+actions. It does not establish general historical-data or multi-rebalance agreement.
