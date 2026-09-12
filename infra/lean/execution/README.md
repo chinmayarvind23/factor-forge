@@ -4,6 +4,8 @@ This separate profile extends the seeded-price spike to actual LEAN orders for t
 original twelve-return fixture. The translator stages the source strategy, point-in-time
 signal facts, raw equity ticks, explicit borrow permission and local configuration.
 No Python fills, NAV values or performance report enter the engine input.
+The synthetic always-open reader receives an explicit empty tick file for weekend dates.
+These files contain no fabricated price observations and do not change the source clocks.
 
 The C# algorithm selects high/low signals available at formation, computes exact integer
 shares from the declared capital and notional cost rate, and submits market orders at

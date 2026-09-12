@@ -3,7 +3,7 @@
 import hashlib
 import io
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from zipfile import ZIP_STORED, ZipFile, ZipInfo
@@ -52,6 +52,12 @@ def build_files(repository: Path, artifacts: ArtifactStore) -> dict[str, bytes]:
             milliseconds = (at.hour * 3600 + at.minute * 60 + at.second) * 1000
             scaled = Decimal(row["price_usd"]) * 10000
             days.setdefault(at.strftime("%Y%m%d"), []).append(f"{milliseconds},{scaled},1,,0,0\n")
+        # The synthetic always-open reader asks for every date; empty files declare no ticks.
+        day_at = datetime.strptime(min(days), "%Y%m%d")
+        last_day = datetime.strptime(max(days), "%Y%m%d")
+        while day_at <= last_day:
+            days.setdefault(day_at.strftime("%Y%m%d"), [])
+            day_at += timedelta(days=1)
         for day, rows in sorted(days.items()):
             output = io.BytesIO()
             with ZipFile(output, "w", compression=ZIP_STORED) as archive:
