@@ -94,18 +94,33 @@ cannot change the run's permissions, data timing or resource budget.
 
 ## Technology
 
-| Layer | Tools |
-|---|---|
-| Research workflow | Python, LangGraph, Deep Agents, Ollama |
-| Data and execution | Polars, PySpark, LEAN, Docker |
-| Persistence and memory | PostgreSQL, content-addressed storage, Redis, Neo4j |
-| Search and interoperability | Elasticsearch, Kafka, GraphQL, MCP |
-| Tracking and monitoring | MLflow, LangSmith, OpenTelemetry, Prometheus, Grafana |
-| Learning tools | PyTorch, TRL, PEFT, DVC |
-| Application and hosting | FastAPI, Next.js, TypeScript, Hugging Face; AWS adapters |
+**Python · FastAPI · LangGraph · Polars · LEAN · PostgreSQL · Docker**
 
-Supporting services have separate setup instructions and locked environments. Start
-only the tools your workflow needs; see [deployment](docs/deployment.md).
+Python and FastAPI expose the research service, LangGraph coordinates research workflows,
+and Polars prepares data for deterministic strategy execution. LEAN provides independent
+reference-backtest verification, while Docker isolates experiment processes. PostgreSQL
+retains workflow checkpoints and the operation ledger; content-addressed filesystem storage
+preserves research artifacts for inspection and replay. Ollama supplies local model inference.
+
+### Integrations
+
+Configure the integrations your deployment needs:
+
+- **Research and data:** Deep Agents for bounded planning, Elasticsearch for literature
+  metadata search, Redis for discovery caches and PySpark for panel-data materialization.
+- **Memory and tracking:** MLflow for experiment artifacts, Neo4j for research-memory
+  projections and LangSmith for importing recorded research-operation traces. OpenTelemetry
+  supports execution tracing; Prometheus and Grafana expose operational monitoring.
+- **Interfaces and delivery:** GraphQL and MCP for read-only research inspection, Kafka
+  for archived quote-event transport, and Next.js and TypeScript for the application UI.
+  Hugging Face hosts the static research demo.
+- **Learning and versioning:** PyTorch, TRL and PEFT for trajectory-based training tools,
+  with DVC for data-versioning workflows.
+- **AWS adapters:** S3 for artifact storage, SQS for asynchronous job delivery and Cognito
+  for application identity in operator-managed deployments.
+
+See [architecture](docs/architecture.md) for component boundaries and
+[deployment setup](docs/deployment.md) for integration guides and configuration.
 
 ## Development
 
