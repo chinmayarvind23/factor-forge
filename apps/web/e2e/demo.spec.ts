@@ -45,9 +45,10 @@ test("inspect completed accounting and the precision guard", async ({
 
 test("modified validation bytes clear the prior result", async ({ page }) => {
   // The linked validation record has its own integrity check after a valid initial result.
+  const manifestResponse = page.waitForResponse((response) => response.url().endsWith("/evidence.json"));
   await page.goto(demo ?? "");
   await expect(page.locator("#status")).toHaveText("Completed");
-  const manifest = await (await page.request.get(`${demo}/evidence.json`)).json();
+  const manifest = await (await manifestResponse).json();
   const ref = manifest.cases.find((row: { id: string }) => row.id === "validation").validation;
   await page.route(`**/objects/sha256/${ref.sha256.slice(0, 2)}/${ref.sha256}`, (route) => route.fulfill({ body: "{}" }));
   await page.getByRole("button", { name: "A validated twelve-return path" }).click();
