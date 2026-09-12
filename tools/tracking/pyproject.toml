@@ -1,0 +1,15 @@
+[project]
+name = "factorforge-tracking"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+  "factorforge",
+  "mlflow-skinny==3.16.0",
+  "sqlalchemy>=2,<3",
+  "alembic>=1.17,<2",
+  "sqlparse>=0.5.4,<1",
+  "pip-audit>=2.10.1,<3",
+]
+
+[tool.uv.sources]
+factorforge = { path = "../..", editable = true }

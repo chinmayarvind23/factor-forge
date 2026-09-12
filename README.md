@@ -2,6 +2,10 @@
 
 **Autonomous quantitative research with reproducible evidence**
 
+[Local MLflow tracking](tools/tracking/README.md) exports verified research histories,
+metrics and artifact bundles to SQLite, with complete readback verification and reuse
+of finished projections on serial replay.
+
 Explore the [free Hugging Face evidence demo](https://huggingface.co/spaces/chinmayarvind/factorforge), with the
 full research runner available locally. Build it with `python scripts/build_space.py`;
 see [deployment and optional AWS setup](docs/deployment.md). AWS provisioning and EKS
