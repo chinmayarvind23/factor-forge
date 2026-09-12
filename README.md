@@ -120,6 +120,8 @@ PostgreSQL step replay and verified proposal/trajectory output.
 explicitly reviewed development trajectories, with source verification and candidate
 receipts. Training execution and policy improvement remain unmeasured; the full
 published-factor and autonomous research benchmarks remain separate research work.
+[PySpark materialization](tools/spark/README.md) provides an optional offline monthly
+panel path with partitioned Parquet output; its runtime and scale performance are unmeasured.
 
 The next research improvements are dependable source extraction, broader point-in-time
 historical data support, frozen end-to-end evaluation, and measured runtime/cost studies.
