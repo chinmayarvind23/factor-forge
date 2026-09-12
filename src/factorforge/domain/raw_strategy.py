@@ -165,14 +165,14 @@ class RawPortfolio(Contract):
 class RawPolicies(Contract):
     """Missing data and unsupported economics stop the path instead of triggering repair."""
 
-    dataset_kind: Literal["original_fixture"]
+    dataset_kind: Literal["original_fixture", "observed"]
     missing_signal: Literal["fail", "exclude_at_formation"]
     missing_price: Literal["fail"]
     unknown_terminal: Literal["fail"]
     corporate_actions: Literal["reject_any_events"]
     point_in_time: Literal["available_at_lte_formation_lt_trade"]
     freshness: Literal["explicit_requested_calendar_month_no_stale_fallback_v1"]
-    short_loan: Literal["require_valid_finite_original_grant"]
+    short_loan: Literal["require_valid_finite_original_grant", "require_valid_finite_source_grant"]
     funding_failure: Literal["stop_run"]
     execution: Literal["simultaneous_exact_quote_batch"]
     fee_charge: Literal["all_absolute_trade_notional"]
@@ -180,6 +180,15 @@ class RawPolicies(Contract):
     winsorization: Literal["none"]
     standardization: Literal["none"]
     neutralization: Literal["none"]
+
+    @model_validator(mode="after")
+    def declared_source_kind(self) -> Self:
+        """Observed borrow evidence cannot inherit an authored-fixture policy label."""
+        if (self.dataset_kind == "observed") != (
+            self.short_loan == "require_valid_finite_source_grant"
+        ):
+            raise ValueError("Borrow provenance must match the declared dataset kind")
+        return self
 
 
 class RawEvaluation(Contract):

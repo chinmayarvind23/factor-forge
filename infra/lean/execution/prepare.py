@@ -86,6 +86,7 @@ def build_strategy_files(
     )
     if (
         any(binding.history_observations != 1 for binding in spec.signal_inputs)
+        or spec.policies.dataset_kind != "original_fixture"
         or spec.timing.formation_lag_months != 0
         or len(plans) != 1
         or spec.portfolio.allocation.bucket_count != 2

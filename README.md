@@ -25,6 +25,8 @@ verifies downloaded evidence in the browser; new model-driven research runs loca
   review, bounded revision, model-proposed synthesis and compatible weighted hybrids.
 - **Execution and validation:** point-in-time checks, signed-share accounting, explicit
   transaction costs, retained return paths, walk-forward/purged splits and HAC diagnostics.
+- **Observed-data admission:** archived raw sources, transformation and timing evidence,
+  rights checks and PostgreSQL readback of complete dataset provenance.
 - **Independent verification:** a resource-limited LEAN execution of an authored reference
   strategy, with actual orders, fills, fees and portfolio valuations.
 - **Memory and observability:** PostgreSQL checkpoints, searchable retained outcomes,

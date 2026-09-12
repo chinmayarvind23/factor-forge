@@ -15,7 +15,13 @@ from factorforge.auth.principal import Principal
 from factorforge.data.artifacts import LocalArtifactStore
 from factorforge.data.catalog import PostgresDatasetCatalog
 from factorforge.domain.artifacts import ArtifactRef
-from factorforge.domain.datasets import DatasetManifest, DatasetObject, UsageRights
+from factorforge.domain.datasets import (
+    DatasetManifest,
+    DatasetObject,
+    ObservedDatasetManifest,
+    ObservedDerivation,
+    UsageRights,
+)
 from factorforge.domain.errors import ResearchError
 from factorforge.orchestration.postgres_runs import PostgresRunStore
 
@@ -23,6 +29,50 @@ INGESTOR = Principal(
     "fixture", "ingestor", frozenset({"ingest_dataset", "publish_dataset", "read_dataset"})
 )
 READER = Principal("fixture", "reader", frozenset({"read_dataset"}))
+
+
+def test_observed_catalog_preserves_and_checks_raw_evidence(
+    catalog: PostgresDatasetCatalog,
+) -> None:
+    """Real PostgreSQL readback retains the complete observed subtype and owner isolation."""
+    base = dataset(catalog.objects.put(b"normalized controlled test"))
+    with pytest.raises(ResearchError) as incomplete:
+        catalog.publish(base.model_copy(update={"kind": "observed"}), INGESTOR)
+    assert incomplete.value.code == "DATASET_INVALID"
+    source = catalog.objects.put(b"raw controlled test")
+    code = catalog.objects.put(b"# controlled transformer", media_type="text/x-python")
+    parameters = catalog.objects.put(b"{}", media_type="application/json")
+    timing = catalog.objects.put(b"controlled timing evidence")
+    wire = base.model_dump()
+    wire.update(
+        kind="observed",
+        derivations=(
+            ObservedDerivation(
+                object_name="facts",
+                raw_sources=(source,),
+                normalizer=code,
+                parameters=parameters,
+                timing_evidence=timing,
+            ),
+        ),
+    )
+    observed = ObservedDatasetManifest.model_validate(wire)
+    assert catalog.publish(observed, INGESTOR) == observed.version_id
+    assert catalog.publish(observed, INGESTOR) == observed.version_id
+    result = catalog.get(observed.version_id, INGESTOR)
+    assert isinstance(result, ObservedDatasetManifest) and result == observed
+    with pytest.raises(ResearchError):
+        catalog.get(observed.version_id, READER)
+    original_get = catalog.objects.get
+
+    def corrupt(ref: ArtifactRef) -> bytes:
+        """Even a provider claiming success cannot return changed archived source bytes."""
+        return b"changed" if ref == source else original_get(ref)
+
+    from unittest.mock import patch
+
+    with patch.object(catalog.objects, "get", side_effect=corrupt), pytest.raises(ResearchError):
+        catalog.get(observed.version_id, INGESTOR)
 
 
 @pytest.fixture

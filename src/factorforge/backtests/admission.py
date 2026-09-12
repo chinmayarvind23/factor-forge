@@ -12,7 +12,7 @@ from factorforge.data.monthly_signals import load_monthly
 from factorforge.data.raw_market import load_intervals, load_market
 from factorforge.domain.artifacts import ArtifactRef
 from factorforge.domain.calendar import SessionCalendar
-from factorforge.domain.datasets import DatasetManifest
+from factorforge.domain.datasets import DatasetManifest, ObservedDatasetManifest
 from factorforge.domain.errors import ResearchError
 from factorforge.domain.factors import Contract, Digest
 from factorforge.domain.monthly_signals import MonthlySourceBundle
@@ -30,7 +30,9 @@ class AdmissionReceipt(Contract):
 
     schema_version: Literal["monthly-admission-v1"] = "monthly-admission-v1"
     profile: Literal["monthly-raw-price-post-fee-v1"] = "monthly-raw-price-post-fee-v1"
-    scope: Literal["original-fixture-source-admission"] = "original-fixture-source-admission"
+    scope: Literal["original-fixture-source-admission", "observed-source-admission"] = (
+        "original-fixture-source-admission"
+    )
     spec_sha256: Digest
     execution_sha256: Digest
     evaluated_at: AwareDatetime
@@ -125,16 +127,24 @@ def _manifests(
     tables = spec.table_references()
     for link in sorted(spec.datasets, key=lambda item: item.version_id):
         raw = _read(store, link.manifest)
-        manifest = DatasetManifest.model_validate_json(raw, strict=True)
+        model = (
+            ObservedDatasetManifest if spec.policies.dataset_kind == "observed" else DatasetManifest
+        )
+        manifest = model.model_validate_json(raw, strict=True)
         if manifest.version_id != link.version_id or manifest.canonical_bytes() != raw:
             raise _fail("MONTHLY_MANIFEST_IDENTITY")
         if not manifest.rights.permits("local_research", at):
             raise _fail("MONTHLY_DATA_USE_DENIED")
         if (
-            manifest.kind != "original_fixture"
+            manifest.kind != spec.policies.dataset_kind
             or manifest.retrieved_at > at
             or manifest.security_id_namespace != spec.universe.security_id_namespace
-            or manifest.availability_policy != "explicit-authored-timestamps"
+            or manifest.availability_policy
+            != (
+                "explicit-source-availability"
+                if manifest.kind == "observed"
+                else "explicit-authored-timestamps"
+            )
             or manifest.universe_policy != "known-effective-events"
             or manifest.corporate_action_policy != "raw-prices-separate-explicit-actions"
             or manifest.delisting_policy != "explicit-exit-events-or-fail"
@@ -179,6 +189,21 @@ def admit_monthly(
         refs = spec.unique_artifacts()
         entries: dict[str, tuple[ArtifactRef, bytes]] = {}
         manifests = _manifests(spec, store, at, entries)
+        # Expand provenance only after all rights checks; preflight the combined budget before I/O.
+        inventory = {ref.sha256: ref for ref in refs}
+        for manifest in manifests:
+            if isinstance(manifest, ObservedDatasetManifest):
+                for derivation in manifest.derivations:
+                    for ref in derivation.references():
+                        if ref.sha256 in inventory and inventory[ref.sha256] != ref:
+                            raise _fail("MONTHLY_EVIDENCE_CONFLICT")
+                        inventory[ref.sha256] = ref
+        if (
+            len(inventory) > 128
+            or sum(ref.size_bytes for ref in inventory.values()) > 64 * 1024 * 1024
+        ):
+            raise _fail("MONTHLY_EVIDENCE_LIMIT")
+        refs = tuple(inventory[key] for key in sorted(inventory))
         for ref in refs:
             if ref.sha256 not in entries:
                 entries[ref.sha256] = (ref, _read(store, ref))
@@ -207,6 +232,9 @@ def admit_monthly(
         ):
             raise _fail("MONTHLY_SOURCE_ROW_COUNT")
         receipt = AdmissionReceipt(
+            scope="observed-source-admission"
+            if spec.policies.dataset_kind == "observed"
+            else "original-fixture-source-admission",
             spec_sha256=spec.sha256,
             execution_sha256=spec.execution_sha256,
             evaluated_at=at,

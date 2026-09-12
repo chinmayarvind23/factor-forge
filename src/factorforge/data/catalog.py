@@ -6,11 +6,15 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from psycopg.types.json import Jsonb
-from pydantic import ValidationError
 
 from factorforge.auth.principal import Principal
-from factorforge.data.artifacts import ArtifactStore
-from factorforge.domain.datasets import DatasetManifest, PermittedUse
+from factorforge.data.artifacts import ArtifactStore, verify_bytes
+from factorforge.domain.datasets import (
+    DatasetManifest,
+    PermittedUse,
+    dataset_references,
+    parse_dataset_manifest,
+)
 from factorforge.domain.errors import ResearchError
 from factorforge.orchestration.postgres_runs import PostgresRunStore
 
@@ -41,16 +45,17 @@ class PostgresDatasetCatalog:
         if shared:
             principal.require("publish_dataset")
         try:
-            validated = DatasetManifest.model_validate(manifest)
-        except ValidationError:
+            validated = parse_dataset_manifest(manifest)
+            references = dataset_references(validated)
+        except ValueError:
             raise ResearchError(
                 "DATASET_INVALID", "The dataset metadata is invalid.", 422
             ) from None
         now = datetime.now(UTC)
         required: PermittedUse = "public_demo" if shared else "local_research"
         require_use(validated, required)
-        for item in validated.objects:
-            self.objects.get(item.artifact)
+        for ref in references:
+            verify_bytes(self.objects.get(ref.model_copy()), ref)
         version_id = validated.version_id
         with self._database._connection() as connection, connection.transaction():
             connection.execute(
@@ -105,15 +110,16 @@ class PostgresDatasetCatalog:
                 "DATASET_NOT_FOUND", "No accessible dataset has that identity.", 404
             )
         try:
-            manifest = DatasetManifest.model_validate(saved["manifest"])
-        except ValidationError:
+            manifest = parse_dataset_manifest(saved["manifest"])
+            references = dataset_references(manifest)
+        except ValueError:
             raise ResearchError(
                 "DATASET_CORRUPT", "The dataset metadata cannot be verified.", 409
             ) from None
         if manifest.version_id != version_id:
             raise ResearchError("DATASET_CORRUPT", "The dataset identity no longer matches.", 409)
         require_use(manifest, operation)
-        for item in manifest.objects:
-            self.objects.get(item.artifact)
+        for ref in references:
+            verify_bytes(self.objects.get(ref.model_copy()), ref)
         require_use(manifest, operation)
         return manifest

@@ -155,3 +155,69 @@ class DatasetManifest(BaseModel):
     def version_id(self) -> str:
         """Content identity binds all declared policies and object references."""
         return hashlib.sha256(self.canonical_bytes()).hexdigest()
+
+
+class ObservedDerivation(BaseModel):
+    """Trusted ingestion records source bytes and transformation context for one normalized role."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", revalidate_instances="always")
+    object_name: Label
+    raw_sources: tuple[ArtifactRef, ...] = Field(min_length=1, max_length=16)
+    normalizer: ArtifactRef
+    parameters: ArtifactRef
+    timing_evidence: ArtifactRef
+
+    def references(self) -> tuple[ArtifactRef, ...]:
+        """Archive code as evidence only; admission never executes a supplied normalizer."""
+        return (*self.raw_sources, self.normalizer, self.parameters, self.timing_evidence)
+
+
+class ObservedDatasetManifest(DatasetManifest):
+    """Observed declarations require provenance beyond the normalized execution tables.
+
+    Hash verification establishes retained identity, not the truth of provider timestamps
+    or the correctness of normalization. Those remain trusted ingestion responsibilities.
+    """
+
+    kind: Literal["observed"] = "observed"
+    observed_schema: Literal["observed-provenance-v1"] = "observed-provenance-v1"
+    derivations: tuple[ObservedDerivation, ...] = Field(min_length=1, max_length=128)
+
+    @model_validator(mode="after")
+    def complete_derivations(self) -> "ObservedDatasetManifest":
+        """Each role has one derivation; identity transforms may share raw/output byte identity."""
+        names = [row.object_name for row in self.derivations]
+        objects = {row.name: row.artifact for row in self.objects}
+        if len(set(names)) != len(names) or set(names) != set(objects):
+            raise ValueError("Every observed object requires exactly one derivation")
+        for row in self.derivations:
+            if len({ref.sha256 for ref in row.raw_sources}) != len(row.raw_sources):
+                raise ValueError("Raw source identities must be unique per derivation")
+            if any(not 0 < ref.size_bytes <= 64 * 1024 * 1024 for ref in row.references()):
+                raise ValueError("Observed evidence must be nonempty and bounded")
+        return self
+
+
+def parse_dataset_manifest(value: object) -> DatasetManifest:
+    """Select the required observed contract without dropping subtype provenance in catalogs."""
+    wire = value.model_dump() if isinstance(value, DatasetManifest) else value
+    if not isinstance(wire, dict):
+        raise ValueError("Dataset metadata requires an object")
+    model = ObservedDatasetManifest if wire.get("kind") == "observed" else DatasetManifest
+    return model.model_validate(wire)
+
+
+def dataset_references(manifest: DatasetManifest) -> tuple[ArtifactRef, ...]:
+    """Preflight the complete catalog inventory before touching source or transformation bytes."""
+    references = [item.artifact for item in manifest.objects]
+    if isinstance(manifest, ObservedDatasetManifest):
+        references.extend(ref for row in manifest.derivations for ref in row.references())
+    unique: dict[str, ArtifactRef] = {}
+    for ref in references:
+        if ref.sha256 in unique and unique[ref.sha256] != ref:
+            raise ValueError("Dataset evidence has conflicting reference metadata")
+        unique[ref.sha256] = ref
+    limit = (64 if isinstance(manifest, ObservedDatasetManifest) else 512) * 1024 * 1024
+    if len(unique) > 128 or sum(ref.size_bytes for ref in unique.values()) > limit:
+        raise ValueError("Dataset evidence exceeds its inventory budget")
+    return tuple(unique[key] for key in sorted(unique))

@@ -210,7 +210,9 @@ class MonthlyRun(Contract):
     """A terminal run preserves the requested denominator and cannot shorten a failed sample."""
 
     schema_version: Literal["monthly-backtest-run-v1"] = "monthly-backtest-run-v1"
-    scope: Literal["original-monthly-raw-price-simulator"] = "original-monthly-raw-price-simulator"
+    scope: Literal[
+        "original-monthly-raw-price-simulator", "observed-monthly-raw-price-simulator"
+    ] = "original-monthly-raw-price-simulator"
     request: MonthlyRequest
     request_ref: ArtifactRef
     admission_ref: ArtifactRef | None
@@ -302,6 +304,10 @@ class MonthlyRun(Contract):
     def source_and_trade_lineage(self) -> Self:
         """Source-selected formula choices and generated fills close over this exact strategy."""
         spec = self.request.spec
+        if (self.scope == "observed-monthly-raw-price-simulator") != (
+            spec.policies.dataset_kind == "observed"
+        ):
+            raise ValueError("Execution scope must match the declared source kind")
         allocations = {}
         for formation in self.formations:
             selected = formation.assembly.request
@@ -820,6 +826,9 @@ def run_monthly(
     except Exception:
         failure = "MONTHLY_EXECUTION_FAILED"
     result = MonthlyRun(
+        scope="observed-monthly-raw-price-simulator"
+        if request.spec.policies.dataset_kind == "observed"
+        else "original-monthly-raw-price-simulator",
         request=request,
         request_ref=request_ref,
         admission_ref=admission_ref,

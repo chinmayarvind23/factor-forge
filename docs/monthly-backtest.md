@@ -1,7 +1,7 @@
 # Monthly raw-price simulator
 
 `backtests.monthly.run_monthly(spec, store, initial_cash_usd=..., evaluated_at=...)`
-executes the original-fixture v3 strategy profile. It connects verified source admission,
+executes the v3 strategy profile with fixture or declared observed inputs. It connects verified source admission,
 calendar scheduling, point-in-time monthly selection, Polars allocation, exact post-fee
 funding, generated signed-share fills, ledger replay and complete-path metrics.
 
@@ -74,7 +74,7 @@ An authored flat-price case at $101 and $97 enters nine long shares and ten shor
 then closes both positions. At 10 basis points total costs and $1,002 initial cash, the
 four fills incur $3.758 and leave $998.242. Disk verification covers all 36 reachable
 objects, and identical execution reproduces the result. This is engineering evidence;
-observed historical-data admission and larger portfolios still need implementation.
+provider-specific historical normalization and larger portfolios remain development work.
 
 Independent LEAN source contract v4 now verifies this single-entry whole-share case,
 including all four closing NAVs, cash balances and fee totals, plus the four actual
