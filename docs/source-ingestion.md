@@ -19,9 +19,14 @@ store = LocalArtifactStore(Path("artifacts/discovery"))
 discovery = store.put(Path("discovery.json").read_bytes(), media_type="application/json")
 pdf = store.put(Path("paper.pdf").read_bytes(), media_type="application/pdf")
 request = AdmissionRequest(
-    discovery=discovery, pdf=pdf, doi="10.1111/j.1540-6261.1993.tb04702.x",
-    paper_id="jt1993", selected_strategy="Six-month momentum ranking with six-month holding",
-    pages=(4, 5, 6), identity_reviewed=True, rights="private_research_only",
+    discovery=discovery,
+    pdf=pdf,
+    doi="10.1111/j.1540-6261.1993.tb04702.x",
+    paper_id="jt1993",
+    selected_strategy="Six-month momentum ranking with six-month holding",
+    pages=(4, 5, 6),
+    identity_reviewed=True,
+    rights="private_research_only",
 )
 with Path("admission-request.json").open("xb") as output:
     output.write(request.canonical_bytes())

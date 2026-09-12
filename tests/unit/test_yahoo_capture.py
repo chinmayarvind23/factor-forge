@@ -3,6 +3,7 @@
 import hashlib
 import io
 import json
+from email.message import Message
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.error import HTTPError
@@ -49,7 +50,7 @@ def test_capture_retains_status_and_never_retries(
         calls.append(request)
         assert timeout == 30
         if scenario == "forbidden":
-            raise HTTPError("https://query1.finance.yahoo.com", 403, "Forbidden", {}, None)
+            raise HTTPError("https://query1.finance.yahoo.com", 403, "Forbidden", Message(), None)
         return Response(raw)
 
     monkeypatch.setattr(yahoo_capture, "urlopen", open_response)
