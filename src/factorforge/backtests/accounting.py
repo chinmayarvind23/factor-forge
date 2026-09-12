@@ -227,6 +227,35 @@ def ledger_at(
         raise _fail("ACCOUNTING_NUMERIC_BOUND") from None
 
 
+def value_ledger(*, state: LedgerState, marks: Sequence[PriceMark]) -> LedgerSnapshot:
+    """Mark an already derived ledger at its own clock; this does not replay or advance events.
+
+    Callers must establish ledger provenance and reconcile marks with their source inventory.
+    The general account_at entry point also checks marks against historical fill quotes.
+    """
+    try:
+        state = LedgerState.model_validate(state)
+        verified_marks = _inventory(marks, PriceMark, "source_id")
+        _consistent_prices(verified_marks)
+        with localcontext(accounting_context()):
+            nav = _nav(
+                state.cash_usd,
+                {p.security_id: p.signed_shares for p in state.positions},
+                {claim.event_id: claim for claim in state.claims},
+                verified_marks,
+                state.at,
+            )
+            return LedgerSnapshot(
+                **state.model_dump(),
+                nav_usd=nav,
+                total_return=_bounded(nav / state.initial_cash_usd - 1),
+            )
+    except (ValidationError, ValueError, TypeError):
+        raise _fail("ACCOUNTING_INPUT_INVALID") from None
+    except DecimalException:
+        raise _fail("ACCOUNTING_NUMERIC_BOUND") from None
+
+
 def account_at(
     *,
     initial_cash: Decimal,
@@ -254,17 +283,7 @@ def account_at(
                 (*verified_marks, *(fill.quote for fill in verified_fills)), PriceMark, "source_id"
             )
         )
-        with localcontext(accounting_context()):
-            nav = _nav(
-                state.cash_usd,
-                {p.security_id: p.signed_shares for p in state.positions},
-                {claim.event_id: claim for claim in state.claims},
-                verified_marks,
-                state.at,
-            )
-            return LedgerSnapshot(
-                **state.model_dump(), nav_usd=nav, total_return=_bounded(nav / initial_cash - 1)
-            )
+        return value_ledger(state=state, marks=verified_marks)
     except (ValidationError, ValueError, TypeError):
         raise _fail("ACCOUNTING_INPUT_INVALID") from None
     except DecimalException:

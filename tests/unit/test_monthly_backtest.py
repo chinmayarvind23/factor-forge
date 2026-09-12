@@ -62,6 +62,48 @@ def execute(spec: RawStrategySpec, store: MemoryStore) -> MonthlyRun:
     return run_monthly(spec, store, initial_cash_usd=Decimal("1002"), evaluated_at=AT)
 
 
+@pytest.mark.parametrize("scenario", ["fees", "rank_reversal", "unchanged_ranks"])
+def test_unchanged_inventory_reuses_ledger_and_matches_full_replay(scenario: str) -> None:
+    """Every valuation matches independent full replay while only trades rebuild the ledger."""
+    from unittest.mock import patch
+
+    from factorforge.backtests import accounting
+
+    spec, store = original_strategy() if scenario == "fees" else two_formation_strategy()
+    capital = Decimal("1002" if scenario == "fees" else "1000")
+    if scenario == "unchanged_ranks":
+
+        def keep_ranks(value: dict[str, Any]) -> None:
+            """A zero-turnover formation still records a batch without changing inventory."""
+            for row in value["facts"]:
+                if row["source_id"].startswith("may-score-"):
+                    row["value"] = "2" if row["security_id"] == "A" else "1"
+
+        spec = replace_source(spec, store, "signals", keep_ranks)
+    with patch.object(accounting, "_replay", wraps=accounting._replay) as replay:
+        result = run_monthly(spec, store, initial_cash_usd=capital, evaluated_at=AT)
+        calls = replay.call_count
+    assert result.status == "completed", result.failure_code
+    assert calls == 1 + sum(bool(batch.fill_ids) for batch in result.batches)
+    if scenario == "unchanged_ranks":
+        assert len(result.batches) == 3
+        assert result.batches[1].fill_ids == ()
+    assert calls < len(result.observations)
+    for observation in result.observations:
+        # Before-entry marks precede same-instant fills; recorded phases identify that boundary.
+        ids = {phase.event_id for phase in observation.snapshot.applied_phases}
+        expected = accounting.account_at(
+            initial_cash=capital,
+            start_at=result.observations[0].at,
+            at=observation.at,
+            fills=tuple(fill for fill in result.fills if fill.fill_id in ids),
+            actions=(),
+            marks=observation.marks,
+            costs=spec.costs,
+        )
+        assert observation.snapshot == expected
+
+
 def test_frozen_original_trace_and_metrics_follow_actual_strategy_inputs() -> None:
     """PIT selection, generated fills, funding and complete metrics reproduce independent gold."""
     spec, store = original_strategy()

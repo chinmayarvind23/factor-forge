@@ -39,6 +39,14 @@ aligned benchmark/risk-free intervals. Entry fees belong to the first genuine in
 drawdown includes the baseline and closes. Intraday funding checks remain distinct.
 Benchmark data do not affect formation. Undefined statistics remain explicitly unavailable.
 
+Between trades, execution reuses its privately derived ledger and values it at the
+current marks. A changed fill inventory triggers full replay. This optimization requires
+the existing action-free, zero-carry profile; collateral and loan checks still run at
+every observation. Tests compare every snapshot against full replay for fees, rank
+reversal and a zero-turnover rebalance. The authored two-formation reversal case needs
+4 full replays for 54 observations. This is an engineering workload, not a measured
+end-to-end research speedup. The calendar and output-size limits remain unchanged.
+
 The returned `MonthlyRun` is also saved canonically. It contains request and preparation
 references, plans, selections, allocations, funding batches, fills, observations, metric
 paths and terminal status. Reload validation checks source/trade identities and requires

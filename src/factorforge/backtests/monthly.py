@@ -14,7 +14,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import Field, model_validator
 
-from factorforge.backtests.accounting import account_at
+from factorforge.backtests.accounting import ledger_at, value_ledger
 from factorforge.backtests.admission import MonthlyAdmission, admit_monthly
 from factorforge.backtests.funding import (
     CollateralObservation,
@@ -30,7 +30,7 @@ from factorforge.backtests.performance import compute_performance
 from factorforge.backtests.whole_shares import SharePrice, WholeSharePlan, size_whole_shares
 from factorforge.data.artifacts import ArtifactStore, reference
 from factorforge.data.monthly_signals import assemble_monthly_signals
-from factorforge.domain.accounting import ConditionalFill, LedgerSnapshot, PriceMark
+from factorforge.domain.accounting import ConditionalFill, LedgerSnapshot, LedgerState, PriceMark
 from factorforge.domain.artifacts import ArtifactRef
 from factorforge.domain.calendar import FormationPlan, TradingSession, plan_formations
 from factorforge.domain.errors import ResearchError
@@ -386,6 +386,8 @@ class _Execution:
     batches: list[MonthlyBatch] = field(default_factory=list)
     fills: list[ConditionalFill] = field(default_factory=list)
     closes: list[NavObservation] = field(default_factory=list)
+    ledger: LedgerState | None = None
+    ledger_fills: tuple[ConditionalFill, ...] = ()
 
 
 def _prepare(store: ArtifactStore, request: ArtifactRef, admission: ArtifactRef) -> ArtifactRef:
@@ -505,6 +507,38 @@ def _loan(state: _Execution, security: str, quantity: Fraction, at: datetime) ->
     return grants[0]
 
 
+def _ledger(state: _Execution, at: datetime) -> LedgerState:
+    """Reuse private inventory only for the action-free, zero-carry monthly profile.
+
+    Full replay after each changed fill inventory preserves fee arithmetic and phase order.
+    Advancing an unchanged inventory is valid only because no scheduled cash events exist.
+    """
+    if state.admitted.market.actions or any(
+        (
+            state.request.spec.costs.annual_borrow_bps,
+            state.request.spec.costs.annual_financing_bps,
+            state.request.spec.costs.annual_interest_bps,
+        )
+    ):
+        raise _fail("MONTHLY_LEDGER_CACHE_PROFILE")
+    fills = tuple(state.fills)
+    if state.ledger is None or fills != state.ledger_fills or at < state.ledger.at:
+        state.ledger = ledger_at(
+            initial_cash=state.request.initial_cash_usd,
+            start_at=state.sessions[0].closes_at,
+            at=at,
+            fills=fills,
+            actions=(),
+            costs=state.request.spec.costs,
+        )
+        state.ledger_fills = fills
+    else:
+        if state.ledger.claims or any(fill.executed_at > state.ledger.at for fill in fills):
+            raise _fail("MONTHLY_LEDGER_CACHE_PROFILE")
+        state.ledger = LedgerState.model_validate(state.ledger.model_copy(update={"at": at}))
+    return state.ledger
+
+
 def _observe(state: _Execution, at: datetime, phase: str, mark_phase: str) -> AccountObservation:
     """Retain failed reserve evidence and compare ledger replay with exact independent balances."""
     state.at = at
@@ -526,15 +560,9 @@ def _observe(state: _Execution, at: datetime, phase: str, mark_phase: str) -> Ac
     for row in notionals:
         expected_nav += row.notional_usd.as_fraction()
         exact_accounting(expected_nav)
-    snapshot = account_at(
-        initial_cash=state.request.initial_cash_usd,
-        start_at=state.sessions[0].closes_at,
-        at=at,
-        fills=tuple(state.fills),
-        actions=(),
-        marks=marks,
-        costs=state.request.spec.costs,
-    )
+    # Admission enforces unique source quote IDs and security/instant pairs; generated fills
+    # and marks use that same pinned inventory, so their historical prices cannot disagree.
+    snapshot = value_ledger(state=_ledger(state, at), marks=marks)
     if (
         Fraction(snapshot.cash_usd) != state.cash
         or Fraction(snapshot.fees_usd) != state.fees
