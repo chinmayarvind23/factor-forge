@@ -1,0 +1,17 @@
+{
+  "suite_id": "synthesis-original-v1",
+  "scope": "One original fictional source-to-hybrid integration case; not published-factor replication",
+  "input_builder": "scripts/prepare_synthesis_example.py",
+  "frozen_before_model_execution": true,
+  "expected_source_formulas": {"original-score": "score", "original-quality": "quality"},
+  "expected_direction": "long_high_short_low",
+  "expected_weights": {"original-score": "3/4", "original-quality": "1/4"},
+  "required_citations": "Literal quote and supplied page for each selected source",
+  "expected_terminal_status": "completed",
+  "expected_initial_cash_usd": "1002",
+  "expected_terminal_nav_usd": "1057.98",
+  "maximum_model_attempts": 5,
+  "maximum_experiment_operations": 1,
+  "output_repair": false,
+  "automatic_retry": false
+}
