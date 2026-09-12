@@ -35,7 +35,8 @@ also exercise the complete hybrid backtest and replay path.
 The monthly engine currently executes the original integration fixture using verified
 point-in-time inputs, declared formation/trade timing, exact funding and transaction
 costs. Walk-forward/purged splitters have boundary tests and HAC calculations have
-independent statsmodels reference checks;
+independent statsmodels reference checks. The [validation command](docs/research-validation.md)
+now connects those components to retained account paths with per-block diagnostics;
 full statistical research decisions and published-factor reproduction remain to be
 composed and evaluated. The frozen three-paper extraction pilot matched 11 of 27
 critical fields; release FactorSpec accuracy remains unmeasured.
