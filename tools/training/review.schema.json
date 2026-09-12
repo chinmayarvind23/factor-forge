@@ -1,0 +1,142 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "description": "Exact bytes determine identity; media type describes trusted ingestion's interpretation.",
+      "properties": {
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "maximum": 1073741824,
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "media_type": {
+          "maxLength": 127,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9!#$&^_.+-]+/[A-Za-z0-9!#$&^_.+-]+$",
+          "title": "Media Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sha256",
+        "size_bytes",
+        "media_type"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "Selection": {
+      "additionalProperties": false,
+      "description": "Review labels name retained attempts; operation success never supplies a reward.",
+      "properties": {
+        "chosen": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Chosen",
+          "type": "string"
+        },
+        "rejected": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rejected"
+        },
+        "rationale": {
+          "maxLength": 4000,
+          "minLength": 10,
+          "title": "Rationale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "chosen",
+        "rationale"
+      ],
+      "title": "Selection",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "An operator attests split ownership; byte and exact-prompt isolation are checked.",
+  "properties": {
+    "schema_version": {
+      "const": "training-review-v1",
+      "default": "training-review-v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "reviewer": {
+      "maxLength": 200,
+      "minLength": 3,
+      "title": "Reviewer",
+      "type": "string"
+    },
+    "environment_version": {
+      "maxLength": 200,
+      "minLength": 3,
+      "title": "Environment Version",
+      "type": "string"
+    },
+    "rubric_version": {
+      "maxLength": 200,
+      "minLength": 3,
+      "title": "Rubric Version",
+      "type": "string"
+    },
+    "development_only_attested": {
+      "const": true,
+      "title": "Development Only Attested",
+      "type": "boolean"
+    },
+    "train_exports": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "maxItems": 128,
+      "minItems": 1,
+      "title": "Train Exports",
+      "type": "array"
+    },
+    "heldout_exports": {
+      "items": {
+        "$ref": "#/$defs/ArtifactRef"
+      },
+      "maxItems": 128,
+      "minItems": 1,
+      "title": "Heldout Exports",
+      "type": "array"
+    },
+    "selections": {
+      "items": {
+        "$ref": "#/$defs/Selection"
+      },
+      "maxItems": 10000,
+      "minItems": 1,
+      "title": "Selections",
+      "type": "array"
+    }
+  },
+  "required": [
+    "reviewer",
+    "environment_version",
+    "rubric_version",
+    "development_only_attested",
+    "train_exports",
+    "heldout_exports",
+    "selections"
+  ],
+  "title": "Review",
+  "type": "object"
+}

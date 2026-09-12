@@ -682,3 +682,18 @@ Start with tasks that have strong machine-verifiable outcomes:
 4. Research completion decisions where required validators and terminal-state rules are deterministic.
 
 Multi-step RL follows after one-step formulations are stable.
+
+## 18. Implemented local SFT/DPO candidate path
+
+`tools/training/prepare.py` verifies and reconstructs trajectory exports from their
+retained source closures. A versioned review supplies chosen/rejected provider-record
+hashes, rationale, development attestation and train/held-out export inventories.
+Training runs and exact prompts must be disjoint from the supplied held-out inventory.
+Semantic isolation remains a review responsibility.
+
+`tools/training/train.py` reconstructs the dataset again before loading a local
+safetensors model. It checks prompt-token boundaries and sequence budgets, then uses
+TRL SFT or DPO with rank-8 LoRA. A fresh output directory retains inputs, code and
+model hashes, package versions, trainer state, adapter files and a completion/failure
+receipt. Output remains a candidate; the command has no production promotion capability.
+See [operator instructions](../tools/training/README.md) for the implementation scope.

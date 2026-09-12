@@ -112,8 +112,11 @@ hosted account verification remains. The [Neo4j projection](tools/tracking/NEO4J
 has verified real-server import, replay, reverse lookup and conflict rollback.
 [DVC tooling](tools/dvc/README.md) retains its dependency-audit gate.
 [Deep Agents planning](tools/planning/README.md) has a bounded local model adapter,
-PostgreSQL step replay and verified proposal/trajectory output. PyTorch/TRL training
-and the full historical-data benchmark remain development work. Trajectory export alone is not model training.
+PostgreSQL step replay and verified proposal/trajectory output.
+[PyTorch/TRL training](tools/training/README.md) implements local LoRA SFT and DPO from
+explicitly reviewed development trajectories, with source verification and candidate
+receipts. Training execution and policy improvement remain unmeasured; the full
+published-factor and autonomous research benchmarks remain separate research work.
 
 The next research improvements are dependable source extraction, broader point-in-time
 historical data support, frozen end-to-end evaluation, and measured runtime/cost studies.

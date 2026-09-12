@@ -185,3 +185,8 @@ flowchart LR
 ```
 
 The LangGraph control plane retains lifecycle authority after a learned policy is deployed.
+
+The implemented local learning entry point is [reviewed SFT/DPO training](../tools/training/README.md).
+It reconstructs retained development trajectories, prepares explicit review labels and
+saves a candidate LoRA adapter. Registry promotion, RLVR and multi-step agentic RL in
+the diagram remain future stages. No training improvement is asserted by this implementation.
