@@ -1,0 +1,10 @@
+{
+  "schema_version": "redis-discovery-integration-v1",
+  "scope": "Real Redis with controlled offline provider metadata",
+  "redis_version": "7.4.11",
+  "verified_cache_reuse": true,
+  "observed_ttl_seconds": 86400,
+  "malformed_locator_fallback": true,
+  "provider_transport_calls": 2,
+  "live_provider_calls": 0
+}

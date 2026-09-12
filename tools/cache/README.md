@@ -29,8 +29,12 @@ failure does not invalidate a captured provider result. Concurrent misses can pr
 more than one search; this implementation has no distributed single-flight lock.
 
 Five offline checks cover hits, availability faults, oversized entries, stale captures
-and mismatched requests. Redis-server execution and end-to-end runtime savings remain
-unmeasured. These checks use controlled metadata and do not run research evaluations.
+and mismatched requests. A real Redis 7.4.11 integration run also verified cache reuse,
+86,400-second expiry and malformed-locator fallback, using controlled HTTP metadata.
+Its [receipt](../../reports/evidence/redis-discovery.json) records zero live provider calls.
+Repeat that integration check against an operator-provided Redis endpoint with
+`uv run --project tools/cache --locked python tools/cache/verify.py`.
+End-to-end research runtime savings remain unmeasured.
 
 References: [redis-py async lifecycle](https://redis.readthedocs.io/en/stable/examples/asyncio_examples.html),
 [bounded GETRANGE](https://redis.io/docs/latest/commands/getrange/).
