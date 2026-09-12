@@ -27,12 +27,11 @@ Search uses title BM25 plus exact DOI matching, 1–20 hits, a bounded printable
 no caller-supplied DSL, a five-second server search timeout and ten-second client request
 timeout without retries. Search output provides metadata artifact identities for later
 verification; it does not establish source rights, page evidence, or research quality.
-Dense/vector/hybrid retrieval is not implemented.
 
 Tests use synthetic data and the official client's transport interface. Set
 `FACTORFORGE_ELASTICSEARCH_TEST_URL` to opt into an actual service smoke test; it creates
-and deletes only a fresh `factorforge-literature-smoke-<uuid>` index. This tests indexing,
-idempotent replay and retrieval, not research relevance or benchmark performance.
+and deletes only a fresh `factorforge-literature-smoke-<uuid>` index. This checks indexing,
+idempotent replay and retrieval.
 
 API references: [official Python client getting started](https://www.elastic.co/docs/reference/elasticsearch/clients/python/getting-started)
 and [client examples](https://www.elastic.co/docs/reference/elasticsearch/clients/python/examples).

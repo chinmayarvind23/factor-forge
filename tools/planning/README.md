@@ -16,7 +16,7 @@ model and uses no paid provider. The named planning profile uses 8192 context to
 768 output tokens, an 8192-byte request cap and a 120-second transport read cap.
 Extraction keeps its existing profile. The planner allows at most two model steps;
 each reserves one dollar of capacity before dispatch, while actual local billing
-remains explicitly unmeasured. The research brief's shared cost and wall-time limits
+uses the local-provider billing classification. The research brief's shared cost and wall-time limits
 still apply. The output path must be new.
 
 The model adapter accepts two disjoint actions: write one note at `/research-plan.md`
@@ -35,31 +35,19 @@ Proposals need source review and semantic evaluation before downstream execution
 
 ## Verification
 
-The actual Deep Agents graph and PostgreSQL ledger passed five controlled boundary
-cases: notebook-to-proposal, invalid action, repeated note, insufficient budget and
-interrupted generation. Replay made no new provider calls. Run these checks against
-a FactorForge test database using a fresh output directory:
+Check notebook-to-proposal transitions, invalid actions, budget exhaustion and
+interrupted generation against a FactorForge test database using a fresh output
+directory:
 
 ```powershell
 uv run --project tools/planning --locked python tools/planning/verify_planner.py --output artifacts/planning-check
 ```
 
 The verifier reads `FACTORFORGE_TEST_DSN`, creates an isolated generated test schema,
-and retains labelled controlled-provider receipts. These cases measure framework and
-budget behavior, not model accuracy.
-
-A live final-version local run produced a typed proposal in one model call. Its ten
-reachable artifacts verified, exact replay invoked no model, and trajectory export
-reported one captured attempt with no pending operations or missing provider evidence.
-Earlier development attempts are retained separately: one exhausted available system
-memory under the larger extraction profile; another generated inconsistent action
-fields before the disjoint schema was implemented. No aggregate planning-quality
-benchmark is claimed from these development attempts.
+and retains controlled-provider receipts for inspecting framework and budget behavior.
 
 `factorforge.lineage.trajectories` accepts the planning result root and preserves the
 actual prompts/responses for later review. Exports remain unreviewed training material.
-The isolated environment's OSV audit checked 102 dependencies with no reported
-vulnerabilities and no skips.
 
 The [Deep Agents customization documentation](https://docs.langchain.com/oss/python/deepagents/customization)
 describes custom models and backends. The implementation uses an explicit custom

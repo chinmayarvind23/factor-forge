@@ -6,10 +6,6 @@ content-addressed source, then selects responses identified by explicit review l
 The trainer repeats that verification before loading a model and writes a separate
 candidate adapter with source, configuration, package and model hashes.
 
-This path is implemented and statically checked. No training run or policy improvement
-is claimed. It does not change the historical study, factor-reproduction scores or
-autonomous research completion measurements.
-
 ## Prepare a reviewed corpus
 
 Use Python 3.12 and the regular project environment for preparation; this step does
@@ -26,7 +22,7 @@ uv run python tools/training/prepare.py --review review.json --artifacts artifac
 - `train_exports` and `heldout_exports` contain artifact references to retained
   `trajectory-export-v1` manifests. Both inventories are mandatory. Store a manifest
   using `LocalArtifactStore.put(export.canonical_bytes(), media_type="application/json")`
-  and use the returned reference. See [trajectory export](../../docs/research-trajectories.md).
+  and use the returned reference. See [trajectory export](../../docs/research.md).
 - Each selection names a `chosen` provider-record SHA-256 and a review `rationale`.
   SFT requires no `rejected` entry. DPO requires a `rejected` provider-record SHA-256
   whose prompt matches exactly and whose retained response differs.
@@ -39,8 +35,8 @@ Training exports must declare the development partition. Preparation rejects sha
 run identities and exact prompt overlap with the supplied held-out exports. The
 reviewer must supply the complete protected inventory and check shared papers,
 paraphrases, licensing and sensitive content. These byte checks do not establish
-semantic isolation or independently authenticate the reviewer. Never include the
-public release benchmark in training.
+semantic isolation or independently authenticate the reviewer. Keep protected
+evaluation material out of training.
 
 ## Train a local candidate
 
@@ -73,8 +69,8 @@ guarantee identical floating-point results.
 
 Adapters remain candidates. This command does not register, promote or install a
 learned policy into the research workflow. Authorization, budgets, source admission,
-accounting and lineage verification remain deterministic production controls. A future
-promotion requires a separate, authorized comparison against the prompted baseline.
+accounting and lineage verification remain deterministic production controls. Promotion
+requires a separate, authorized comparison against the prompted baseline.
 
 API references: [TRL SFT](https://huggingface.co/docs/trl/sft_trainer),
 [TRL DPO](https://huggingface.co/docs/trl/dpo_trainer), and

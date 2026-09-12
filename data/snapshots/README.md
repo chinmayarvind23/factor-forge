@@ -8,10 +8,8 @@
 The output is ignored by Git. The original fixture remains available in Git so a clean
 checkout does not need a private cloud remote to inspect these fictional test values.
 Copying it here reconstructs the local snapshot; it does not demonstrate a DVC remote restore.
-A real producer/push/empty-consumer/pull test passed against a local remote before the
-dependency audit found an unresolved diskcache advisory. That is functional evidence only.
 
-DVC is excluded from the application environment while its isolated tooling security gate
-is unresolved. Do not treat this pointer as evidence of secure tooling, live S3 access,
-historical equity-data coverage, or published-factor replication. No remote credentials or
-machine-specific remote configuration are committed.
+
+Use the [isolated DVC tooling](../../tools/dvc/README.md) and pass its dependency audit
+before running snapshot restoration. Configure remote credentials and machine-specific
+remote settings locally.

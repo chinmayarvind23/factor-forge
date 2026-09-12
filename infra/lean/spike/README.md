@@ -1,16 +1,7 @@
-# Original equity tick engine spike
+# Seeded equity valuation fixture
 
-This directory prepares one real LEAN `Engine.Run` trial. The fixed C# algorithm
-uses the already compiled launcher from
-`lean-8ee075a-factorforge-dependencies-v1`. It does not replace the engine with a
-portfolio formula. The algorithm compiled against the verified assemblies with zero
-compiler warnings or errors and was packaged into a local image. Both compile
-attempts confirmed container cleanup. The first failed because the inherited
-`QCAlgorithm.Symbol` method shadowed `Symbol.Empty`; qualifying the type fixed it.
-The packaged launcher subsequently executed the fixture and matched all three
-predeclared NAV observations: 1000, 1020 and 1040. It exited zero, reported no OOM,
-and confirmed owned-container removal. This verifies conditional seeded valuation;
-it does not establish trading, corporate-action or monthly-strategy equivalence.
+The C# algorithm uses the `lean-8ee075a-factorforge-dependencies-v1` launcher to
+value a supplied inventory through LEAN `Engine.Run`.
 
 The source is original engineering data: ten SEC-A shares, average price 100,
 cash zero, and prices 100, 102 and 104 at 20:00 UTC on April 29, April 30 and
@@ -48,7 +39,7 @@ validation data. Any order event, changed inventory or missing row fails.
 
 ## Build and run after review
 
-First verify all 322 compiled runtime files against the retained patched build
+First verify all compiled runtime files against the retained patched build
 inventory and the exact two-package patch. Compile this project in the pinned
 Microsoft SDK image using `build.sh`, an empty package-source configuration,
 network none, two CPUs, 3 GiB RAM with no additional swap, 256 PIDs and a five-minute
@@ -61,15 +52,10 @@ The packaging-only Dockerfile expects three bounded context directories:
 `runtime/` with the verified patched output, `algorithm/` with the newly compiled
 DLL, and `notices/` with retained upstream/package notices. The build controller
 must bind source, patch, algorithm, configuration and output hashes to the final
-image digest. The first local packaging produced
-`sha256:337b3e29f39b9fbf1dba781b43469282649407c777df2362a737deda2ae724fb`.
-The executed revision with the original-fixture result handler is
-`sha256:bc6020cd13fed4c1cd4142dede6788902303c576ad850dd28cd43d176aca8d9d`.
-No registry publication is part of
-this spike. Packaging labels alone do not establish that the supplied directories
-match the reviewed bytes.
+image digest. Check the supplied directories against the reviewed bytes before
+starting a packaged runtime.
 
-The proposed execution profile is separate from Python v2: two CPUs, 2 GiB RAM
+The execution profile is separate from Python v2: two CPUs, 2 GiB RAM
 and equal memory-swap, 128 PIDs, 120 seconds, user/group 1654, readonly root and
 input, all capabilities dropped, no-new-privileges, private PID/IPC/cgroup
 namespaces, network none and the existing socket-denying seccomp asset. Use a
@@ -78,7 +64,7 @@ Docker configuration, and at most 1 MiB combined stdout/stderr. Fixed environmen
 `DOTNET_EnableDiagnostics=0`, `DOTNET_CLI_TELEMETRY_OPTOUT=1`,
 `DOTNET_PROCESSOR_COUNT=2`, `HOME=/scratch`, `TZ=UTC`,
 `FACTORFORGE_LEAN_SPIKE=1`. No caller argv, host path or environment reaches the
-container. These are proposed limits awaiting the parent's runtime review.
+container.
 
 The exact process command is:
 
@@ -91,29 +77,17 @@ Archive the start, exact input/source/image identity, created policy, bounded ra
 output, exit/OOM and final cleanup. Timeout/cancellation must remove only that
 owned container and confirm absence with a healthy daemon reply. No unconfined or
 network-enabled retry is allowed. The existing launcher invokes `Engine.Run`;
-an empty Python venv does not activate CPython, but native startup compatibility
-still needs an actual run. The standard API object constructs clients; network
+an empty Python venv does not activate CPython. Check native startup compatibility
+with the selected runtime. The standard API object constructs clients; network
 and socket denial remain necessary even for this offline configuration.
 
 Accept only a clean launcher exit, three `FACTORFORGE_NAV:` rows with the exact
 original clocks, Equity type, price/quantity/cash fields, `FACTORFORGE_DONE:3`, no
 orders/fees and confirmed cleanup. Compare NAV against the separate predeclared
 hand reference outside the engine. Do not use LEAN's aggregate strategy statistics
-to grade this conditional valuation fixture. A successful trial would not yet
-enable full gRPC readiness or establish trade/action/accounting equivalence.
+to grade this conditional valuation fixture.
 
-The first execution produced correct values, but its verification failed: LEAN
-wraps algorithm console messages in a timestamped `TRACE:: Debug:` prefix, and
-the optional result analyzer attempted to load SPY market-hours/history outside
-the original fixture. The corrected parser recognizes the exact emitted prefix.
-`OriginalFixtureResultHandler` disables only the inherited optional results
-analysis through `RunResultsAnalysis = false`, retaining normal result storage.
-The successful second trial required three ordered observations, one completion
-marker, exit zero, no OOM, complete log capture, no `ERROR::` log and cleanup.
-Its standard aggregate statistics are not validation evidence: seeded holdings
-do not establish a complete strategy-return baseline.
-
-The earlier ZIP compatibility result remains 10/11: a twelve-byte truncation
-returned a missing entry instead of the expected exception. This spike generates
-valid small archives and rejects missing observations; it does not rewrite that
-failed oracle or establish general archive safety.
+`OriginalFixtureResultHandler` disables optional aggregate analysis through
+`RunResultsAnalysis = false` while retaining ordinary result storage. The output
+parser recognizes LEAN's timestamped `TRACE:: Debug:` prefix before checking the
+fixture markers.

@@ -26,24 +26,8 @@ path refuses another run. Model outcomes remain separate from execution-path tes
 The comparator requires the same suite reference and ordered case IDs and rejects a
 relative pass-count regression of at least five percent. It consumes saved evaluation
 JSON, regrades every observation against the frozen source labels, and starts no model.
-Unit CI exercises the grader and comparator; automated model
-score gating awaits a reviewed baseline artifact distribution path.
-
-Layer status:
-
-- Static release benchmarks: the planned 15 reproduction / 15 synthesis / 15 adversarial
-  cases remain a separate release deliverable; these original examples do not replace them.
-- Custom offline: direction/citation rubric and frozen cases implemented. Existing real
-  PostgreSQL tests verify dispatch, replay, amendments, budget effects and reports. A
-  calibrated source-grounded LLM judge and a general optimizer loop remain future work.
-- Online: retained operator replays and provider cost/latency records exist. OTel GenAI
-  spans, guardrail alerts and production evaluation aggregation remain future work.
-
-The first live run completed all ten cases using `llama3.1:8b`: seven met the direction
-criterion, six met cited support, and six met both. All 64 reachable artifacts verified.
-The suite was frozen in `33e4e86` before inference; labels and anchors remain unchanged.
-See [recorded results](../docs/results.md#original-direction-development-baseline).
-Complete provider evidence is retained outside the repository by the operator.
+Unit CI exercises the grader and comparator. Supply explicit baseline and candidate
+artifacts to apply the model-output gate.
 
 The optional `--profile complete-evidence-v1` runs a fixed development prompt that
 explicitly requires both trading legs, resolves ranking definitions in the cited excerpt,
@@ -54,10 +38,6 @@ and does not change the production reviewer. Use a new output journal for its si
 comparison run. Improvement on these exposed development cases needs separate held-out
 validation before any broader accuracy claim.
 
-The recorded candidate scored 3/10 joint passes against the baseline's 6/10. The
-saved-result gate rejected it and the production prompt remains unchanged. Both runs
-completed all cases and retain their full provider evidence.
-
 `--profile qwen3-baseline-v1` compares the installed `qwen3:8b` model using the original
 baseline prompt, unchanged cases, schema and limits. Its wire request explicitly sets
 `think: false` using [Ollama's thinking control](https://docs.ollama.com/capabilities/thinking).
@@ -66,25 +46,13 @@ download models. Production workers continue to select `llama3.1:8b`. The evalua
 prompt digest is intentionally identical to the baseline; model identity is recorded
 in each provider capture and the journal profile identifies the comparison.
 
-The recorded Qwen comparison met both criteria on 7/10 cases, preserving all six
-baseline passes and adding complete quintile support. The comparator accepted it.
-Production promotion awaits separate validation; the three ambiguity cases remain open.
-
 `--profile qwen3-coherent-v1` keeps the Qwen model and baseline prompt but generates a
 `judgment` envelope with two disjoint schema branches: cited direction with null
 uncertainty, or null direction/citation/page with an uncertainty explanation. Pydantic
 validates the envelope before passing its unchanged judgment to the existing parser.
 This experiment constrains combinations during generation; it does not repair saved
 responses, change gold labels or relax citation requirements. Schemas are derived from
-Pydantic with references inlined. The first provider target is local Ollama; no OpenAI
-API compatibility or live schema enforcement is claimed before evaluation.
-
-The recorded coherent-schema run completed all ten cases with **9/10 joint passes**,
-preserving Qwen's seven passes and adding valid uncertainty on unspecified and
-contradictory directions. All ten raw responses validated against the envelope; the
-missing-short-leg case still selected a direction, so schema validity alone is not
-semantic correctness. The comparator accepted the candidate. Independent validation
-and a production profile decision remain separate steps.
+Pydantic with references inlined for the local Ollama provider.
 
 `cases/custom/direction-validation-v1.json` freezes eight additional original examples
 after candidate selection and before either validation run. They cover position signs,
@@ -95,22 +63,7 @@ Run the production `baseline` and frozen `qwen3-coherent-v1` once each with this
 through `--cases`. Predeclared selection requires at least 7/8 joint passes, all three
 uncertain cases correct, and no regression against the baseline on the same suite.
 An accepted validation result is necessary for a versioned production-profile change;
-it does not replace scheduler integration checks or the published-factor benchmark.
+scheduler integration checks remain a separate requirement.
 
-The separate validation run recorded 2/8 joint passes for the production baseline and
-6/8 for the candidate. The candidate passed all five explicit directions and the unknown
-regime case; long-only and short-only descriptions received directional guesses. It
-therefore does not meet the frozen selection criteria. Production selection remains
-unchanged. The validation set is now exposed and cannot serve as a fresh holdout for
-subsequent tuning.
-
-What to read next: [observability](../docs/observability.md) for the span substrate,
-[failure modes](../docs/failure-modes.md) for coverage, and
-[research reports](../docs/research-reports.md) for evidence-based execution summaries.
-
-[Saved research batch evaluation](../docs/research-batch-evaluation.md) now aggregates
-retained source-to-hybrid development attempts using the existing original rubric.
-It binds results to declared inputs and preserves missing/invalid cases in the total.
-The four retained synthesis development attempts were regraded together with identical
-repeat output and no model calls; the retrospective inventory is separate from the
-planned frozen release benchmark.
+See [development](../docs/development.md) for local checks and
+[research](../docs/research.md) for the operator workflow.

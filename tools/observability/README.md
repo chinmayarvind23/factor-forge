@@ -3,6 +3,8 @@
 From the repository root:
 
 ```powershell
+# Supply an absolute path to your saved study report.
+$env:FACTORFORGE_STUDY_REPORT = 'C:/path/to/historical-study-v1.json'
 docker compose -f tools/observability/compose.yaml up -d
 ```
 

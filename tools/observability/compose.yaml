@@ -5,7 +5,12 @@ services:
     command: [python, /app/exporter.py, --report, /data/report.json, --host, 0.0.0.0]
     volumes:
       - ./exporter.py:/app/exporter.py:ro
-      - ../../reports/historical-study-v1.json:/data/report.json:ro
+      - type: bind
+        source: ${FACTORFORGE_STUDY_REPORT:?Set FACTORFORGE_STUDY_REPORT to an absolute study JSON path}
+        target: /data/report.json
+        read_only: true
+        bind:
+          create_host_path: false
     read_only: true
     mem_limit: 128m
     cpus: 0.5

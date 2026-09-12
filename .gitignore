@@ -14,6 +14,11 @@ node_modules/
 .env
 .env.*
 artifacts/local/
+artifacts/reports/
+artifacts/demo/
+reports/
+research/results/
+evals/results/
 research/runs/local/
 mlruns/
 .dvc/cache/

@@ -19,7 +19,7 @@ from factorforge.validation.research import ValidationRequest, validate_research
 REPO = Path(__file__).resolve().parents[1]
 
 
-def build(output: Path) -> None:
+def build(output: Path, journey: Path | None = None) -> None:
     """Publish only original fixture evidence; private runs and credentials are never inputs."""
     output.mkdir(parents=True, exist_ok=True)
     store = LocalArtifactStore(output / "objects")
@@ -82,17 +82,7 @@ def build(output: Path) -> None:
         cases=cases,
     )
     (output / "evidence.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    for name in (
-        "index.html",
-        "app.js",
-        "style.css",
-        "README.md",
-        "journey.html",
-        "journey.css",
-        "journey.js",
-        "journey.json",
-    ):
-        shutil.copyfile(REPO / "apps/demo" / name, output / name)
+    copy_assets(output, journey)
     print(
         json.dumps(
             {
@@ -104,11 +94,30 @@ def build(output: Path) -> None:
     )
 
 
+def copy_assets(output: Path, journey: Path | None = None) -> None:
+    """Package product assets and an explicitly supplied capture without repository reports."""
+    for name in ("index.html", "app.js", "style.css", "README.md"):
+        shutil.copyfile(REPO / "apps/demo" / name, output / name)
+    if journey is not None:
+        with journey.open("rb") as stream:
+            raw = stream.read(1024 * 1024 + 1)
+        if len(raw) > 1024 * 1024:
+            raise ValueError("Journey display data exceeds its limit")
+        data = json.loads(raw)
+        if not isinstance(data, dict) or data.get("schema_version") != "research-journey-v1":
+            raise ValueError("Expected a research journey display projection")
+        for name in ("journey.html", "journey.css", "journey.js"):
+            shutil.copyfile(REPO / "apps/demo" / name, output / name)
+        (output / "journey.json").write_bytes(raw)
+
+
 def main() -> None:
     """Keep publication separate from building so the exact public directory is reviewable."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=REPO / "dist/space")
-    build(parser.parse_args().output)
+    parser.add_argument("--journey", type=Path, help="Optional operator-supplied replay projection")
+    args = parser.parse_args()
+    build(args.output, args.journey)
 
 
 if __name__ == "__main__":

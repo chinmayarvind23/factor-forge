@@ -2,8 +2,10 @@
 
 import asyncio
 import json
+import os
 import sys
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import evidence
 import httpx
@@ -12,7 +14,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 
-async def main() -> None:
+async def exercise_transports() -> None:
     """Exercise real protocol serialization and rejection boundaries against saved files."""
     for evidence_id in evidence.FILES:
         evidence.read_evidence(evidence_id)
@@ -44,7 +46,9 @@ async def main() -> None:
             )
         ).status_code == 400
     params = StdioServerParameters(
-        command=sys.executable, args=[str(Path(__file__).with_name("mcp_server.py"))]
+        command=sys.executable,
+        args=[str(Path(__file__).with_name("mcp_server.py"))],
+        env={**os.environ, "FACTORFORGE_REPORTS_DIR": os.environ["FACTORFORGE_REPORTS_DIR"]},
     )
     async with stdio_client(params) as (read, write), ClientSession(read, write) as session:
         await session.initialize()
@@ -73,6 +77,55 @@ async def main() -> None:
             }
         )
     )
+
+
+def write_fixtures(directory: Path) -> None:
+    """Author transport-only records; no private reports or research run is needed."""
+    sample = {
+        "scope": "Synthetic transport fixture; not research results",
+        "source_rows": 0,
+        "source_count": 0,
+        "start_date": "2000-01-01",
+        "end_date": "2000-01-02",
+        "experiments": [
+            {
+                "signal": name,
+                "cost_bps": 0,
+                "status": "fixture",
+                "n": 0,
+                "annualized_sharpe": None,
+                "total_return": None,
+                "max_drawdown": None,
+                "hac_t": None,
+            }
+            for name in ("fixture-a", "fixture-b")
+        ],
+    }
+    for evidence_id, relative in evidence.FILES.items():
+        payload = {"schema_version": "transport-fixture-v1"}
+        if evidence_id == "historical-study":
+            payload = sample
+        elif evidence_id == "historical-manifest":
+            payload = {"fixture.json": "0" * 64}
+        path = directory / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+
+async def main() -> None:
+    """Isolate both protocols from local or private operator data."""
+    previous = os.environ.get("FACTORFORGE_REPORTS_DIR")
+    try:
+        with TemporaryDirectory(prefix="factorforge-explorer-") as temporary:
+            directory = Path(temporary)
+            write_fixtures(directory)
+            os.environ["FACTORFORGE_REPORTS_DIR"] = str(directory)
+            await exercise_transports()
+    finally:
+        if previous is None:
+            os.environ.pop("FACTORFORGE_REPORTS_DIR", None)
+        else:
+            os.environ["FACTORFORGE_REPORTS_DIR"] = previous
 
 
 if __name__ == "__main__":

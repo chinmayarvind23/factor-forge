@@ -2,7 +2,7 @@
 
 DVC is required for dataset versioning but is installed separately from the application and its ordinary development tools. This project pins DVC 3.67.1 with S3 support and pip-audit 2.10.1; its own `uv.lock` records the dependency resolution.
 
-**Security gate blocked:** diskcache 5.6.3, required by dvc-data, is affected by [PYSEC-2026-2447](https://osv.dev/vulnerability/PYSEC-2026-2447). On 11 September 2026 the advisory lists no fixed version and PyPI's latest release is 5.6.3. Isolation does not fix this vulnerability. The required DVC CI job audits before running DVC and fails on the finding. The complete release gate remains blocked even if application checks pass. No advisory suppression or failure-to-success conversion is permitted.
+Audit the isolated dependency environment before executing DVC. The pinned diskcache dependency is covered by [PYSEC-2026-2447](https://osv.dev/vulnerability/PYSEC-2026-2447); package isolation does not remediate the advisory. The DVC CI job audits first and stops on findings. Review dependency remediation and update the lock before proceeding; do not suppress advisory failures.
 
 From the repository root, install and audit without invoking DVC:
 
@@ -23,4 +23,4 @@ On Windows, set `FACTORFORGE_DVC_PYTHON` to the absolute `tools\dvc\.venv\Script
 
 The restoration test creates separate producer, consumer and local remote directories. It passes only selected OS startup variables and uses new private home, temporary, DVC site-cache and DVC configuration directories. It excludes inherited cloud/application credentials and Python/tool configuration. The test uses copied original fixture bytes and finite subprocess timeouts; it does not contact S3 or run pipeline commands. A virtual environment is package isolation, not an operating-system sandbox.
 
-An earlier local restoration succeeded before the dependency finding was identified. That is engineering evidence of the byte-restoration flow, not a security acceptance result. New DVC execution is blocked until the audit passes. The application's ordinary audit covers its own environment; it does not certify this optional tool environment.
+Run restoration only after the isolated environment passes its audit. The application environment and this tool environment have separate dependency audits.

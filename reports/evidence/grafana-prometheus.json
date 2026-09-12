@@ -1,8 +1,0 @@
-{
-  "scope": "Real local Grafana provisioning and Prometheus scrape of retained evidence",
-  "grafana_version": "12.1.0",
-  "dashboard_uid": "factorforge-evidence",
-  "panels": 5,
-  "observed_completed_gauge": 45,
-  "research_evaluations": 0
-}

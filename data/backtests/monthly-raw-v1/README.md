@@ -12,4 +12,4 @@ slippage match the already-frozen declaration. No expected output is a strategy 
 
 The independent expected files retain their original hashes and explicitly describe their
 scope and arithmetic conventions. A valid strategy declaration or source-admission receipt
-alone does not establish a successful execution, research result or published-factor replication.
+must be followed by execution and comparison against the independent reference.

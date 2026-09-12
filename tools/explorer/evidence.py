@@ -1,7 +1,8 @@
-"""Shared bounded, read-only access to checked-in historical evidence."""
+"""Shared bounded, read-only access to operator-supplied historical evidence."""
 
 import hashlib
 import json
+import os
 import re
 from pathlib import Path
 
@@ -9,13 +10,13 @@ from pydantic import BaseModel, ConfigDict, Field
 
 ROOT = Path(__file__).resolve().parents[2]
 FILES = {
-    "historical-study": "reports/historical-study-v1.json",
-    "historical-freeze": "reports/evidence/historical-freeze.json",
-    "historical-manifest": "reports/evidence/historical-manifest.json",
-    "historical-mlflow": "reports/evidence/historical-mlflow.json",
-    "historical-mlflow-replay": "reports/evidence/historical-mlflow-replay.json",
-    "redis-discovery": "reports/evidence/redis-discovery.json",
-    "spark-materialization": "reports/evidence/spark-materialization.json",
+    "historical-study": "historical-study-v1.json",
+    "historical-freeze": "evidence/historical-freeze.json",
+    "historical-manifest": "evidence/historical-manifest.json",
+    "historical-mlflow": "evidence/historical-mlflow.json",
+    "historical-mlflow-replay": "evidence/historical-mlflow-replay.json",
+    "redis-discovery": "evidence/redis-discovery.json",
+    "spark-materialization": "evidence/spark-materialization.json",
 }
 MAX_BYTES = 1_000_000
 
@@ -50,8 +51,9 @@ def read_evidence(evidence_id: str) -> dict:
     """Resolve only an allowlisted file; reject symlink escape and oversized JSON."""
     if evidence_id not in FILES:
         raise ValueError("Unknown evidence ID")
-    path = (ROOT / FILES[evidence_id]).resolve()
-    if not path.is_relative_to(ROOT / "reports"):
+    reports = Path(os.environ.get("FACTORFORGE_REPORTS_DIR", ROOT / "artifacts/reports")).resolve()
+    path = (reports / FILES[evidence_id]).resolve()
+    if not path.is_relative_to(reports):
         raise ValueError("Evidence path escaped reports")
     with path.open("rb") as handle:
         raw = handle.read(MAX_BYTES + 1)

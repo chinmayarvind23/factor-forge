@@ -75,8 +75,8 @@ The retained calls cover ordinary CPU arithmetic, interpreter memory allocation,
 signals, clocks, regular-file access, pipes, process creation and process waits.
 The upstream argument-limited `clone` rules remain; the no-CAP_SYS_ADMIN
 `clone3` rule returns ENOSYS to support libc fallback. This is a static assessment.
-Actual Python startup, file I/O, bounded subprocess and PID-limit probes still
-need to pass on the pinned image and the target Docker/libseccomp runtime.
+Require Python startup, file I/O, bounded subprocess and PID-limit probes on the
+pinned image and target Docker/libseccomp runtime before admission.
 Unknown syscall names on older runtimes may make profile loading fail; that
 failure must remain visible. No compatibility fallback is permitted.
 

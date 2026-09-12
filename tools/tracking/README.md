@@ -11,11 +11,10 @@ uv run --project tools/tracking --locked pip-audit
 uv run --project tools/tracking --locked python tools/tracking/mlflow_export.py --request trajectory-request.json --source-artifacts artifacts/research --database artifacts/tracking.sqlite --tracking-artifacts artifacts/mlflow --receipt tracking-receipt.json
 ```
 
-See [trajectory requests](../../docs/research-trajectories.md) for the input format.
+See [research workflow](../../docs/research.md) and the [trajectory request model](../../src/factorforge/lineage/trajectories.py) for input details.
 The supplied root must be a supported saved research result or budget. The projection
 records operation counts, actual retained model-attempt counts, pending operations,
-missing provider evidence, verified object count and verified byte count. These are
-evidence-inventory metrics, not research accuracy or economic performance.
+missing provider evidence, verified object count and verified byte count. These fields describe the exported research inventory.
 
 MLflow is a derived tracking view. Content-addressed artifacts remain authoritative.
 After logging, the exporter reads metrics and every artifact back and checks their
@@ -28,12 +27,8 @@ prompts. This command accepts local database/artifact paths and does not configu
 a hosted tracking service or publish the corpus. `mlflow-skinny` supplies the tracking
 SDK; this environment does not include the full MLflow web UI server.
 
-The initial real SDK/SQLite check exported five model operations and 64 verified objects.
-Serial replay reused one run, a modified manifest was detected, and restored artifacts
-passed readback with model dispatch forbidden. The initial MLflow-only environment's
-dependency audit passed. The [Neo4j adapter](NEO4J.md) expands this tool environment;
-its real Community-server checks passed, and the expanded Python environment audit
-completed through OSV with 110 dependencies, no reported vulnerabilities and no skips.
+The [Neo4j adapter](NEO4J.md) adds reverse artifact lookup to this tool environment;
+the [LangSmith adapter](LANGSMITH.md) provides retrospective run-tree export.
 
 MLflow's [backend-store documentation](https://mlflow.org/docs/latest/self-hosting/architecture/backend-store/)
 describes SQLite tracking storage; its [tracking API](https://mlflow.org/docs/latest/ml/tracking/)
@@ -54,7 +49,3 @@ replay reuses the finished run and repeats readback. Interrupted or duplicate ex
 require inspection; concurrent exporters are not supported. Raw source data stays
 local. This experiment records numerical historical studies, separately from model
 research trajectories.
-
-The recorded 45-case study passed readback for **64 files: 63 study artifacts plus
-their manifest**, including 30,192 source observations and 7,516 backtest spans.
-Real SQLite MLflow checks cover replay, stored-artifact corruption and source corruption.

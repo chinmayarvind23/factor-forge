@@ -1,6 +1,6 @@
 # Three-paper retrieval development pilot
 
-This frozen development corpus contains three original summaries of published equity-factor research, nine manually targeted queries, and 27 explicit binary judgments. It is too small and deliberately targeted to estimate production search quality or the 15-paper release benchmark. Full papers and extracted passages are not distributed here.
+This frozen development corpus contains three original summaries of published equity-factor research, nine manually targeted queries, and 27 explicit binary judgments. Use it to exercise the retrieval grader against fixed judgments. Full papers and extracted passages are not distributed here.
 
 The documents cover Jegadeesh and Titman (1993), Novy-Marx's June 2012 manuscript preceding the 2013 publication, and Sloan (1996). The retained identifier `nm2013` comes from candidate tracking; its source version is explicitly the 2012 manuscript. Each `source_sha256` identifies the reviewed PDF, while the document and corpus identities bind the original summary actually indexed.
 
