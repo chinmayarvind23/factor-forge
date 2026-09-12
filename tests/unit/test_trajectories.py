@@ -12,7 +12,7 @@ from factorforge.orchestration.budgets import reserve, settle
 
 
 @pytest.mark.parametrize(
-    "outcome", ["success", "malformed", "pending", "missing", "nested", "corrupt"]
+    "outcome", ["success", "malformed", "pending", "missing", "nested", "corrupt", "planning"]
 )
 def test_operation_inventory_and_unreviewed_training_status(outcome: str) -> None:
     """Pending attempts stay explicit; valid JSON never grants training approval."""
@@ -95,8 +95,29 @@ def test_operation_inventory_and_unreviewed_training_status(outcome: str) -> Non
                 ).encode(),
                 media_type="application/json",
             )
+        if outcome == "planning":
+            result = store.put(
+                json.dumps(
+                    {
+                        "schema_version": "planning-step-v1",
+                        "generation": {"record": provider.model_dump(), "status": "unavailable"},
+                    }
+                ).encode(),
+                media_type="application/json",
+            )
         budget = settle(budget, op.operation_id, actual_cost_microusd=None, result=result, at=NOW)
     root = store.put(budget.canonical_bytes(), media_type="application/json")
+    if outcome == "planning":
+        root = store.put(
+            json.dumps(
+                {
+                    "schema_version": "deepagents-planning-run-v1",
+                    "run_id": str(budget.run_id),
+                    "budget": root.model_dump(),
+                }
+            ).encode(),
+            media_type="application/json",
+        )
     if outcome == "corrupt":
         store.values[response.sha256] = b"changed response"
         with pytest.raises(ResearchError):

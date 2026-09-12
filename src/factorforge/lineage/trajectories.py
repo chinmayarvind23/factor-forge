@@ -110,6 +110,11 @@ def _operation_attempt(
     schema = wrapper.get("schema_version")
     if schema == "local-generation-v2":
         return [_attempt(result, snapshot)], None
+    if schema == "planning-step-v1":
+        generation = wrapper["generation"]
+        return [_attempt(ArtifactRef.model_validate(generation["record"]), snapshot)], generation[
+            "status"
+        ]
     field = {
         "extraction-operation-result-v1": "extraction",
         "direction-review-operation-result-v1": "direction_review",
@@ -149,6 +154,7 @@ def export_trajectories(request: TrajectoryRequest, artifacts: ArtifactStore) ->
         "research-completion-v1",
         "synthesis-research-result-v1",
         "hybrid-experiment-result-v1",
+        "deepagents-planning-run-v1",
     ):
         budget_ref = ArtifactRef.model_validate(source["budget"])
     else:

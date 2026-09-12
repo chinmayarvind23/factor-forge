@@ -106,8 +106,9 @@ is documented separately. Kubernetes/EKS is an optional architecture extension.
 hosted account verification remains. The [Neo4j projection](tools/tracking/NEO4J.md)
 has verified real-server import, replay, reverse lookup and conflict rollback.
 [DVC tooling](tools/dvc/README.md) retains its dependency-audit gate.
-Deep Agents orchestration, PyTorch/TRL training and the full historical-data benchmark
-remain development work. Trajectory export alone is not model training.
+[Deep Agents planning](tools/planning/README.md) has a bounded local model adapter,
+PostgreSQL step replay and verified proposal/trajectory output. PyTorch/TRL training
+and the full historical-data benchmark remain development work. Trajectory export alone is not model training.
 
 The next research improvements are dependable source extraction, broader point-in-time
 historical data support, frozen end-to-end evaluation, and measured runtime/cost studies.

@@ -38,12 +38,15 @@ class GenerationProfile(StrEnum):
 
     EXTRACTION_32K_V1 = "extraction_32k_v1"
     LOCAL_PROTOCOL_4K_V1 = "local_protocol_4k_v1"
+    PLANNING_8K_V1 = "planning_8k_v1"
 
     @property
     def limits(self) -> _ProfileLimits:
         """The smoke probe reserves 1,920 tokens beyond admitted bytes and maximum output."""
         if self is GenerationProfile.LOCAL_PROTOCOL_4K_V1:
             return _ProfileLimits(4096, 128, 2048, 180)
+        if self is GenerationProfile.PLANNING_8K_V1:
+            return _ProfileLimits(8192, 768, 8192, 120)
         return _ProfileLimits(32768, 2048, MAX_REQUEST_BYTES, 120)
 
 

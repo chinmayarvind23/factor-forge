@@ -79,6 +79,7 @@ def test_worker_deadline_caps_each_http_read() -> None:
     [
         (GenerationProfile.EXTRACTION_32K_V1, 32768, 2048, 120),
         (GenerationProfile.LOCAL_PROTOCOL_4K_V1, 4096, 128, 180),
+        (GenerationProfile.PLANNING_8K_V1, 8192, 768, 120),
     ],
 )
 def test_fixed_profiles_preserve_wire_options_and_record_identity(
@@ -114,6 +115,7 @@ def test_fixed_profiles_preserve_wire_options_and_record_identity(
     [
         (GenerationProfile.EXTRACTION_32K_V1, 24 * 1024),
         (GenerationProfile.LOCAL_PROTOCOL_4K_V1, 2 * 1024),
+        (GenerationProfile.PLANNING_8K_V1, 8 * 1024),
     ],
 )
 def test_profile_exact_request_boundary_precedes_io(
@@ -445,6 +447,7 @@ def test_elapsed_deadline_blocks_admission_and_late_eof(
     [
         (GenerationProfile.EXTRACTION_32K_V1, 120),
         (GenerationProfile.LOCAL_PROTOCOL_4K_V1, 180),
+        (GenerationProfile.PLANNING_8K_V1, 120),
     ],
 )
 def test_remaining_deadline_reduces_later_http_timeouts(
