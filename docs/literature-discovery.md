@@ -42,3 +42,9 @@ The existing HTTP client dependency avoids adding a provider SDK or service.
 [Crossref's official REST documentation](https://www.crossref.org/documentation/retrieve-metadata/rest-api/)
 describes the metadata endpoint and its access terms. Only DOI and title fields are
 requested; abstracts and third-party full text are excluded from this discovery capture.
+# Optional discovery cache
+
+[Redis-assisted discovery](../tools/cache/README.md) reuses recent source-verified
+successful metadata captures. It retains the original capture time and publishes an
+explicit cache/provider delivery receipt. Raw source admission and research decisions
+remain separate from metadata discovery.
