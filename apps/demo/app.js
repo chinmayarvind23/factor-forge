@@ -1,0 +1,90 @@
+"use strict";
+let selection = 0;
+
+/** Use text nodes for every evidence value so recorded content cannot become HTML. */
+function element(tag, text, className) {
+  const node = document.createElement(tag);
+  node.textContent = text;
+  if (className) node.className = className;
+  return node;
+}
+
+/** Display financial amounts without changing the exact values in downloadable evidence. */
+function money(value) {
+  return Number(value).toLocaleString("en-US", { style: "currency", currency: "USD" });
+}
+
+/** Draw only recorded NAV observations; the curve performs no inferred backtest. */
+function drawChart(observations) {
+  const chart = document.querySelector("#chart");
+  chart.replaceChildren();
+  const values = observations.map((row) => Number(row.snapshot.nav_usd));
+  if (!values.length) { chart.style.display = "none"; return; }
+  chart.style.display = "block";
+  const minimum = Math.min(...values), maximum = Math.max(...values);
+  const range = Math.max(maximum - minimum, 1);
+  const points = values.map((value, i) => `${35 + i * 630 / Math.max(values.length - 1, 1)},${160 - (value - minimum) * 130 / range}`);
+  const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+  line.setAttribute("points", points.join(" "));
+  line.setAttribute("fill", "none"); line.setAttribute("stroke", "#267050"); line.setAttribute("stroke-width", "3");
+  chart.append(line);
+  for (const [value, y] of [[maximum, 20], [minimum, 190]]) {
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", "35"); label.setAttribute("y", String(y));
+    label.setAttribute("fill", "#68766c"); label.setAttribute("font-size", "12");
+    label.textContent = money(value); chart.append(label);
+  }
+}
+
+/** Verify the fetched result bytes against their published content address before rendering. */
+async function selectCase(item) {
+  const current = ++selection;
+  document.querySelectorAll("#cases button").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.id === item.id)));
+  const response = await fetch(`objects/sha256/${item.root.sha256.slice(0, 2)}/${item.root.sha256}`);
+  if (!response.ok) throw new Error("Execution evidence is unavailable.");
+  const bytes = await response.arrayBuffer();
+  const digest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), (b) => b.toString(16).padStart(2, "0")).join("");
+  if (digest !== item.root.sha256 || bytes.byteLength !== item.root.size_bytes) throw new Error("Execution evidence did not match its recorded identity.");
+  const result = JSON.parse(new TextDecoder().decode(bytes));
+  if (current !== selection) return;
+  document.querySelector("#title").textContent = item.title;
+  document.querySelector("#status").textContent = result.status === "completed" ? "Completed" : "Guard applied";
+  const metrics = document.querySelector("#metrics"); metrics.replaceChildren();
+  for (const [label, value] of [["Initial capital", money(result.request.initial_cash_usd)], ["Terminal NAV", result.performance ? money(result.performance.terminal_nav_usd) : "No trades"], ["Verified artifacts at build", String(item.objects)]]) {
+    const card = element("div", "", "metric"); card.append(element("span", label), element("strong", value)); metrics.append(card);
+  }
+  drawChart(result.observations);
+  document.querySelector("#chart-note").textContent = result.observations.length ? `${result.observations.length} recorded observations · All values in USD` : "The precision check stopped execution before placing any trades.";
+  document.querySelector("#decision").textContent = result.status === "completed" ? "The declared strategy completed with point-in-time signals, recorded borrowing permission, commissions, slippage, and terminal liquidation. The next research step is evaluation on a substantive historical dataset." : `The engine preserved the exact funding contract and recorded ${result.failure_code}. The selected capital would require quantities outside the supported exact-share precision. No rounding or silent correction was applied.`;
+  const fills = document.querySelector("#fills"); fills.replaceChildren();
+  for (const fill of result.fills) {
+    const row = element("tr", "");
+    for (const value of [fill.security_id, fill.signed_quantity, fill.quote.price_usd, fill.executed_at]) row.append(element("td", String(value)));
+    fills.append(row);
+  }
+  if (!result.fills.length) { const row = element("tr", ""); const cell = element("td", "No trades dispatched."); cell.colSpan = 4; row.append(cell); fills.append(row); }
+  document.querySelector("#integrity").textContent = "Result SHA-256 and byte count verified in your browser. Linked artifact closure verified during the Python build.";
+  document.querySelector("#download").href = `objects/sha256/${digest.slice(0, 2)}/${digest}`;
+  document.querySelector("#raw").textContent = JSON.stringify(result, null, 2);
+}
+
+/** Surface missing evidence explicitly rather than replacing it with simulated success. */
+function showError(error) {
+  document.querySelector("#title").textContent = "Evidence could not be loaded";
+  document.querySelector("#integrity").textContent = error.message;
+}
+
+/** Load the public allowlisted bundle; this static app never invokes a model or backend. */
+async function initialize() {
+  const response = await fetch("evidence.json");
+  if (!response.ok) throw new Error("The evidence index is unavailable.");
+  const manifest = await response.json();
+  for (const item of manifest.cases) {
+    const button = element("button", item.title); button.dataset.id = item.id;
+    button.addEventListener("click", () => selectCase(item).catch(showError));
+    document.querySelector("#cases").append(button);
+  }
+  await selectCase(manifest.cases[0]);
+}
+
+initialize().catch(showError);

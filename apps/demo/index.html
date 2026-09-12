@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore FactorForge quantitative research, portfolio accounting, and verified experiment evidence.">
+  <title>FactorForge · Research evidence</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header><a class="brand" href="./">◈ FactorForge</a><span class="tag">RESEARCH LAB</span><a href="https://github.com/chinmayarvind23/factor-forge" id="source-link">Source & setup ↗</a></header>
+  <main>
+    <section class="intro"><p class="eyebrow">FROM HYPOTHESIS TO EVIDENCE</p><h1>A research result.<br>Every step inspectable.</h1><p class="lead">Explore a monthly long–short experiment, follow its portfolio accounting, and inspect the evidence behind each decision.</p><p class="scope">Original synthetic data · Saved execution · Free public demo</p></section>
+    <section class="workspace" aria-label="Research explorer">
+      <aside><p class="eyebrow">EXPERIMENTS</p><div id="cases"></div><div class="note"><strong>What runs here?</strong><p>This browser displays saved results from the Python research engine. Run the full project locally to launch research and model calls.</p></div></aside>
+      <article><div class="result-heading"><div><p class="eyebrow">MONTHLY FACTOR STUDY</p><h2 id="title">Loading evidence…</h2></div><span id="status" class="status"></span></div>
+        <div class="pipeline"><span>Point-in-time inputs</span><b>→</b><span>Portfolio construction</span><b>→</b><span>Execution & costs</span><b>→</b><span>Evidence</span></div>
+        <div class="metrics" id="metrics"></div>
+        <section class="panel"><h3>Portfolio value</h3><p id="chart-note"></p><svg id="chart" viewBox="0 0 700 200" role="img" aria-label="Portfolio net asset value over the original fixture observations"></svg></section>
+        <section class="panel"><h3>Research decision</h3><p id="decision"></p><p class="muted">This tiny accounting fixture demonstrates execution mechanics. It does not establish investment performance.</p></section>
+        <section class="panel"><h3>Executed trades</h3><div class="table-wrap"><table><thead><tr><th>Security</th><th>Signed quantity</th><th>Raw quote (USD)</th><th>Executed at</th></tr></thead><tbody id="fills"></tbody></table></div></section>
+        <section class="panel"><h3>Evidence you can inspect</h3><p id="integrity" role="status"></p><a id="download" download="monthly-result.json">Download execution JSON ↓</a><details><summary>Result identity & raw record</summary><pre id="raw"></pre></details></section>
+      </article>
+    </section>
+    <footer>FactorForge · Reproducible quantitative research <span>Python / LangGraph / Polars / OpenTelemetry</span></footer>
+  </main>
+</body>
+</html>

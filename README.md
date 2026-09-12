@@ -2,6 +2,12 @@
 
 **Autonomous quantitative research with reproducible evidence**
 
+Explore the [free Hugging Face evidence demo](https://huggingface.co/spaces/chinmayarvind/factorforge), with the
+full research runner available locally. Build it with `python scripts/build_space.py`;
+see [deployment and optional AWS setup](docs/deployment.md). AWS provisioning and EKS
+implementation are outside the current delivery path. Broader diagrams below describe
+optional architecture extensions.
+
 Implementation status: a trusted local command now connects a research idea to ranked
 source packets, durable model extraction, source-derived strategy drafts, monthly
 experiments and retained HAC diagnostics. PostgreSQL stores run budgets, operation
