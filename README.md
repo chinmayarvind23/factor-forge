@@ -56,6 +56,7 @@ Python 3.12+, uv and a browser are sufficient for the saved-evidence demo:
 ```powershell
 uv sync --locked
 uv run python scripts/build_space.py
+uv run python scripts/build_historical_report.py --input reports/historical-study-v1.json --output dist/space/historical-study.html
 uv run python -m http.server 8766 --bind 127.0.0.1 --directory dist/space
 ```
 
