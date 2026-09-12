@@ -1,0 +1,53 @@
+# Neo4j provenance projection
+
+The graph adapter reads a verified artifact closure and stores content identities,
+metadata and JSON-pointer reference edges. It provides reverse lookup of research
+roots sharing an artifact. The original artifact store remains authoritative.
+
+The adapter and source-integrity unit tests are implemented. Real Neo4j server
+verification is pending: the development environment could not download the Community
+image because registry connections reset. Do not treat this as verified server execution.
+The expanded environment's dependency audit also needs a completed network-backed run.
+
+## Setup and usage
+
+Use a private Neo4j Community instance. The official
+[Docker guide](https://neo4j.com/docs/operations-manual/current/docker/introduction/)
+describes installation and authentication. Bind local test ports to loopback, use a
+unique password and set memory/CPU limits. No enterprise license or paid cloud service
+is required by this adapter.
+
+```powershell
+uv sync --project tools/tracking --locked
+uv run --project tools/tracking --locked pip-audit
+# Configure NEO4J_URI, NEO4J_USERNAME and NEO4J_PASSWORD in your local environment.
+uv run --project tools/tracking --locked python tools/tracking/neo4j_export.py --root source-reference.json --artifacts artifacts/research --receipt graph-receipt.json
+```
+
+`source-reference.json` contains the existing `ArtifactRef` fields: `sha256`,
+`size_bytes`, `media_type`. The default URI is `bolt://127.0.0.1:7687`. Credentials
+come from environment variables and are not stored in the exported receipt.
+
+## Graph and query
+
+`FFResearch` identifies the imported root. `CONTAINS` links it to each reachable
+`FFArtifact`. Artifacts retain SHA-256, size, media type and schema version.
+`REFERS_TO` links artifacts using an RFC 6901 JSON pointer identifying the reference
+inside the source object. Plain strings containing a hash do not create relationships.
+
+The adapter creates unique SHA-256 constraints, merges the graph in one managed
+transaction, then compares every imported node and outgoing edge against the verified
+inventory before commit. Conflicting metadata or extra edges reject the transaction.
+Repeated imports use the same content identities. Actual server behavior awaits the
+integration verification described above.
+
+```cypher
+MATCH (r:FFResearch)-[:CONTAINS]->(a:FFArtifact {sha256: $source_sha256})
+RETURN r.sha256 ORDER BY r.sha256 LIMIT 100
+```
+
+The Python `related_research` helper exposes this query with bound parameters. The
+graph contains metadata and references, not executable source instructions. It is a
+provenance lookup, not a learned strategy-selection or semantic retrieval policy.
+The [official Python driver manual](https://neo4j.com/docs/python-manual/current/)
+describes connectivity, parameters and managed transactions.

@@ -30,7 +30,9 @@ SDK; this environment does not include the full MLflow web UI server.
 
 The initial real SDK/SQLite check exported five model operations and 64 verified objects.
 Serial replay reused one run, a modified manifest was detected, and restored artifacts
-passed readback with model dispatch forbidden. The environment's dependency audit passed.
+passed readback with model dispatch forbidden. The initial MLflow-only environment's
+dependency audit passed. The [Neo4j adapter](NEO4J.md) expands this tool environment;
+its server verification and expanded dependency audit remain pending network availability.
 
 MLflow's [backend-store documentation](https://mlflow.org/docs/latest/self-hosting/architecture/backend-store/)
 describes SQLite tracking storage; its [tracking API](https://mlflow.org/docs/latest/ml/tracking/)
