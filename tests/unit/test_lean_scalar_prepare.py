@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from test_monthly_admission import AT, MemoryStore, original_strategy
 
-from infra.lean.execution.prepare import build_files, build_strategy_files
+from infra.lean.execution.prepare import arithmetic_tree, build_files, build_strategy_files
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -28,6 +28,7 @@ def test_scalar_translation_uses_source_sample_and_capital() -> None:
         "strategy",
         "signals",
         "market",
+        "expression",
     }
     assert first["calendar"] == json.loads(store.get(spec.timing.calendar))
     assert short == build_strategy_files(
@@ -40,7 +41,7 @@ def test_unsupported_or_corrupt_translation_is_rejected(kind: str) -> None:
     """The translator cannot silently erase richer formulas or bypass artifact admission."""
     spec, store = original_strategy()
     if kind == "formula":
-        spec = spec.model_copy(update={"formula": "score * 2"})
+        spec = spec.model_copy(update={"formula": "delta(score)"})
     if kind == "tamper":
         store.values[spec.market.table.artifact.sha256] = b"{}"
     from factorforge.domain.errors import ResearchError
@@ -53,3 +54,17 @@ def test_unsupported_or_corrupt_translation_is_rejected(kind: str) -> None:
             initial_cash=Decimal("0") if kind == "cash" else Decimal("1002"),
             evaluated_at=AT,
         )
+
+
+def test_arithmetic_translation_preserves_literals_and_rejects_time_series_calls() -> None:
+    """The wire contains operations and source names, never evaluated factor scores."""
+    tree = arithmetic_tree("(3/4)*score + (1/4)*quality")
+    assert tree["kind"] == "add"
+    assert arithmetic_tree("0.10000000000000000000001") == {
+        "kind": "number",
+        "numerator": "10000000000000000000001",
+        "denominator": "100000000000000000000000",
+    }
+    for expression in ("delta(score)", "compound_return(score, 3)"):
+        with pytest.raises(ValueError, match="time-series"):
+            arithmetic_tree(expression)

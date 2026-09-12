@@ -71,3 +71,29 @@ historical factor replication or general exchange/calendar coverage.
 
 The earlier v1 trial and image above remain historical evidence. The v2 compiled image
 is `sha256:c5a622dfe8f8612dfc6b0ada3c5aa894dc5dcd2aed895b1ff9ae539b443e04db`.
+
+## Arithmetic source contract v3
+
+The v3 contract adds a closed arithmetic tree for scalar input names, exact decimal
+constants, unary signs, addition, subtraction, multiplication and division. Python
+serializes syntax only. LEAN selects point-in-time source facts and evaluates the tree
+with its own bounded rational interpreter, then ranks and trades the resulting scores.
+Time-series calls remain outside this profile. The existing A/B universe, single
+formation and integer-share funding limits remain.
+
+The independently evaluated original hybrid has A = 7/4 and B = 3/2 from the declared
+75% score / 25% quality blend. Its four closing valuations and four fills, including
+fees, match the existing short reference. See the
+[hybrid comparison](../../../data/verification/lean-hybrid-v3/comparison.json).
+Exact rational score arithmetic can expose differences from Python's finite-precision
+decimal evaluator on other inputs; agreement must be measured per case.
+
+The standalone arithmetic checks link the production `ExactRatio.cs` directly and
+need only the installed .NET 9 SDK, without LEAN or NuGet test packages:
+
+```powershell
+dotnet run --project infra/lean/arithmetic-tests/ArithmeticTests.csproj
+```
+
+The LEAN algorithm itself continues to compile against the pinned .NET 10 runtime.
+Include both `ExecutedEquityAlgorithm.cs` and `ExactRatio.cs` in the build context.

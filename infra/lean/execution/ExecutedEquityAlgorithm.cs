@@ -26,12 +26,11 @@ public sealed class ExecutedEquityAlgorithm : QCAlgorithm
         Require(File.Exists("/.dockerenv") && Environment.GetEnvironmentVariable("FACTORFORGE_LEAN_EXECUTION") == "1", "Owned execution container required.");
         using var source = JsonDocument.Parse(File.ReadAllBytes("/input/source.json"));
         var root = source.RootElement;
-        Require(root.GetProperty("schema_version").GetString() == "original-lean-execution-v2", "Unsupported source.");
+        Require(root.GetProperty("schema_version").GetString() == "original-lean-execution-v3", "Unsupported source.");
         _cash = Exact(root.GetProperty("initial_cash_usd"));
         var strategy = root.GetProperty("strategy");
         var inputs = strategy.GetProperty("signal_inputs");
-        Require(inputs.GetArrayLength() == 1 && strategy.GetProperty("formula").GetString() == inputs[0].GetProperty("name").GetString(), "Scalar formula required.");
-        var concept = inputs[0].GetProperty("concept").GetString();
+        Require(inputs.GetArrayLength() >= 1 && inputs.GetArrayLength() <= 32, "Bounded scalar inputs required.");
         var evaluation = strategy.GetProperty("evaluation");
         var start = Clock(evaluation.GetProperty("sample_start").GetString()!).Date;
         var end = Clock(evaluation.GetProperty("sample_end").GetString()!).Date;
@@ -50,12 +49,27 @@ public sealed class ExecutedEquityAlgorithm : QCAlgorithm
             && members.Select(row => row.GetProperty("security_id").GetString()).Order().SequenceEqual(new[] { "A", "B" }), "Two unambiguous eligible members required.");
         _rate = (strategy.GetProperty("costs").GetProperty("commission_bps").GetDecimal()
             + strategy.GetProperty("costs").GetProperty("slippage_bps").GetDecimal()) / 10000m;
-        var scores = root.GetProperty("signals").GetProperty("facts").EnumerateArray()
-            .Where(row => row.GetProperty("concept").GetString() == concept
-                && Clock(row.GetProperty("available_at").GetString()!) <= _formation
-                && Clock(row.GetProperty("period_end").GetString()!).Date == new DateTime(_formation.Year, _formation.Month, DateTime.DaysInMonth(_formation.Year, _formation.Month)))
-            .ToDictionary(row => row.GetProperty("security_id").GetString()!, row => Exact(row.GetProperty("value")));
-        Require(scores.Count == 2 && scores["A"] != scores["B"], "Two distinct known signals required.");
+        var facts = root.GetProperty("signals").GetProperty("facts").EnumerateArray().ToArray();
+        var scores = new Dictionary<string, ExactRatio>();
+        foreach (var security in new[] { "A", "B" })
+        {
+            var values = new Dictionary<string, ExactRatio>();
+            foreach (var input in inputs.EnumerateArray())
+            {
+                var selected = facts.Single(row => row.GetProperty("security_id").GetString() == security
+                    && row.GetProperty("concept").GetString() == input.GetProperty("concept").GetString()
+                    && Clock(row.GetProperty("available_at").GetString()!) <= _formation
+                    && Clock(row.GetProperty("period_end").GetString()!).Date == new DateTime(_formation.Year, _formation.Month, DateTime.DaysInMonth(_formation.Year, _formation.Month)));
+                values.Add(input.GetProperty("name").GetString()!, ExactRatio.Parse(selected.GetProperty("value").GetString()!));
+            }
+            scores.Add(security, ExactRatio.Evaluate(root.GetProperty("expression"), values));
+            Console.WriteLine("FACTORFORGE_EXECUTION_SCORE:" + JsonSerializer.Serialize(new
+            {
+                security_id = security, numerator = scores[security].Numerator.ToString(CultureInfo.InvariantCulture),
+                denominator = scores[security].Denominator.ToString(CultureInfo.InvariantCulture)
+            }));
+        }
+        Require(scores["A"].CompareTo(scores["B"]) != 0, "Distinct scores required.");
         var direction = strategy.GetProperty("portfolio").GetProperty("allocation").GetProperty("direction").GetString();
         Require(direction is "long_high_short_low" or "long_low_short_high", "Unknown direction.");
         _long = (direction == "long_high_short_low" ? scores.OrderByDescending(row => row.Value) : scores.OrderBy(row => row.Value)).First().Key;

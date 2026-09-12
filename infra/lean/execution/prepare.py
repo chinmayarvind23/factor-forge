@@ -1,10 +1,12 @@
-"""Translate the original twelve-return source inputs into a separate LEAN execution trial."""
+"""Translate admitted scalar arithmetic source inputs into a separate LEAN execution trial."""
 
+import ast
 import hashlib
 import io
 import json
 from datetime import UTC, datetime
 from decimal import Decimal
+from fractions import Fraction
 from pathlib import Path
 from zipfile import ZIP_STORED, ZipFile, ZipInfo
 
@@ -12,8 +14,41 @@ from factorforge.backtests.admission import admit_monthly
 from factorforge.data.artifacts import ArtifactStore, verify_bytes
 from factorforge.data.validation_fixture import prepare_validation_fixture
 from factorforge.domain.calendar import plan_formations
+from factorforge.domain.formula import parse_formula
 from factorforge.domain.raw_strategy import RawStrategySpec
 from infra.lean.spike.prepare import build_files as seeded_files
+
+
+def arithmetic_tree(expression: str) -> dict[str, object]:
+    """Translate syntax only; LEAN evaluates raw inputs with its own rational interpreter."""
+
+    def convert(node: ast.AST) -> dict[str, object]:
+        """A closed operator vocabulary excludes calls, runtime code and derived scores."""
+        if isinstance(node, ast.Name):
+            return {"kind": "input", "name": node.id}
+        if isinstance(node, ast.Constant):
+            value = Fraction(ast.get_source_segment(expression, node) or "")
+            return {
+                "kind": "number",
+                "numerator": str(value.numerator),
+                "denominator": str(value.denominator),
+            }
+        if isinstance(node, ast.UnaryOp):
+            return {
+                "kind": "negative" if isinstance(node.op, ast.USub) else "positive",
+                "value": convert(node.operand),
+            }
+        if isinstance(node, ast.BinOp):
+            names = {ast.Add: "add", ast.Sub: "subtract", ast.Mult: "multiply", ast.Div: "divide"}
+            return {
+                "kind": names[type(node.op)],
+                "left": convert(node.left),
+                "right": convert(node.right),
+            }
+        raise ValueError("LEAN arithmetic profile does not support time-series calls")
+
+    expression = expression.strip()
+    return convert(parse_formula(expression).body)
 
 
 def build_files(repository: Path, artifacts: ArtifactStore) -> dict[str, bytes]:
@@ -39,7 +74,7 @@ def build_strategy_files(
     """Translate admitted two-ID scalar source data, never Python holdings or performance.
 
     The current LEAN profile supports one formation and integer-share funding. Reject
-    richer formulas or policies here rather than silently translating a different strategy.
+    time-series formulas or policies here rather than silently translating a different strategy.
     """
     admission = admit_monthly(spec, artifacts, evaluated_at=evaluated_at)
     spec = admission.spec
@@ -50,9 +85,7 @@ def build_strategy_files(
         end=spec.evaluation.sample_end,
     )
     if (
-        len(spec.signal_inputs) != 1
-        or spec.formula != spec.signal_inputs[0].name
-        or spec.signal_inputs[0].history_observations != 1
+        any(binding.history_observations != 1 for binding in spec.signal_inputs)
         or spec.timing.formation_lag_months != 0
         or len(plans) != 1
         or spec.portfolio.allocation.bucket_count != 2
@@ -92,7 +125,8 @@ def build_strategy_files(
         )
     }
     source = dict(
-        schema_version="original-lean-execution-v2",
+        schema_version="original-lean-execution-v3",
+        expression=arithmetic_tree(spec.formula),
         initial_cash_usd=str(initial_cash),
         calendar=admission.calendar.model_dump(mode="json"),
         strategy=spec.model_dump(mode="json"),
