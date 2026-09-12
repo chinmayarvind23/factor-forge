@@ -34,3 +34,33 @@ absence of human intervention or complete release execution-path coverage. The b
 45-case benchmark still needs frozen research cases, appropriate per-case rubrics and
 runtime execution-path evidence. This adapter accepts only the existing original
 synthesis rubric; other research tasks need their own graders.
+
+## Execute a frozen development suite
+
+`research_runner` dispatches the declared suite through the existing source-to-hybrid
+worker, serially, with PostgreSQL run ownership and per-case budgets:
+
+```powershell
+uv run python -m factorforge.evaluation.research_runner --suite suite.json --artifacts artifacts/study --journal study.jsonl --max-reserved-microusd 10000000
+```
+
+Set `RDS_DSN` and the required local model services as for the synthesis command. The
+reservation ceiling must cover the sum of all case brief budgets. It is authorized
+capacity, not measured model spending. Every request and its complete artifact closure
+are verified before any dispatch. Each batch creates new idempotency keys so previous
+single-case runs cannot masquerade as fresh prospective execution.
+
+The exclusive JSONL journal is flushed and synced before each dispatch. It retains
+the suite reference, batch ID, case request, idempotency key, result reference when
+available, terminal status and elapsed worker time. Exceptions retain their case in
+the denominator; returned invalid evidence remains available for inspection and grading.
+Held results remain held and do not become rubric passes.
+
+The final `batch_recorded` row links a `ResearchSubmissions` artifact for the saved-result
+evaluator. Reusing an existing journal path fails without dispatch. There is no automatic
+retry or resume: after interruption, reconcile the recorded idempotency key against the
+PostgreSQL run and operation ledgers. Do not start another batch as a substitute for
+reconciling uncertain work. A journal storage error stops subsequent dispatches.
+
+The runner enables prospective development execution but does not supply the frozen
+45-case release inventory, broader task rubrics or proof of release autonomy.
