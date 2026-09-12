@@ -22,8 +22,25 @@ observation, all individual claims and exact rational totals. Validation recompu
 totals and rejects repeated claim identities. A $20 receivable becoming $20 cash
 preserves NAV while increasing spendable cash by $20.
 
-This pure funding component is implemented and covered by six hand-account checks.
-It does not establish event authenticity, announcement timing or settlement evidence.
-The monthly backtest integration remains to be implemented; the monthly engine's
-existing corporate-action rejection remains active until that integration is verified.
-The published historical signal study remains on its separate adjusted-price path.
+The monthly engine accepts this accounting through an explicit pair of strategy settings:
+`policies.corporate_actions = "explicit_entitlement_payment_v1"` and
+`portfolio.collateral = "short_and_pending_liability_cash_reserve_v1"`.
+Existing strategies declaring `reject_any_events` retain that behavior.
+
+At each open and close, an independent rational account applies effective events before
+payments and trades. The engine compares cash, fees, positions and the complete claim
+inventory against Decimal ledger replay. Splits change share quantities; declared borrow
+capacity must still cover the resulting short. Terminal exits remove the position and
+prohibit subsequent entry. Unknown exit terms fail while shares are held.
+
+Rebalance sizing includes signed claims in NAV. Before committing fills, a separate cash
+check rejects any allocation that would spend a receivable or leave liabilities unreserved.
+The engine stops rather than silently changing the strategy's target weights. At the final
+close all shares are liquidated; fixed unpaid claims may remain in NAV and are retained in
+the terminal snapshot. Settlement after that close is outside the performance sample.
+
+Six pure funding checks and 23 monthly action checks cover these rules, including payment
+at an entry instant, payment after liquidation, split borrow capacity, invalid event timing
+and rejection of an unfunded later rebalance. This establishes accounting behavior on
+authored inputs; event authenticity still depends on admitted source evidence. The published
+historical signal study remains on its separate adjusted-price path.

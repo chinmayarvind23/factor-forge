@@ -697,3 +697,12 @@ TRL SFT or DPO with rank-8 LoRA. A fresh output directory retains inputs, code a
 model hashes, package versions, trainer state, adapter files and a completion/failure
 receipt. Output remains a candidate; the command has no production promotion capability.
 See [operator instructions](../tools/training/README.md) for the implementation scope.
+
+## 19. Monthly corporate actions
+
+`RawStrategySpec` pairs `explicit_entitlement_payment_v1` with
+`short_and_pending_liability_cash_reserve_v1`. `_advance_actions` applies each effective
+and payment phase once before observation and same-clock trading. `_observe` reconciles
+cash, fees, shares and complete claims with full ledger replay. `_batch` validates staged
+cash reserves before committing generated fills. Action-free accounts retain cached
+ledger valuation. [Contract and limitations](pending-cash-claims.md).

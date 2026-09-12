@@ -190,3 +190,7 @@ The implemented local learning entry point is [reviewed SFT/DPO training](../too
 It reconstructs retained development trajectories, prepares explicit review labels and
 saves a candidate LoRA adapter. Registry promotion, RLVR and multi-step agentic RL in
 the diagram remain future stages. No training improvement is asserted by this implementation.
+
+The monthly execution engine supports opt-in corporate actions through independent
+rational balances reconciled against Decimal ledger replay. Pending cash claims contribute
+to NAV while settlement controls spendable cash. See [the decision](adr/monthly-corporate-actions.md).

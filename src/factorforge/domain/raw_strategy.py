@@ -143,7 +143,9 @@ class RawPortfolio(Contract):
     long_exposure: Annotated[int, Field(ge=1, le=1)]
     short_exposure: Annotated[int, Field(ge=1, le=1)]
     sizing_basis: Literal["post_fee_nav"]
-    collateral: Literal["current_short_liability_cash_reserve_v1"]
+    collateral: Literal[
+        "current_short_liability_cash_reserve_v1", "short_and_pending_liability_cash_reserve_v1"
+    ]
     quantity: Literal["exact_terminating_decimal_18_v1", "whole_shares_toward_zero_v1"]
     cash_return: Literal["zero"]
 
@@ -169,7 +171,7 @@ class RawPolicies(Contract):
     missing_signal: Literal["fail", "exclude_at_formation"]
     missing_price: Literal["fail"]
     unknown_terminal: Literal["fail"]
-    corporate_actions: Literal["reject_any_events"]
+    corporate_actions: Literal["reject_any_events", "explicit_entitlement_payment_v1"]
     point_in_time: Literal["available_at_lte_formation_lt_trade"]
     freshness: Literal["explicit_requested_calendar_month_no_stale_fallback_v1"]
     short_loan: Literal["require_valid_finite_original_grant", "require_valid_finite_source_grant"]
@@ -299,6 +301,10 @@ class RawStrategySpec(Contract):
     @model_validator(mode="after")
     def complete_contract(self) -> Self:
         """Bind every source, formula and supported policy without inventing v2 total returns."""
+        if (self.policies.corporate_actions == "explicit_entitlement_payment_v1") != (
+            self.portfolio.collateral == "short_and_pending_liability_cash_reserve_v1"
+        ):
+            raise ValueError("Explicit actions require pending-liability collateral policy")
         inputs: dict[str, InputBinding] = {binding.name: binding for binding in self.signal_inputs}
         if len(inputs) != len(self.signal_inputs) or any(
             binding.table != self.universe.table for binding in self.signal_inputs

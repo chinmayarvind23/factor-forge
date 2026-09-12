@@ -13,13 +13,15 @@ autonomous research graph remains separate unfinished work.
 
 The request binds the full strategy, initial cash and aware evaluation clock. Before any
 signal or account calculation, the runner saves its request, source-admission receipt,
-22 actual installed source files, environment versions and prepared record. Stored source
+the actual installed source files, environment versions and prepared record. Stored source
 is evidence; it is never imported from an artifact as execution authority.
 
 The bound calendar determines monthly formation closes and the next opening session.
 The sample must start at the actual first formation close and end at an actual session.
 Limits are eight security IDs, 512 calendar sessions, 12 formations and 100,000 requested
-signal-history cells. The profile rejects corporate actions and nonzero carry. Monthly
+signal-history cells. The default policy rejects corporate actions; an explicit
+[action and pending-claim policy](pending-cash-claims.md) enables splits, dividends and
+terminal exits. Nonzero carry remains unsupported. Monthly
 signals use formation-known revisions; prices and finite short-loan grants must be known
 when consumed. An expired held loan stops execution at the next required observation.
 

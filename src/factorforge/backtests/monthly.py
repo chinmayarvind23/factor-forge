@@ -16,6 +16,7 @@ from pydantic import Field, model_validator
 
 from factorforge.backtests.accounting import ledger_at, value_ledger
 from factorforge.backtests.admission import MonthlyAdmission, admit_monthly
+from factorforge.backtests.cash_claims import ClaimCollateralObservation, observe_claim_collateral
 from factorforge.backtests.funding import (
     CollateralObservation,
     FundingPlan,
@@ -30,7 +31,13 @@ from factorforge.backtests.performance import compute_performance
 from factorforge.backtests.whole_shares import SharePrice, WholeSharePlan, size_whole_shares
 from factorforge.data.artifacts import ArtifactStore, reference
 from factorforge.data.monthly_signals import assemble_monthly_signals
-from factorforge.domain.accounting import ConditionalFill, LedgerSnapshot, LedgerState, PriceMark
+from factorforge.domain.accounting import (
+    CashClaim,
+    ConditionalFill,
+    LedgerSnapshot,
+    LedgerState,
+    PriceMark,
+)
 from factorforge.domain.artifacts import ArtifactRef
 from factorforge.domain.calendar import FormationPlan, TradingSession, plan_formations
 from factorforge.domain.errors import ResearchError
@@ -54,6 +61,7 @@ CODE_FILES = (
     "backtests/monthly.py",
     "backtests/admission.py",
     "backtests/accounting.py",
+    "backtests/cash_claims.py",
     "backtests/funding.py",
     "backtests/whole_shares.py",
     "backtests/performance.py",
@@ -162,16 +170,27 @@ class AccountObservation(Contract):
     phase: Identifier
     snapshot: LedgerSnapshot
     marks: Annotated[tuple[PriceMark, ...], Field(max_length=8)]
-    collateral: CollateralObservation
+    collateral: CollateralObservation | ClaimCollateralObservation
     loan_refs: Annotated[tuple[Identifier, ...], Field(max_length=8)]
 
     @model_validator(mode="after")
     def consistent_account(self) -> Self:
         """Saved clocks, NAV and cash agree between ledger and reserve observations."""
+        base = (
+            self.collateral.base
+            if isinstance(self.collateral, ClaimCollateralObservation)
+            else self.collateral
+        )
+        claims = (
+            self.collateral.claims
+            if isinstance(self.collateral, ClaimCollateralObservation)
+            else ()
+        )
         if (
             self.at != self.snapshot.at
             or Fraction(self.snapshot.nav_usd) != self.collateral.nav_usd.as_fraction()
-            or Fraction(self.snapshot.cash_usd) != self.collateral.cash_usd.as_fraction()
+            or Fraction(self.snapshot.cash_usd) != base.cash_usd.as_fraction()
+            or self.snapshot.claims != claims
         ):
             raise ValueError("Observation clock or collateral account differs")
         return self
@@ -308,6 +327,12 @@ class MonthlyRun(Contract):
             spec.policies.dataset_kind == "observed"
         ):
             raise ValueError("Execution scope must match the declared source kind")
+        if any(
+            isinstance(row.collateral, ClaimCollateralObservation)
+            != (spec.policies.corporate_actions == "explicit_entitlement_payment_v1")
+            for row in self.observations
+        ):
+            raise ValueError("Observed collateral must match the declared action policy")
         allocations = {}
         for formation in self.formations:
             selected = formation.assembly.request
@@ -388,6 +413,9 @@ class _Execution:
     closes: list[NavObservation] = field(default_factory=list)
     ledger: LedgerState | None = None
     ledger_fills: tuple[ConditionalFill, ...] = ()
+    claims: dict[str, CashClaim] = field(default_factory=dict)
+    action_phases: set[tuple[str, int]] = field(default_factory=set)
+    exited: set[str] = field(default_factory=set)
 
 
 def _prepare(store: ArtifactStore, request: ArtifactRef, admission: ArtifactRef) -> ArtifactRef:
@@ -456,8 +484,18 @@ def _schedule(state: _Execution) -> None:
     if cells > 100000:
         raise _fail("MONTHLY_CELL_LIMIT")
     state.quotes = {(row.security_id, row.observed_at): row for row in state.admitted.market.quotes}
-    if state.admitted.market.actions:
+    if state.admitted.market.actions and spec.policies.corporate_actions == "reject_any_events":
         raise _fail("MONTHLY_ACTIONS_UNSUPPORTED")
+    occupied = set()
+    for action in state.admitted.market.actions:
+        key = (action.security_id, action.effective_at)
+        if key in occupied:
+            raise _fail("ACCOUNTING_AMBIGUOUS_EVENT_ORDER")
+        occupied.add(key)
+        if action.effective_at < sessions[0].closes_at:
+            raise _fail("ACCOUNTING_EVENT_BEFORE_START")
+        if action.available_at > action.effective_at:
+            raise _fail("MONTHLY_ACTION_UNAVAILABLE")
     if (
         state.admitted.market.coverage_start > sessions[0].closes_at
         or state.admitted.market.coverage_end < terminal
@@ -507,13 +545,65 @@ def _loan(state: _Execution, security: str, quantity: Fraction, at: datetime) ->
     return grants[0]
 
 
+def _advance_actions(state: _Execution, at: datetime) -> None:
+    """Apply event phases independently with rational arithmetic before same-instant trading.
+
+    Repeated open/close observations cannot pay a claim twice. Loan quantities are never
+    scaled implicitly by a split: the next observation checks the original grant again.
+    """
+    events = []
+    for action in state.admitted.market.actions:
+        events.append((action.effective_at, 0, action.event_id, action))
+        if action.pay_at is not None:
+            events.append((action.pay_at, 1, action.event_id, action))
+    for occurred, phase, event_id, action in sorted(events, key=lambda row: row[:3]):
+        if occurred > at:
+            break
+        identity = (event_id, phase)
+        if identity in state.action_phases:
+            continue
+        security = action.security_id
+        quantity = state.holdings.get(security, Fraction(0))
+        if phase == 1:
+            claim = state.claims.pop(event_id)
+            state.cash += Fraction(claim.signed_amount_usd)
+            exact_accounting(state.cash)
+        else:
+            if security in state.exited:
+                raise _fail("ACCOUNTING_ACTION_AFTER_EXIT")
+            if action.kind == "split":
+                assert action.new_shares is not None and action.old_shares is not None
+                quantity *= Fraction(action.new_shares) / Fraction(action.old_shares)
+                exact_quantity(quantity)
+                state.holdings[security] = quantity
+            else:
+                if action.kind == "terminal_exit":
+                    if action.cash_per_share is None and quantity:
+                        raise _fail("ACCOUNTING_UNKNOWN_EXIT")
+                    state.exited.add(security)
+                    state.holdings[security] = Fraction(0)
+                    state.loans.pop(security, None)
+                if action.cash_per_share is not None:
+                    assert action.pay_at is not None
+                    state.claims[event_id] = CashClaim(
+                        event_id=event_id,
+                        security_id=security,
+                        kind=action.kind,
+                        signed_amount_usd=exact_accounting(
+                            quantity * Fraction(action.cash_per_share)
+                        ),
+                        pay_at=action.pay_at,
+                    )
+        state.action_phases.add(identity)
+
+
 def _ledger(state: _Execution, at: datetime) -> LedgerState:
-    """Reuse private inventory only for the action-free, zero-carry monthly profile.
+    """Replay action-bearing accounts; reuse only action-free, zero-carry inventories.
 
     Full replay after each changed fill inventory preserves fee arithmetic and phase order.
     Advancing an unchanged inventory is valid only because no scheduled cash events exist.
     """
-    if state.admitted.market.actions or any(
+    if any(
         (
             state.request.spec.costs.annual_borrow_bps,
             state.request.spec.costs.annual_financing_bps,
@@ -522,13 +612,18 @@ def _ledger(state: _Execution, at: datetime) -> LedgerState:
     ):
         raise _fail("MONTHLY_LEDGER_CACHE_PROFILE")
     fills = tuple(state.fills)
-    if state.ledger is None or fills != state.ledger_fills or at < state.ledger.at:
+    if (
+        state.admitted.market.actions
+        or state.ledger is None
+        or fills != state.ledger_fills
+        or at < state.ledger.at
+    ):
         state.ledger = ledger_at(
             initial_cash=state.request.initial_cash_usd,
             start_at=state.sessions[0].closes_at,
             at=at,
             fills=fills,
-            actions=(),
+            actions=state.admitted.market.actions,
             costs=state.request.spec.costs,
         )
         state.ledger_fills = fills
@@ -542,6 +637,7 @@ def _ledger(state: _Execution, at: datetime) -> LedgerState:
 def _observe(state: _Execution, at: datetime, phase: str, mark_phase: str) -> AccountObservation:
     """Retain failed reserve evidence and compare ledger replay with exact independent balances."""
     state.at = at
+    _advance_actions(state, at)
     held = {security for security, quantity in state.holdings.items() if quantity}
     marks = _marks(state, at, mark_phase, held)
     prices = {row.security_id: Fraction(row.price_usd) for row in marks}
@@ -557,6 +653,10 @@ def _observe(state: _Execution, at: datetime, phase: str, mark_phase: str) -> Ac
     for row in notionals:
         exact_accounting(row.notional_usd.as_fraction())
     expected_nav = state.cash
+    claims = tuple(state.claims[key] for key in sorted(state.claims))
+    for claim in claims:
+        expected_nav += Fraction(claim.signed_amount_usd)
+        exact_accounting(expected_nav)
     for row in notionals:
         expected_nav += row.notional_usd.as_fraction()
         exact_accounting(expected_nav)
@@ -567,6 +667,7 @@ def _observe(state: _Execution, at: datetime, phase: str, mark_phase: str) -> Ac
         Fraction(snapshot.cash_usd) != state.cash
         or Fraction(snapshot.fees_usd) != state.fees
         or Fraction(snapshot.nav_usd) != expected_nav
+        or snapshot.claims != claims
         or {
             row.security_id: Fraction(row.signed_shares)
             for row in snapshot.positions
@@ -575,7 +676,11 @@ def _observe(state: _Execution, at: datetime, phase: str, mark_phase: str) -> Ac
         != {key: value for key, value in state.holdings.items() if value}
     ):
         raise _fail("MONTHLY_LEDGER_DISAGREEMENT")
-    collateral = observe_collateral(cash_usd=snapshot.cash_usd, notionals=notionals)
+    collateral = (
+        observe_claim_collateral(cash_usd=snapshot.cash_usd, notionals=notionals, claims=claims)
+        if state.request.spec.policies.corporate_actions == "explicit_entitlement_payment_v1"
+        else observe_collateral(cash_usd=snapshot.cash_usd, notionals=notionals)
+    )
     observation = AccountObservation(
         at=at,
         phase=phase,
@@ -647,6 +752,8 @@ def _batch(
         )
     )
     required = {row.security_id for row in weights if row.weight.as_fraction()}
+    if required & state.exited:
+        raise _fail("ACCOUNTING_TRADE_AFTER_EXIT")
     required.update(key for key, value in state.holdings.items() if value)
     marks = _marks(state, at, "close" if allocation is None else "open", required)
     prices = {row.security_id: Fraction(row.price_usd) for row in marks}
@@ -720,6 +827,21 @@ def _batch(
     exact_accounting(funding.absolute_trade_notional_usd.as_fraction())
     if len(state.fills) + len(staged_fills) > 2048:
         raise _fail("MONTHLY_FILL_LIMIT")
+    # The sizing denominator includes claims, but unsettled receivables cannot fund fills.
+    # Reject an infeasible declared allocation before committing its atomic batch.
+    if state.admitted.market.actions:
+        collateral = observe_claim_collateral(
+            cash_usd=exact_accounting(cash),
+            notionals=tuple(
+                SignedNotional(security_id=key, notional_usd=_rational(quantity * prices[key]))
+                for key, quantity in sorted(new_holdings.items())
+                if quantity
+            ),
+            claims=tuple(state.claims[key] for key in sorted(state.claims)),
+        )
+        if collateral.status != "funded":
+            assert collateral.failure_code is not None
+            raise _fail(collateral.failure_code)
     state.cash, state.fees, state.holdings, state.loans = cash, fees, new_holdings, new_loans
     state.fills.extend(staged_fills)
     execution = ExecutionBatch(
