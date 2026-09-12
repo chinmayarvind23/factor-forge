@@ -10,6 +10,7 @@ inspectable, so an experiment can be reviewed or replayed without repeating infe
 [Open the free Hugging Face demo](https://huggingface.co/spaces/chinmayarvind/factorforge)
 | [Run research locally](docs/research-command.md)
 | [Architecture](docs/system-design.md)
+| [Historical study report](reports/historical-study-v1.json)
 
 ![FactorForge evidence walkthrough](docs/assets/demo.gif)
 
@@ -40,6 +41,7 @@ verifies downloaded evidence in the browser; new model-driven research runs loca
 | MLflow evidence projection | 64 objects read back and verified; serial replay reuses the run | [Tracking integration](tools/tracking/README.md) |
 | Hosted evidence dashboard | 4 saved execution/research scenarios with browser hash checks | [Demo](https://huggingface.co/spaces/chinmayarvind/factorforge) |
 | Hybrid strategy compiler | Supports 2 to 4 compatible source strategies with explicit weights | [Hybrid research](docs/hybrid-research.md) |
+| Retrospective fixed-universe study | 45 retrospective signal/cost experiments; 15 signals, 3 cost settings; 30,192 observations; 7,516 backtest spans | [Saved report](reports/historical-study-v1.json) |
 
 These results describe specific engineering/reference cases. Published-factor reproduction,
 full FactorSpec accuracy and the 45-case autonomous release benchmark are separate research
