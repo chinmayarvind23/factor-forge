@@ -132,6 +132,30 @@ def test_success_archives_start_result_grade_and_complete_references(tmp_path: P
     assert store.get(ArtifactRef.model_validate(root["grade"]))
 
 
+def test_qwen_requires_its_own_frozen_wire_request(tmp_path: Path) -> None:
+    """A profile comparison changes only the declared model, never bypassing frozen input checks."""
+    packet, goldpath, expected, store, gold = inputs(tmp_path)
+    provider = Provider(gold.expected.model_dump_json())
+    with pytest.raises(ResearchError):
+        run_source_trial(packet, goldpath, expected, store, provider=provider, model="qwen3:8b")
+    assert provider.calls == 0
+    prompt = prepare_prompt(SourcePacket.model_validate_json(packet.read_bytes()), store)
+    request = GenerationRequest(
+        model="qwen3:8b",
+        system=cast(str, prompt["system"]),
+        user=cast(str, prompt["user"]),
+        response_schema=cast(dict[str, JsonValue], prompt["response_schema"]),
+    )
+    expected.write_text(
+        store.put(_request_payload(request)[1], media_type="application/json").model_dump_json()
+    )
+    result = run_source_trial(
+        packet, goldpath, expected, store, provider=provider, model="qwen3:8b"
+    )
+    assert provider.calls == 1 and provider.requests[0].model == "qwen3:8b"
+    assert CaseGrade.model_validate(result["grade"]).matched_fields == 9
+
+
 @pytest.mark.parametrize("change", ["paper", "source", "pages", "request", "missing_page"])
 def test_preflight_mismatch_never_calls_provider(tmp_path: Path, change: str) -> None:
     """Declared source and exact wire identity fail before admission or a model request."""

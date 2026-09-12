@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from importlib.metadata import version
 from pathlib import Path
-from typing import cast
+from typing import Literal, cast
 from uuid import uuid4
 
 from pydantic import JsonValue, ValidationError
@@ -113,6 +113,7 @@ def run_source_trial(
     store: ArtifactStore,
     *,
     provider: TextProvider | None = None,
+    model: Literal["llama3.1:8b", "qwen3:8b"] = "llama3.1:8b",
 ) -> dict[str, object]:
     """Run one admitted case; the caller freezes inputs before observing model output."""
     try:
@@ -136,7 +137,7 @@ def run_source_trial(
     prompt = prepare_prompt(packet, store)
     try:
         request = GenerationRequest(
-            model="llama3.1:8b",
+            model=model,
             system=cast(str, prompt["system"]),
             user=cast(str, prompt["user"]),
             response_schema=cast(dict[str, JsonValue], prompt["response_schema"]),
@@ -178,7 +179,7 @@ def run_source_trial(
         guarded = _FrozenProvider(
             provider if provider is not None else OllamaProvider(), expected_bytes
         )
-        result = extract_source(packet, guarded, store)
+        result = extract_source(packet, guarded, store, model=model)
         store.get(result.record)
         grade = grade_extraction(result.observation, gold, result.status)
         result_ref = _save(store, result.model_dump(mode="json"))
@@ -228,12 +229,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--gold", type=Path, required=True)
     parser.add_argument("--expected-request", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--model", choices=("llama3.1:8b", "qwen3:8b"), default="llama3.1:8b")
     args = parser.parse_args(argv)
     try:
         if not args.output.is_dir():
             raise _invalid("Trial output must be an existing owned artifact directory.")
         result = run_source_trial(
-            args.packet, args.gold, args.expected_request, LocalArtifactStore(args.output)
+            args.packet,
+            args.gold,
+            args.expected_request,
+            LocalArtifactStore(args.output),
+            model=args.model,
         )
         print(json.dumps(result, sort_keys=True))
         return 0
