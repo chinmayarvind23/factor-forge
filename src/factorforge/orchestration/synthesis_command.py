@@ -29,7 +29,7 @@ from factorforge.orchestration.hybrid_command import HybridExperimentRequest, ex
 from factorforge.orchestration.postgres_budgets import read_budget
 from factorforge.orchestration.postgres_runs import PostgresRunStore
 from factorforge.orchestration.research_strategies import (
-    ReviewedStrategyBinding,
+    StrategyBinding,
     research_strategies,
 )
 from factorforge.orchestration.synthesis_worker import SynthesisCommand, execute_synthesis_operation
@@ -42,7 +42,7 @@ class _SynthesisResearchFields(Contract):
 
     brief: ResearchBrief
     catalog: LiteratureCatalog
-    bindings: Annotated[tuple[ReviewedStrategyBinding, ...], Field(max_length=32)]
+    bindings: Annotated[tuple[StrategyBinding, ...], Field(max_length=32)]
     initial_cash_usd: Positive
     evaluated_at: Instant
     max_cost_per_model_microusd: Annotated[int, Field(ge=1, le=100000000)] = 1000000

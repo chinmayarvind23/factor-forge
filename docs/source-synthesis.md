@@ -33,6 +33,13 @@ review. `--source-literal-timing` prepares a separate development request whose 
 label includes that source period. This changes the curated binding and request identity;
 it does not amend an existing result or relax the matching rule.
 
+For the original example, `--reviewed-source-aliases` supplies three upfront reviewed
+descriptions: the timing phrase, that phrase with a period, and the source's longer timing
+sentence. Each alternative must occur in the exact supplied source, and model output must
+match an enumerated alternative exactly. The full alias binding enters the strategy's
+lineage. Unlisted wording still requires review; aliases do not modify typed execution
+timing or other compiler checks. Existing requests without aliases retain their behavior.
+
 Grade a saved command receipt without inference or database access:
 
 ```powershell

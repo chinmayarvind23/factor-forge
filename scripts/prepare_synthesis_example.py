@@ -1,6 +1,7 @@
 """Prepare original multi-source research inputs before any local model call."""
 
 import argparse
+import json
 from pathlib import Path
 
 from factorforge.data.artifacts import LocalArtifactStore
@@ -17,6 +18,7 @@ def main() -> None:
         "--profile", choices=("original-v1", "qwen-extraction-v1"), default="original-v1"
     )
     parser.add_argument("--source-literal-timing", action="store_true")
+    parser.add_argument("--reviewed-source-aliases", action="store_true")
     args = parser.parse_args()
     request = prepare_synthesis_fixture(
         Path(__file__).resolve().parents[1], LocalArtifactStore(args.artifacts)
@@ -38,6 +40,17 @@ def main() -> None:
                 )
             }
         )
+    if args.reviewed_source_aliases:
+        wire = request.model_dump(mode="json")
+        for binding in wire["bindings"]:
+            rule = binding["reviewed_formation_rule"].removesuffix(".")
+            binding["reviewed_formation_rule_aliases"] = [
+                rule,
+                rule + ".",
+                rule + ". Use only signal values available at formation, "
+                "and trade at the subsequent open.",
+            ]
+        request = type(request).model_validate_json(json.dumps(wire))
     with args.request.open("xb") as output:
         output.write(request.canonical_bytes())
     print(request.sha256)

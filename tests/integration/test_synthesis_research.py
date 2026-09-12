@@ -28,9 +28,12 @@ from factorforge.retrieval.synthesis import SYNTHESIS_PROMPT
 
 
 @pytest.mark.parametrize("outcome", ["completed", "abstained", "uncertain_review", "pending"])
-@pytest.mark.parametrize("qwen_extraction", [False, True])
+@pytest.mark.parametrize("qwen_extraction", [False, True, "aliases"])
 def test_full_synthesis_path_reuses_all_operations(
-    store: PostgresRunStore, monkeypatch: pytest.MonkeyPatch, outcome: str, qwen_extraction: bool
+    store: PostgresRunStore,
+    monkeypatch: pytest.MonkeyPatch,
+    outcome: str,
+    qwen_extraction: bool | str,
 ) -> None:
     """Five controlled model calls produce one hybrid; held cases remain fully inspectable."""
     calls = []
@@ -61,6 +64,11 @@ def test_full_synthesis_path_reuses_all_operations(
                 formation_rule="Last session close each month",
                 source_pages=[1],
             )
+            if qwen_extraction == "aliases":
+                wire["formation_rule"] += (
+                    ". Use only signal values available at formation, "
+                    "and trade at the subsequent open."
+                )
         elif request.system == REVIEW_PROMPT:
             assert request.model == "llama3.1:8b"
             wire = dict(
@@ -112,6 +120,15 @@ def test_full_synthesis_path_reuses_all_operations(
                     update={"schema_version": "synthesis-research-request-v2"}
                 ).model_dump_json()
             )
+        if qwen_extraction == "aliases":
+            wire = request.model_dump(mode="json")
+            for binding in wire["bindings"]:
+                binding["reviewed_formation_rule_aliases"] = [
+                    binding["reviewed_formation_rule"]
+                    + ". Use only signal values available at formation, "
+                    "and trade at the subsequent open."
+                ]
+            request = QwenSynthesisResearchRequest.model_validate_json(json.dumps(wire))
         run = store.create(request.brief, "synthesis", owner)
         if outcome == "pending":
 
