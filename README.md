@@ -104,7 +104,7 @@ is documented separately. Kubernetes/EKS is an optional architecture extension.
 
 [LangSmith trace imports](tools/tracking/LANGSMITH.md) are SDK/HTTP-contract tested;
 hosted account verification remains. The [Neo4j projection](tools/tracking/NEO4J.md)
-is implemented with source-integrity tests; server verification remains.
+has verified real-server import, replay, reverse lookup and conflict rollback.
 [DVC tooling](tools/dvc/README.md) retains its dependency-audit gate.
 Deep Agents orchestration, PyTorch/TRL training and the full historical-data benchmark
 remain development work. Trajectory export alone is not model training.

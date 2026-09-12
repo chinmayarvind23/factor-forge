@@ -1,0 +1,28 @@
+{
+  "server_versions": [
+    "2026.08.1"
+  ],
+  "research": {
+    "root": "2439619faec2c08b3d004b53a2477060802c8c5bc839e1cb0273fa3c477eee98",
+    "nodes": 62,
+    "edges": 295,
+    "readback_verified": true
+  },
+  "synthetic_wrapper": {
+    "root": "d56f6f67799b81053328ac32149dea8869fddeb5e605eddc3d0616284578a17e",
+    "nodes": 63,
+    "edges": 296,
+    "readback_verified": true
+  },
+  "related_roots": [
+    "2439619faec2c08b3d004b53a2477060802c8c5bc839e1cb0273fa3c477eee98",
+    "d56f6f67799b81053328ac32149dea8869fddeb5e605eddc3d0616284578a17e"
+  ],
+  "repeated_import_identical": true,
+  "parameter_binding_verified": true,
+  "conflict_rejected": true,
+  "rollback_verified": true,
+  "restored_readback_verified": true,
+  "image_digest": "sha256:7f2c38fa0de8caf875d35237fa7dabda74de4f4fc2fc7c3c9e4b53c2add268ad",
+  "scope": "Metadata projection of one original development research result; wrapper is a verification fixture"
+}
