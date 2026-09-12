@@ -20,6 +20,11 @@ can publish a verified report and completion receipt with `--report`. Prompts, o
 input references, results and review decisions remain available for replay. See the
 [research command](docs/research-command.md) and [direction review](docs/direction-review.md).
 
+[Hybrid experiments](docs/hybrid-research.md) combine two to four explicitly weighted,
+direction-aligned source strategies. Compatible parents feed the same durable monthly
+runner; source evidence, composition rules, accounting results and reports remain linked.
+The public demo includes an original two-signal example.
+
 The monthly engine currently executes the original integration fixture using verified
 point-in-time inputs, declared formation/trade timing, exact funding and transaction
 costs. Walk-forward/purged splitters have boundary tests and HAC calculations have

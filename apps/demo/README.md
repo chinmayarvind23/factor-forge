@@ -10,9 +10,10 @@ pinned: false
 
 # FactorForge
 
-Explore verified quantitative-research evidence from two original synthetic fixture
+Explore verified quantitative-research evidence from three original synthetic fixture
 executions. The demo shows a complete monthly backtest and a capital-precision guard,
-with actual portfolio observations, fills, inputs, code snapshots and result hashes.
+and a two-signal hybrid, with actual portfolio observations, fills, inputs, code
+snapshots and result hashes.
 
 This free static Space displays saved Python execution results. It does not run an
 LLM, accept private research, execute generated code, or claim published-factor returns.

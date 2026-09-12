@@ -24,6 +24,13 @@ test("inspect completed accounting and the precision guard", async ({
   );
   await expect(page.locator("#fills")).toContainText("No trades dispatched.");
   await expect(page.locator("#metrics")).toContainText("No trades");
+  await page.getByRole("button", { name: "A two-signal hybrid" }).click();
+  await expect(page.locator("#status")).toHaveText("Completed");
+  await expect(page.locator("#decision")).toContainText(
+    "75% score and 25% quality",
+  );
+  await expect(page.locator("#metrics")).toContainText("$1,057.98");
+  await expect(page.locator("#raw")).toContainText("quality");
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
