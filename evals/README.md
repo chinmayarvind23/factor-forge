@@ -107,3 +107,10 @@ subsequent tuning.
 What to read next: [observability](../docs/observability.md) for the span substrate,
 [failure modes](../docs/failure-modes.md) for coverage, and
 [research reports](../docs/research-reports.md) for evidence-based execution summaries.
+
+[Saved research batch evaluation](../docs/research-batch-evaluation.md) now aggregates
+retained source-to-hybrid development attempts using the existing original rubric.
+It binds results to declared inputs and preserves missing/invalid cases in the total.
+The four retained synthesis development attempts were regraded together with identical
+repeat output and no model calls; the retrospective inventory is separate from the
+planned frozen release benchmark.
