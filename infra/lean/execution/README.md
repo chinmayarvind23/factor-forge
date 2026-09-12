@@ -4,15 +4,14 @@ This separate profile extends the seeded-price spike to actual LEAN orders for t
 original twelve-return fixture. The translator stages the source strategy, point-in-time
 signal facts, raw equity ticks, explicit borrow permission and local configuration.
 No Python fills, NAV values or performance report enter the engine input.
-The synthetic always-open reader receives an explicit empty tick file for weekend dates.
-These files contain no fabricated price observations and do not change the source clocks.
+The original UTC calendar closes weekends and retains the supplied weekday tick clocks.
 
 The C# algorithm selects high/low signals available at formation, computes exact integer
 shares from the declared capital and notional cost rate, and submits market orders at
 the authored entry and liquidation clocks. It reads LEAN's actual order events and
 portfolio values. The fee adapter implements the Python profile's explicit commission
 plus slippage charge; it does not shift fill prices. The account uses LEAN's two-times
-security margin model, an original always-open UTC equity calendar and zero risk-free
+security margin model, an original weekday UTC equity calendar and zero risk-free
 rate. No holdings or NAV are seeded.
 
 The predeclared comparison requires 13 closing observations, including the $1002 baseline,
@@ -33,6 +32,17 @@ It does not establish general FactorSpec translation, historical exchange covera
 arbitrary borrow/margin policies, corporate actions, financing charges or published-factor
 reproduction. A successful compilation is not engine-verification evidence; actual trial
 results must be recorded separately.
+
+The actual weekday-calendar trial completed with **13/13 closing NAV matches and 4/4
+fill matches**, including quantities, raw prices and fees. It reported total fees $4.11,
+final NAV $1107.89, exit zero, no OOM, no engine errors and confirmed container cleanup.
+The [captured comparison](../../../data/verification/lean-execution-v1/comparison.json)
+contains the observations and evidence hashes. Compiled image:
+`sha256:19995f31393fc4203648cdc7d5ee7ee135452b7bff72c2324e8c94e79e24e60d`.
+The original always-open-calendar attempts also matched numbers but recorded missing-date
+errors; the accepted trial closes weekends without changing source prices, orders or the
+predeclared reference. LEAN's aggregate annualized performance statistics are not used
+as evidence from this short authored sample.
 
 The fee and margin interfaces were checked against the pinned upstream
 [FeeModel](https://github.com/QuantConnect/Lean/blob/8ee075a39918f2df6fe9e0a5944e366fb60d10dc/Common/Orders/Fees/FeeModel.cs)

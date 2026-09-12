@@ -43,8 +43,9 @@ critical fields; release FactorSpec accuracy remains unmeasured.
 
 A Docker sandbox stages verified artifacts and retains execution, termination and
 cleanup evidence. Eight original acceptance cases pass locally and in hosted CI.
-A separate real LEAN integration spike verifies an original seeded NAV path; full
-strategy translation and independent factor verification remain in progress. See
+A separate real LEAN execution now matches all 13 closing NAVs and four long/short fills
+of the original longer fixture, including $4.11 in costs and final NAV $1107.89.
+General strategy translation and published-factor verification remain in progress. See
 [sandbox setup](docs/sandbox.md) and [results](docs/results.md).
 
 The browser/API supports research briefs and owner-scoped run inspection. Cognito

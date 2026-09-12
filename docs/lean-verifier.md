@@ -55,8 +55,8 @@ the schema cannot authenticate an engine merely because an object validates.
 The future backend must preserve actual translator, configuration, controller, image and
 control-evidence artifacts, including failed-process captures. The handler has no automatic
 retry, durable status index or verification-ID idempotency. A crashed call cannot be retried
-automatically as though no work occurred. Independent LEAN execution remains unverified, and
-upstream engine dependency findings remain unresolved.
+automatically as though no work occurred. This handler is not yet connected to the separate
+original execution trials; its default backend remains unavailable.
 
 The 108 focused Windows and Linux tests cover the boundary and controlled backend fixtures.
 They do not count as engine runs. Run them with:

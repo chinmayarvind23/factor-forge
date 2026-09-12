@@ -17,11 +17,10 @@ def test_execution_input_has_two_raw_equities_and_no_reference_answers() -> None
     assert source["initial_cash_usd"] == "1002"
     assert "fills" not in source and "performance" not in source
     assert b"terminal_nav_usd" not in files["source.json"]
-    assert len([name for name in files if name.endswith(".zip")]) == 34
+    assert len([name for name in files if name.endswith(".zip")]) == 26
     for day, ticker, expected in [
         ("20240501", "ffa", b"48600000,1000000,1,,0,0\n72000000,1020000,1,,0,0\n"),
         ("20240516", "ffb", b"48600000,1000000,1,,0,0\n72000000,1000000,1,,0,0\n"),
-        ("20240504", "ffa", b""),
     ]:
         with ZipFile(
             io.BytesIO(files[f"data/equity/usa/tick/{ticker}/{day}_trade.zip"])

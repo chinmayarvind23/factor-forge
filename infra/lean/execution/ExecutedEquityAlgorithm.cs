@@ -56,7 +56,12 @@ public sealed class ExecutedEquityAlgorithm : QCAlgorithm
         SetRiskFreeInterestRateModel(new ConstantRiskFreeRateInterestRateModel(0m));
         foreach (var (id, ticker) in new[] { ("A", "FFA"), ("B", "FFB") })
         {
-            MarketHoursDatabase.SetEntryAlwaysOpen(Market.USA, ticker, SecurityType.Equity, TimeZones.Utc);
+            var hours = new SecurityExchangeHours(TimeZones.Utc, Enumerable.Empty<DateTime>(),
+                Enum.GetValues<DayOfWeek>().ToDictionary(day => day, day =>
+                    day is DayOfWeek.Saturday or DayOfWeek.Sunday
+                        ? LocalMarketHours.ClosedAllDay(day) : LocalMarketHours.OpenAllDay(day)),
+                new Dictionary<DateTime, TimeSpan>(), new Dictionary<DateTime, TimeSpan>());
+            MarketHoursDatabase.SetEntry(Market.USA, ticker, SecurityType.Equity, hours, TimeZones.Utc);
             SymbolPropertiesDatabase.SetEntry(Market.USA, ticker, SecurityType.Equity,
                 new SymbolProperties("Original execution fixture", "USD", 1m, 0.0001m, 1m, ticker));
             var equity = AddEquity(ticker, Resolution.Tick, Market.USA, fillForward: false,

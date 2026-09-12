@@ -1,0 +1,124 @@
+{
+  "schema_version": "original-lean-execution-comparison-v1",
+  "scope": "Original authored fixture execution; not published-factor replication",
+  "image_id": "sha256:19995f31393fc4203648cdc7d5ee7ee135452b7bff72c2324e8c94e79e24e60d",
+  "engine_source_commit": "8ee075a39918f2df6fe9e0a5944e366fb60d10dc",
+  "source_sha256": "75a07a8df337f89c5ce9e05ebfa0b82d5ef1473d888770be9e57344cef2a14ad",
+  "reference_sha256": "b12c3e16e147e3fc372d5c260340208bf38bc5390bc30d1efcf53cae156de69a",
+  "closing_nav_matches": 13,
+  "fill_matches": 4,
+  "terminal_nav_usd": "1107.89",
+  "total_fees_usd": "4.11",
+  "engine_exit_code": 0,
+  "oom_killed": false,
+  "cleanup_confirmed": true,
+  "stdout_sha256": "4d4a4687bf80b6d16abafea746150013ad6bd543729552c6050ccd7e9348f698",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "controller_receipt_sha256": "2da702aa202abf4d4ce189c270e4bd6b742f4ba3b1ea84c63ff8874121ed5447",
+  "points": [
+    {
+      "at": "2024-04-30T20:00:00Z",
+      "nav_usd": "1002.0",
+      "cash_usd": "1002",
+      "fees_usd": "0"
+    },
+    {
+      "at": "2024-05-01T20:00:00Z",
+      "nav_usd": "1020.0",
+      "cash_usd": "1000",
+      "fees_usd": "2"
+    },
+    {
+      "at": "2024-05-02T20:00:00Z",
+      "nav_usd": "1010.0",
+      "cash_usd": "1000",
+      "fees_usd": "2"
+    },
+    {
+      "at": "2024-05-03T20:00:00Z",
+      "nav_usd": "1040.0",
+      "cash_usd": "1000",
+      "fees_usd": "2"
+    },
+    {
+      "at": "2024-05-06T20:00:00Z",
+      "nav_usd": "1030.0",
+      "cash_usd": "1000",
+      "fees_usd": "2"
+    },
+    {
+      "at": "2024-05-07T20:00:00Z",
+      "nav_usd": "1060.0",
+      "cash_usd": "1000",
+      "fees_usd": "2"
+    },
+    {
+      "at": "2024-05-08T20:00:00Z",
+      "nav_usd": "1050.0",
+      "cash_usd": "1000",
+      "fees_usd": "2"
+    },
+    {
+      "at": "2024-05-09T20:00:00Z",
+      "nav_usd": "1080.0",
+      "cash_usd": "1000",
+      "fees_usd": "2"
+    },
+    {
+      "at": "2024-05-10T20:00:00Z",
+      "nav_usd": "1070.0",
+      "cash_usd": "1000",
+      "fees_usd": "2"
+    },
+    {
+      "at": "2024-05-13T20:00:00Z",
+      "nav_usd": "1100.0",
+      "cash_usd": "1000",
+      "fees_usd": "2"
+    },
+    {
+      "at": "2024-05-14T20:00:00Z",
+      "nav_usd": "1090.0",
+      "cash_usd": "1000",
+      "fees_usd": "2"
+    },
+    {
+      "at": "2024-05-15T20:00:00Z",
+      "nav_usd": "1120.0",
+      "cash_usd": "1000",
+      "fees_usd": "2"
+    },
+    {
+      "at": "2024-05-16T20:00:00Z",
+      "nav_usd": "1107.89",
+      "cash_usd": "1107.89",
+      "fees_usd": "4.11"
+    }
+  ],
+  "fills": [
+    {
+      "symbol": "FFA",
+      "quantity": "10",
+      "price_usd": "100",
+      "fee_usd": "1"
+    },
+    {
+      "symbol": "FFB",
+      "quantity": "-10",
+      "price_usd": "100",
+      "fee_usd": "1"
+    },
+    {
+      "symbol": "FFA",
+      "quantity": "-10",
+      "price_usd": "111",
+      "fee_usd": "1.11"
+    },
+    {
+      "symbol": "FFB",
+      "quantity": "10",
+      "price_usd": "100",
+      "fee_usd": "1"
+    }
+  ]
+}
