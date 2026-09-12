@@ -19,6 +19,11 @@ The driver restriction preserves the existing OOM assertion and all resource lim
 It is a local worker prerequisite, not an EKS driver recommendation. The controller
 never changes a user's daemon configuration; unsupported hosts fail preflight.
 
+At `5eda06e`, all eight real acceptance cases passed locally in 57.49 seconds and on
+the configured hosted runner in 40.68 seconds. The hosted OOM record retained exit137,
+`OOMKilled: true`, `SANDBOX_OOM` and confirmed cleanup. This verifies that execution
+under the selected driver; it is not a claim that every runtime race is eliminated.
+
 FactorForge has an internal synchronous runner for bounded Python experiments in a local
 Docker Linux container. An original arithmetic smoke read its staged code as UID65532,
 returned 5050 for `sum(range(101))`, exited zero with no OOM flag and recorded confirmed
