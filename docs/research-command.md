@@ -1,5 +1,7 @@
 # Local research operator
 
+For optional asynchronous operator execution, see [SQS research delivery](sqs-research.md).
+
 ## Complete a resumable workflow
 
 ```powershell

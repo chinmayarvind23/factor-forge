@@ -13,6 +13,7 @@ deployed service. This map describes the current code and retained execution evi
 | PySpark | Optional offline monthly panel materialization | [Spark SQL job](../tools/spark/README.md), partitioned Parquet and readback implementation; runtime unmeasured |
 | LEAN / C# / gRPC | Independent execution and accounting comparison | [LEAN integration](../infra/lean/execution/README.md), actual reference fills and valuations |
 | PostgreSQL | Research state, budgets, idempotency and operation receipts | [PostgreSQL stores](../src/factorforge/orchestration/), exercised local database paths |
+| SQS | Optional asynchronous research delivery | [FIFO adapter](sqs-research.md), offline acknowledgement checks; AWS execution unmeasured |
 | Docker | Resource-limited experiment and LEAN execution | [Sandbox](sandbox.md), [LEAN runtime](../infra/lean/) |
 | MLflow | Verified research and historical experiment artifacts | [Tracking tools](../tools/tracking/README.md), actual SQLite readback and replay |
 | Neo4j | Research lineage projection and reverse lookup | [Graph projection](../tools/tracking/NEO4J.md), real-server import/readback evidence |
@@ -27,7 +28,7 @@ deployed service. This map describes the current code and retained execution evi
 ## Scale and platform roadmap
 
 The broader architecture also names Elasticsearch, Weaviate, Kafka, Redis,
-SQS, Prometheus/Grafana, CloudWatch, MCP, A2A/Google ADK, GraphQL and optional Supabase.
+Prometheus/Grafana, CloudWatch, MCP, A2A/Google ADK, GraphQL and optional Supabase.
 These are planned scale, retrieval, interoperability or platform roles; they are not
 represented as completed services in the current product. Polars handles the measured
 dataset and PostgreSQL handles the implemented durable workflow. Adding an unused
