@@ -3,7 +3,7 @@
   "tier": "original_fixture",
   "source": {
     "name": "FactorForge manually designed test market",
-    "origin": "All securities, filings, prices and events are fictional values authored for this fixture. No external market dataset or paper data were copied.",
+    "origin": "All securities, filings, prices and events are synthetic values authored for this fixture. No external market dataset or paper data were copied.",
     "purpose": "Deterministic schema, point-in-time, identity and corporate-action tests; unsuitable for empirical factor claims.",
     "trading_dates": ["2024-04-29", "2024-04-30", "2024-05-01", "2024-05-02", "2024-05-03", "2024-05-06"],
     "timestamp_zone": "UTC",
@@ -13,10 +13,10 @@
     "missing_terminal_policy": "An unknown terminal outcome remains null and blocks complete return accounting. Never replace it with zero, the last price, or a known payout from another security."
   },
   "license_notes": {
-    "permission": "The original fictional content in this JSON and its adjacent fixture README may be copied, modified and redistributed for any purpose.",
+    "permission": "The original synthetic content in this JSON and its adjacent fixture README may be copied, modified and redistributed for any purpose.",
     "scope": "This permission covers these two fixture files only. It does not change the repository code license or grant rights in third-party data, papers or provider content.",
     "attribution": "No third-party data attribution is required because no third-party data were used.",
-    "retention": "No provider subscription or contractual deletion condition applies to these original fictional values."
+    "retention": "No provider subscription or contractual deletion condition applies to these original synthetic values."
   },
   "security_history": [
     {"security_id": "SEC-A", "symbol": "OLD", "exchange": "FIXTURE-X", "effective_from": "2024-04-29T13:30:00Z", "effective_to": "2024-05-02T13:30:00Z", "available_at": "2024-04-26T12:00:00Z", "source_id": "master-A-original"},
@@ -58,7 +58,7 @@
     {"security_id": "SEC-A", "action_id": "action-A-dividend", "kind": "cash_dividend", "available_at": "2024-05-01T12:00:00Z", "ex_at": "2024-05-03T13:30:00Z", "entitlement_cutoff_at": "2024-05-03T13:30:00Z", "pay_at": "2024-05-06T12:00:00Z", "cash_per_share": "1.00", "share_basis": "post_split", "currency": "USD", "entitlement_rule": "Shares held immediately before entitlement_cutoff_at receive cash at pay_at; no reinvestment is assumed."}
   ],
   "exits": [
-    {"security_id": "SEC-B", "exit_id": "exit-B-known", "available_at": "2024-04-30T15:00:00Z", "effective_at": "2024-05-02T13:30:00Z", "reason": "fictional_cash_acquisition", "terminal_status": "known_cash_payout", "cash_per_share": "24.00", "currency": "USD", "pay_at": "2024-05-02T16:00:00Z", "reinvestment_policy": "Hold cash; no synthetic post-exit price or reinvestment return."},
-    {"security_id": "SEC-C", "exit_id": "exit-C-unknown", "available_at": "2024-05-02T12:00:00Z", "effective_at": "2024-05-03T13:30:00Z", "reason": "fictional_exit_with_unavailable_terms", "terminal_status": "unknown", "cash_per_share": null, "currency": "USD", "pay_at": null, "reinvestment_policy": "Unspecified because terminal value is unknown; complete return accounting must reject this case."}
+    {"security_id": "SEC-B", "exit_id": "exit-B-known", "available_at": "2024-04-30T15:00:00Z", "effective_at": "2024-05-02T13:30:00Z", "reason": "synthetic_cash_acquisition", "terminal_status": "known_cash_payout", "cash_per_share": "24.00", "currency": "USD", "pay_at": "2024-05-02T16:00:00Z", "reinvestment_policy": "Hold cash; no synthetic post-exit price or reinvestment return."},
+    {"security_id": "SEC-C", "exit_id": "exit-C-unknown", "available_at": "2024-05-02T12:00:00Z", "effective_at": "2024-05-03T13:30:00Z", "reason": "synthetic_exit_with_unavailable_terms", "terminal_status": "unknown", "cash_per_share": null, "currency": "USD", "pay_at": null, "reinvestment_policy": "Unspecified because terminal value is unknown; complete return accounting must reject this case."}
   ]
 }

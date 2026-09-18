@@ -22,7 +22,7 @@ from factorforge.retrieval.extraction import ExtractionResult
 
 
 def observation(**updates: object) -> SourceExtraction:
-    """A fictional ratio strategy keeps public tests independent of private paper selections."""
+    """A synthetic ratio strategy keeps public tests independent of private paper selections."""
     values: dict[str, object] = {
         "status": "extracted",
         "refusal_reason": None,
@@ -57,7 +57,7 @@ def gold(case_id: str = "ratio") -> GoldCase:
     )
     return GoldCase(
         case_id=case_id,
-        paper_id="fictional",
+        paper_id="synthetic",
         source_sha256="a" * 64,
         expected=observation(),
         numerical_vectors=vectors,
@@ -242,7 +242,7 @@ def test_delta_and_compound_names_use_full_predeclared_vectors() -> None:
     )
     case = GoldCase(
         case_id="history",
-        paper_id="fictional",
+        paper_id="synthetic",
         source_sha256="a" * 64,
         expected=actual,
         numerical_vectors=vectors,

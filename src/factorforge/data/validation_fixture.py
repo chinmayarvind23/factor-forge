@@ -10,7 +10,7 @@ from factorforge.domain.raw_strategy import RawStrategySpec
 
 
 def prepare_validation_fixture(repository: Path, store: ArtifactStore) -> RawStrategySpec:
-    """Retain distinct fictional prices and rights without changing the original short fixture.
+    """Retain distinct synthetic prices and rights without changing the original short fixture.
 
     Prices are authored inputs, not inferred from expected NAVs. The independent test
     computes the account path for ten shares per leg and the declared ten-basis-point cost.

@@ -34,9 +34,9 @@ def tmp_path() -> Iterator[Path]:
 def inputs(root: Path) -> tuple[Path, Path, Path, LocalArtifactStore, GoldCase]:
     """Construct source and gold independently of the private three-paper development suite."""
     store = LocalArtifactStore(root / "objects")
-    page = store.put(b"An original fictional strategy description.", media_type="text/plain")
+    page = store.put(b"An original synthetic strategy description.", media_type="text/plain")
     packet = SourcePacket(
-        paper_id="fictional",
+        paper_id="synthetic",
         source_sha256="a" * 64,
         selected_strategy="Original engineering case",
         pages=(SourcePage(pdf_page=1, artifact=page),),
@@ -59,7 +59,7 @@ def inputs(root: Path) -> tuple[Path, Path, Path, LocalArtifactStore, GoldCase]:
     )
     gold = GoldCase(
         case_id="original-v1",
-        paper_id="fictional",
+        paper_id="synthetic",
         source_sha256="a" * 64,
         expected=observation,
         numerical_vectors=tuple(
@@ -180,7 +180,7 @@ def test_evidence_style_flows_through_frozen_trial(tmp_path: Path) -> None:
                     {
                         "fields": fields,
                         "pdf_page": 1,
-                        "quote": "An original fictional strategy description.",
+                        "quote": "An original synthetic strategy description.",
                     }
                 ],
                 "observation": gold.expected.model_dump(),

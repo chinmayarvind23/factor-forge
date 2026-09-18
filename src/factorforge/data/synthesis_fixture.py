@@ -32,7 +32,7 @@ def prepare_synthesis_fixture(repository: Path, store: ArtifactStore) -> Synthes
             "No trailing lookback window is required for this scalar signal. "
             "Formation rule: Last session close each month. "
             "Use only signal values available at formation, and trade at the subsequent open. "
-            "This is an original fictional research method for an engineering demonstration."
+            "This is an original synthetic research method for an engineering demonstration."
         )
         page = store.put(text.encode(), media_type="text/plain")
         packet = SourcePacket(

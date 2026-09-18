@@ -30,8 +30,8 @@ MAX_COMPONENT_BYTES = 2 * 2**20
 FIXTURE_PATH = "data/fixtures/tiny-market-v1.json"
 # This command grants reuse only for the reviewed original fixture and its authored terms.
 # A future fixture revision must update its version and these identities through review.
-FIXTURE_SHA256 = "f0f075c544a78fa99ce27dadf615b5fc4d6bd68f0ebe7268591cdcc75ac4e36b"
-TERMS_UTF8_LF_SHA256 = "b6c5eda55e023a53c2f6a48a0777b9ab99ab2cb87b8bc00e02fb175faba4946e"
+FIXTURE_SHA256 = "9b7064832e4dd5279a399d94cf94281fb3519aee343a05c7b40dbc6178b424de"
+TERMS_UTF8_LF_SHA256 = "5da8b50eee68e4da040f285c3636ceae6df6a5b0aa3ec43a1dc7643d5bf70724"
 CODE_PATHS = {
     "point_in_time.py": "src/factorforge/data/point_in_time.py",
     "fixture_bundle.py": "src/factorforge/data/fixture_bundle.py",

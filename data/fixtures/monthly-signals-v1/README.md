@@ -1,6 +1,6 @@
 # Original monthly planning inputs
 
-These are fictional inputs for a conditional source-to-target calculation: 52 facts for
+These are synthetic inputs for a conditional source-to-target calculation: 52 facts for
 eight securities, two monthly requests and equal/value portfolio policies. No observed
 market dataset, published-factor label, expected output or paper passage is included.
 
@@ -26,6 +26,6 @@ observation produces a recorded failure and exit status one. An explicit
 `value_weight.json` to apply the separate capitalization weighting policy. Each invocation
 creates a new attempt; it does not replace earlier failed outcomes.
 
-The original fictional content in this directory may be copied, modified and redistributed
+The original synthetic content in this directory may be copied, modified and redistributed
 for any purpose. This fixture permission does not change the code license or grant rights in
 third-party papers or provider data.

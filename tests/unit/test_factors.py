@@ -1,4 +1,4 @@
-"""Complete fictional factor contracts never infer execution choices from nullable extraction."""
+"""Complete synthetic factor contracts never infer execution choices from nullable extraction."""
 
 import json
 from datetime import UTC, date, datetime
@@ -49,7 +49,7 @@ def specification() -> dict[str, object]:
     return {
         "factor_id": "fiction-ratio",
         "version": "v1",
-        "name": "Fictional income/assets ratio",
+        "name": "Synthetic income/assets ratio",
         "source_refs": (artifact,),
         "datasets": ({"version_id": "b" * 64, "manifest": {**artifact, "sha256": "b" * 64}},),
         "signal_inputs": (column("income"), column("assets")),
@@ -180,9 +180,9 @@ def test_queue_requires_verified_contract_and_keeps_unresolved_hypotheses_blocke
         candidate = Hypothesis(
             hypothesis_id="draft",
             statement="Income/assets predicts later returns.",
-            mechanism="A fictional accounting signal may sort future returns.",
+            mechanism="A synthetic accounting signal may sort future returns.",
             expected_direction="positive",
-            source_refs=(store.put(b"Original fictional hypothesis."),),
+            source_refs=(store.put(b"Original synthetic hypothesis."),),
             factor_spec=None,
             unresolved_questions=("Which historical universe is supported?",),
             novelty=1.0,
@@ -197,7 +197,7 @@ def test_queue_requires_verified_contract_and_keeps_unresolved_hypotheses_blocke
 def stored_specification(
     store: ArtifactStore, *, manifest_changes: dict[str, object] | None = None, large: bool = False
 ) -> FactorSpec:
-    """Author verifiable fictional bytes; the queue checks declarations, not an accounting
+    """Author verifiable synthetic bytes; the queue checks declarations, not an accounting
     backtest."""
 
     rows = [
@@ -222,7 +222,7 @@ def stored_specification(
             sha256="c" * 64, size_bytes=70 * 1024 * 1024, media_type="application/json"
         )
     values: dict[str, object] = dict(
-        name="fictional-contract",
+        name="synthetic-contract",
         kind="original_fixture",
         provider="Authored test",
         source_version="fiction-v1",
@@ -235,7 +235,7 @@ def stored_specification(
         corporate_action_policy="total-return-includes-actions-and-delisting",
         delisting_policy="explicit-total-return-or-fail",
         rights=UsageRights(
-            provenance="Original fictional test bytes.", permitted_uses=("local_research",)
+            provenance="Original synthetic test bytes.", permitted_uses=("local_research",)
         ),
         objects=(
             DatasetObject(
@@ -254,7 +254,7 @@ def stored_specification(
         dataset_version=manifest.version_id, artifact=data_ref.model_dump(mode="python")
     )
     value["datasets"] = ({"version_id": manifest.version_id, "manifest": manifest_ref},)
-    value["source_refs"] = (store.put(b"Original fictional ratio hypothesis."),)
+    value["source_refs"] = (store.put(b"Original synthetic ratio hypothesis."),)
     cast(dict[str, object], value["timing"])["calendar"] = calendar_ref
     return FactorSpec.model_validate(value)
 
@@ -266,7 +266,7 @@ def hypothesis(
     return Hypothesis(
         hypothesis_id=name,
         statement="Income/assets may predict returns.",
-        mechanism="A fictional accounting relation.",
+        mechanism="A synthetic accounting relation.",
         expected_direction="positive",
         source_refs=spec.source_refs,
         factor_spec=spec,
@@ -281,7 +281,7 @@ def queue_for(candidates: tuple[Hypothesis, ...], store: ArtifactStore) -> Hypot
     return rank_hypotheses(candidates, store, at=datetime(2026, 9, 11, tzinfo=UTC))
 
 
-def test_complete_fictional_contract_ranks_and_deduplicates_by_execution() -> None:
+def test_complete_synthetic_contract_ranks_and_deduplicates_by_execution() -> None:
     """Higher declared priority keeps one execution while duplicate IDs remain observable."""
     with TemporaryDirectory(prefix="factorforge-queue-ready-") as directory:
         store = LocalArtifactStore(Path(directory))

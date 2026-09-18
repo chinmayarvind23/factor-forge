@@ -1,4 +1,4 @@
-"""Independent extraction and retrieval probes use only fictional hand-ranked fixtures."""
+"""Independent extraction and retrieval probes use only synthetic hand-ranked fixtures."""
 
 import json
 from typing import cast
@@ -65,7 +65,7 @@ def test_invalid_query_mapping_fails_with_safe_error(rankings: object) -> None:
 
 
 def extracted() -> dict[str, object]:
-    """Unknown strategy fields remain explicit nulls in a fictional source observation."""
+    """Unknown strategy fields remain explicit nulls in a synthetic source observation."""
     return {
         "status": "extracted",
         "refusal_reason": None,

@@ -79,7 +79,7 @@ def prepare_hybrid_fixture(repository: Path, store: ArtifactStore) -> HybridRequ
     return HybridRequest(
         name="Score and quality hybrid",
         rationale=(
-            "Test a declared 75% score and 25% quality blend on two original fictional securities."
+            "Test a declared 75% score and 25% quality blend on two original synthetic securities."
         ),
         components=tuple(
             HybridComponent(strategy=parent, weight=Rational.from_fraction(weight))

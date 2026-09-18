@@ -70,7 +70,7 @@ RAW = {
 
 
 def mark(security: str, day: int) -> PriceMark:
-    """Use exact fictional raw closes, without inventing post-exit observations."""
+    """Use exact synthetic raw closes, without inventing post-exit observations."""
     observed = instant(DATES[day] + "T20:00:00Z")
     return PriceMark(
         source_id=f"price-{security}-{day}",

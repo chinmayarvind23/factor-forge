@@ -9,7 +9,7 @@ from factorforge.domain.extraction import SourceExtraction, parse_extraction
 
 
 def example() -> dict[str, object]:
-    """An original fictional strategy avoids leaking any pilot gold into protocol tests."""
+    """An original synthetic strategy avoids leaking any pilot gold into protocol tests."""
     return {
         "status": "extracted",
         "refusal_reason": None,

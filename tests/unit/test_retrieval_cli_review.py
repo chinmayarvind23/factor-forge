@@ -1,4 +1,4 @@
-"""Independent CLI probes preserve fictional inputs and exercise the real module entrypoint."""
+"""Independent CLI probes preserve synthetic inputs and exercise the real module entrypoint."""
 
 import json
 import subprocess
@@ -18,7 +18,7 @@ from factorforge.evaluation.retrieval import JudgedQuery, RetrievalCorpus, Retri
 
 
 def write_inputs(root: Path) -> tuple[Path, Path, list[str]]:
-    """Use explicit positive and negative fictional judgments unrelated to the frozen pilot."""
+    """Use explicit positive and negative synthetic judgments unrelated to the frozen pilot."""
     corpus = RetrievalCorpus(
         version="review-v1",
         status="frozen",

@@ -16,6 +16,6 @@ entry-open loss is retained separately. The absolute 1e-40 comparison tolerance 
 finite decimal representation.
 
 The calendar, prices, score observations, permissions and zero benchmark/risk-free intervals
-are original fictional data. These references check arithmetic on the authored inputs.
+are original synthetic data. These references check arithmetic on the authored inputs.
 The full v3 strategy specification
 must be bound separately before an admitted execution can be compared with this reference.

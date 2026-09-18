@@ -1,6 +1,6 @@
 {
   "suite_id": "synthesis-original-v1",
-  "scope": "One original fictional source-to-hybrid integration case; not published-factor replication",
+  "scope": "One original synthetic source-to-hybrid integration case; not published-factor replication",
   "input_builder": "scripts/prepare_synthesis_example.py",
   "frozen_before_model_execution": true,
   "expected_source_formulas": {"original-score": "score", "original-quality": "quality"},
