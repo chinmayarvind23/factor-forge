@@ -1,5 +1,7 @@
 """Hand portfolios and future perturbations constrain the retrospective research study."""
 
+from typing import Any
+
 import pytest
 
 from factorforge.evaluation.historical_study import (
@@ -58,7 +60,7 @@ def test_failed_experiment_is_retained_and_next_case_can_run() -> None:
 
     from factorforge.evaluation.historical_study import _retain_failure
 
-    summaries = []
+    summaries: list[dict[str, Any]] = []
     with TemporaryDirectory() as directory:
         with _retain_failure(summaries, "first", 0, Path(directory)):
             raise ValueError("controlled")

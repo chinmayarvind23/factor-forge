@@ -117,8 +117,6 @@ def test_journal_failure_stops_dispatch(
     monkeypatch: pytest.MonkeyPatch, failed_sync: int, expected_calls: int
 ) -> None:
     """A durability error before or after a worker stops the remaining batch immediately."""
-    from factorforge.evaluation import research_runner
-
     suite, store = suite_fixture()
     syncs = 0
     calls = 0
@@ -136,7 +134,7 @@ def test_journal_failure_stops_dispatch(
         calls += 1
         return held(request, store)
 
-    monkeypatch.setattr(research_runner.os, "fsync", sync)
+    monkeypatch.setattr("factorforge.evaluation.research_runner.os.fsync", sync)
     with TemporaryDirectory() as temporary, pytest.raises(OSError):
         run_research_batch(
             suite,

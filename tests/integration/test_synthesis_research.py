@@ -19,6 +19,7 @@ from factorforge.orchestration.postgres_budgets import read_budget
 from factorforge.orchestration.postgres_runs import PostgresRunStore
 from factorforge.orchestration.synthesis_command import (
     QwenSynthesisResearchRequest,
+    SynthesisResearchRequest,
     execute_synthesis_research,
 )
 from factorforge.providers.ollama import GenerationRequest, GenerationResult
@@ -113,7 +114,9 @@ def test_full_synthesis_path_reuses_all_operations(
     owner = Principal("fixture", "synthesis-owner", frozenset({"execute_research"}))
     with TemporaryDirectory() as directory:
         artifacts = LocalArtifactStore(Path(directory))
-        request = prepare_synthesis_fixture(Path(__file__).resolve().parents[2], artifacts)
+        request: SynthesisResearchRequest | QwenSynthesisResearchRequest = (
+            prepare_synthesis_fixture(Path(__file__).resolve().parents[2], artifacts)
+        )
         if qwen_extraction:
             request = QwenSynthesisResearchRequest.model_validate_json(
                 request.model_copy(

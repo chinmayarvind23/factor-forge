@@ -123,13 +123,13 @@ def test_operation_inventory_and_unreviewed_training_status(outcome: str) -> Non
         with pytest.raises(ResearchError):
             export_trajectories(TrajectoryRequest(source=root, partition="development"), store)
         return
-    result = export_trajectories(TrajectoryRequest(source=root, partition="development"), store)
-    row = json.loads(store.get(result.rows))
+    exported = export_trajectories(TrajectoryRequest(source=root, partition="development"), store)
+    row = json.loads(store.get(exported.rows))
     assert row["training_eligibility"] == "unreviewed"
-    assert result.operation_count == 1
-    assert result.model_attempt_count == int(outcome not in ("pending", "missing"))
-    assert result.pending_count == int(outcome == "pending")
-    assert result.missing_llm_evidence_count == int(outcome == "missing")
+    assert exported.operation_count == 1
+    assert exported.model_attempt_count == int(outcome not in ("pending", "missing"))
+    assert exported.pending_count == int(outcome == "pending")
+    assert exported.missing_llm_evidence_count == int(outcome == "missing")
     if outcome in ("success", "malformed"):
         attempt = row["model_attempts"][0]
         assert attempt["messages"][0]["content"] == "Read the source"
@@ -139,5 +139,5 @@ def test_operation_inventory_and_unreviewed_training_status(outcome: str) -> Non
         )
     assert (
         export_trajectories(TrajectoryRequest(source=root, partition="development"), store)
-        == result
+        == exported
     )

@@ -41,7 +41,7 @@ def test_real_sdk_upload_contract_has_no_raw_source() -> None:
     class Handler(BaseHTTPRequestHandler):
         """Acknowledge trace requests without a hosted account or source-text storage."""
 
-        def do_POST(self):
+        def do_POST(self) -> None:
             """Retain the complete SDK JSON body and return a bounded acknowledgement."""
             captured.append(json.loads(self.rfile.read(int(self.headers["Content-Length"]))))
             self.send_response(200)
@@ -49,7 +49,7 @@ def test_real_sdk_upload_contract_has_no_raw_source() -> None:
             self.end_headers()
             self.wfile.write(b"{}")
 
-        def log_message(self, *args):
+        def log_message(self, format: str, *args: object) -> None:
             """Keep credentials and request metadata out of test output."""
 
     server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)

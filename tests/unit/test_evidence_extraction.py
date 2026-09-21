@@ -38,6 +38,8 @@ def test_literal_support_boundary(change: str) -> None:
     raw = json.dumps(dict(evidence=[quote], observation=observation))
     if change == "duplicate_key":
         raw = raw.replace('"formula": "x"', '"formula": "y", "formula": "x"')
-    prompt = {"user": json.dumps({"pages": [{"pdf_page": 1, "text": "Sort on x. Every month."}]})}
+    prompt: dict[str, object] = {
+        "user": json.dumps({"pages": [{"pdf_page": 1, "text": "Sort on x. Every month."}]})
+    }
     result = parse_evidence(raw, prompt)
     assert (result is not None) == (change == "valid")
